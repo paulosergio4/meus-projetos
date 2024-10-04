@@ -194,13 +194,29 @@ section img {
   display: flex;
   gap: 20px;
 }
+.sobre > .fotos > .foto-esquerda > a {
+  font-size: 1.5em;
+}
+
+i {
+  font-size: 1.55em;
+  padding: 10px 10px 10px 100px;
+}
 
 .foto-direita{
-  padding:300px 20px 50px 0 ;
+  padding:220px 20px 50px 20px ;
 }
 
 .foto-esquerda{
-  padding-top: 220px;
+  padding-top: 120px;
+}
+
+.foto-direita:hover, .foto-esquerda:hover {
+  transform: translateY(-5px) ;
+  transition: linear 0.3s;
+  opacity: 0.7;
+  
+  
 }
 
 div .foto-direita h1{
@@ -229,7 +245,7 @@ div .foto-direita h1{
 }
 
 aside {
- padding: 100px 10px 0 0;
+ padding: 0px 10px 0 0;
  margin-right: 100px;
 
 }
