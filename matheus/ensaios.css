@@ -1,0 +1,82 @@
+
+#ensaios{
+    display: flex;
+    flex-direction: column;
+    align-items: center;  
+    height: 100vh;
+    padding-top: 100px;
+
+}
+
+#title > h3 {
+    padding-right: 10px;
+}
+
+#title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-bottom: 20px;
+    padding-top: 20px;
+}
+
+#portifolio{
+    display: flex;
+    flex-direction: column;
+    justify-items: center;
+    padding-bottom: 80px;
+    align-items: center;
+}
+
+#portifolio > h1 {
+    padding: 30px;
+    font-size: 3em;
+}
+
+#portifolio > p{
+    padding: 60px 90px 60px  90px;
+    font-size: 1em;
+}
+
+
+
+#options {
+    width: 100%;
+    display: flex;
+
+}
+
+.links {
+    width: 285px;
+    height: 250px;
+    margin: 15px;
+}
+
+.links-text {
+    background: linear-gradient( to top, #0b0b0b , #0b0b0b00);
+    width: 100%;         
+    height: 100%; 
+    position: relative;
+}
+
+.links-text > a > p {
+    padding: 210px 10px  0 20px;
+    height: 100%; 
+    font-size: 1.2em;
+}
+
+.backgroud-links{
+    width: 285px;
+    height: 250px;       
+    object-fit: cover;    
+    object-position: center;
+    position: absolute; 
+    transition: transform 0.3s ease-in-out; 
+}
+
+.links:hover{
+    opacity: 0.1;
+    transform: translateY(-5px)  ;
+    transition: linear 0.3s;
+    opacity: 0.7;
+}

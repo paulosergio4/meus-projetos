@@ -27,7 +27,7 @@ a {
 }
 
 a:hover {
-  color: #5e3bee !important;
+  color: hsl(37, 56%, 49%)  !important;
 }
 
 h5 {
