@@ -1,37 +1,57 @@
 const changSlideButton = document.querySelectorAll('[data-change-slide-button]')
 
-changSlideButton.forEach(button => {
-    button.addEventListener("click", () => {
-        const slides = document.querySelector('.slides')
-        const activeSlide = slides.querySelector('[data-active]')
+let slideIndex = 0;
+const slides = document.querySelectorAll('.slide');
+const nextButton = document.querySelector('[data-change-slide-button="next"]');
+const prevButton = document.querySelector('[data-change-slide-button="previous"]');
+let slideInterval = setInterval(showNextSlide, 5000); // Altera o slide a cada 3 segundos
 
-        let indexActiveSlide = Array.from(slides.children).indexOf(activeSlide)
+function showNextSlide() {
+    slides[slideIndex].removeAttribute('data-active'); // Remove a classe "ativa" do slide atual
+    slideIndex = (slideIndex + 1) % slides.length; // Incrementa o índice do slide
+    slides[slideIndex].setAttribute('data-active', true); // Mostra o próximo slide
+}
 
-        indexActiveSlide =  button.dataset.changeSlideButton === "next"  ? (indexActiveSlide +1) : 
-        (indexActiveSlide -1);
+function showPreviousSlide() {
+    slides[slideIndex].removeAttribute('data-active'); // Remove a classe "ativa" do slide atual
+    slideIndex = (slideIndex - 1 + slides.length) % slides.length; // Decrementa o índice do slide
+    slides[slideIndex].setAttribute('data-active', true); // Mostra o slide anterior
+}
 
-        if (indexActiveSlide >=  slides.children.length) {
-            indexActiveSlide = 0
-        }
+// Função para pausar o slide automático ao clicar nos botões de próximo/anterior
+function pauseSlideshow() {
+    clearInterval(slideInterval);
+    slideInterval = setInterval(showNextSlide, 6000); // Retoma o slideshow após a pausa
+}
 
-        if  (indexActiveSlide < 0) {
-            indexActiveSlide = slides.children.length - 1
-        }
+// Adiciona eventos de clique aos botões para controle manual
+nextButton.addEventListener('click', () => {
+    showNextSlide();
+    pauseSlideshow();
+});
 
-
-
-        activeSlide.removeAttribute("data-active")
-        slides.children[indexActiveSlide].dataset.active = true
-    })
-
-    setInterval(() => {
-        changeSlide("next");
-    }, 3000);
-
-
+prevButton.addEventListener('click', () => {
+    showPreviousSlide();
+    pauseSlideshow();
 });
 
 function openMenu(){
     const nav = document.querySelector('nav');
     nav.classList.toggle('open');
 }
+
+const myObserver = new IntersectionObserver((entries) => {
+    entries.forEach( (entry) => {
+        if  (entry.isIntersecting){
+            entry.target.classList.add('show')
+        }  else {
+            entry.target.classList.remove('show')
+        }
+
+
+    })
+})
+
+const elements = document.querySelectorAll('.hidden')
+
+elements.forEach((element) => myObserver.observe(element))

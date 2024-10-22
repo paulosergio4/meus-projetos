@@ -5,25 +5,26 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Matheus-Fotografias</title>
-    <script src="https://kit.fontawesome.com/351d156b3e.js" crossorigin="anonymous"></script>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+
     <link rel="shortcut icon" href="fotos/favicon-32x32.png" type="image/x-icon">
     <link rel="stylesheet" href="style.css" />
-    <link rel="stylesheet" href="ensaios.css">
+    <link rel="stylesheet" href="animacoes.css">
     </head>
 
     <body>
-        <header>
-            <section class="nav">
+        <header name="header">
+            <section class="nav ">
                 <nav >
                     <div class="logo">
-                        <img src="fotos/logo1.png" alt="Matheus-Fotografias">
+                        <img src="fotos/fotos-slide/logo1.png" alt="Matheus-Fotografias">
                         <a href="">Matheus-Fotografias</a>
                     </div>
                     <ul>
-                        <li><a href="#main">HOME</a></li>
-                        <li><a href="#portfolio">PORTFÓLIO</a></li>
-                        <li><a href="#about">QUEM SOU</a></li>
-                        <li><a href="#feedback">ORÇAMENTO</a></li>                        
+                        <li><a href="#header">HOME</a></li>
+                        <li><a href="#ensaios">PORTFÓLIO</a></li>
+                        <li><a href="#sobre">QUEM SOU</a></li>
+                        <li><a href=https://api.whatsapp.com/send?phone=553784038171&text=Oi%20Matheus%21%0AGostaria%20de%20um%20or%C3%A7amento%20para%20um%20ensaio%20fotogr%C3%A1fico.%20Podemos%20conversar%20sobre%20isso%3F%0AObrigado(a)%20 target="_blank">ORÇAMENTO</a></li>                        
                     </ul>
                     <button>Contato</button>
                     <button id="menuButton" onclick="openMenu()">
@@ -31,7 +32,7 @@
                     </button>
                 </nav>
             </section>
-            <section  class="slideshow-container ">
+            <section  class="slideshow-container  ">
                     <ul class="slides">
                         <li class="slide fade" data-active><img src="fotos/fotos-slide/ft1.jpg" alt="foto sensual"></li>
                         <li class="slide fade"><img src="fotos/fotos-slide/ft2.jpg" alt="foto sensual"></li>
@@ -40,90 +41,106 @@
                         <li class="slide fade"><img src="fotos/fotos-slide/ft5.jpg" alt="foto de casal"></li>
                         <li class="slide fade"><img src="fotos/fotos-slide/ft6.jpg" alt="foto sensual"></li>
                         <li class="slide fade"><img src="fotos/fotos-slide/ft7.jpg" alt="foto individual"></li>
-                        <li class="slide fade"><img src="fotos/fotos-slide/ft8.jpg" alt="foto sensual"></li>
-                        <li class="slide fade"><img src="fotos/fotos-slide/ft9.jpg" alt="foto conceitual"></li>
-                        <li class="slide fade"><img src="fotos/fotos-slide/ft10.jpg" alt="foto de família"></li>
-                        <li class="slide fade"><img src="fotos/fotos-slide/ft12.jpg" alt="foto de gestante"></li>
-                        <li class="slide fade"><img src="fotos/fotos-slide/ft13.jpg" alt="foto individual"></li>
-                        <li class="slide fade"><img src="fotos/fotos-slide/ft14.jpg" alt="foto de família"></li>
-                        <li class="slide fade"><img src="fotos/fotos-slide/ft16.jpg" alt="foto de gestante"></li>
                     </ul>
                     <button class="previous-button" data-change-slide-button="previous">&lt;</button>
                     <button class="next-button" data-change-slide-button="next">&gt;</button>
             </section>
         </header>
         <main>
-            <section class="sobre">
-                <div class="fotos">
-                    <div class="foto-direita">
-                        <img src="fotos/SAM8365-_1_.webp" alt="">
+            <section class="hidden" id="sobre" >
+                <div class="fotos hidden">
+                    <div class="foto-direita hidden">
+                        <img src="fotos/fotos-slide/ftsobre2.jpg" alt="">
                     </div>
-                    <div class="foto-esquerda">
-                        <img src="fotos/SAM8398-_1_.webp" alt="">                    
+                    <div class="foto-esquerda hidden">
+                        <img src="fotos/fotos-slide/ftsobre.jpg" alt="">                    
                         <h1><span>8 Anos</span> como Fotógrafo</h1>
-                        <a href=""><i class="fa-brands fa-instagram"></i>Visitar Perfil</a>
+                        <a href="https://https://www.instagram.com/marcosmatheusfotografias/?igsh=MTB6ZG91c3Z4NnR3YQ%3D%3D"><i class='bx bxl-instagram'></i>Visitar Perfil</a>
                     </div>
                 </div>
-                <aside>
+                <aside class="hidden">
                     <div  id="separator1">
 
                         <div class="separator"></div><h3>Fotógrafo </h3>
                     </div>
                     <h1>Conheça Marcos Matheus</h1>
                     <p>
-                        Desde 2016, venho dedicando minha trajetória a capturar momentos especiais através das lentes da minha câmera. Para mim, fotografar é mais do que apenas registrar imagens; é narrar histórias. Cada foto representa uma chance de imortalizar memórias e criar laços. Minha paixão pela fotografia ultrapassa os limites do estúdio: adoro captar a essência da vida em cada pessoa que fotografa. </p> <br>
-
+                        Desde 2016, venho dedicando minha trajetória a capturar momentos especiais através das lentes da minha câmera. Para mim, fotografar é mais do que apenas registrar imagens; é narrar histórias. Cada foto representa uma chance de imortalizar memórias e criar laços. Minha paixão pela fotografia ultrapassa os limites do estúdio: adoro captar a essência da vida em cada pessoa que fotografa. 
+                    </p> 
+                    <p>
                         Quando não estou atrás das câmeras, estou sempre em busca de novas inspirações e explorando diferentes formas de arte, o que me permite trazer uma abordagem fresca e única para cada ensaio. Fotografar, para mim, é um estilo de vida que se reflete em tudo o que faço.
                     </p>
                 </aside>
             </section>
-            <section id="ensaios">
+            <section  class ="ensaios" >
+
                 <div id="title">
                     <div class="separator"></div> 
                     <h3>Ensaios</h3>
                     <div class="separator"></div>
                 </div>
-                <div id="portifolio">
+                <div class="portifolio" >
                     <h1>Ensaios para Cada Capítulo da Sua História</h1>
                     <p>De Cada Capítulo, Uma Lente: Ensaio Gestante, Casamento, empresarial, feminino e Muito mais. Clique para conferir!</p>
                     <div id="options">
-                        <div class="links">
+                        <div class="links hidden">
                             <img class="backgroud-links " src="fotos/fotos-slide/ft11.jpg" alt="">
                             <div  class="links-text">
-                                <a href="">
-                                    <p>Empresarial</p>
-                                </a>
+                                <button class="button-link">Empresarial</button>  
                             </div>
                         </div>
-                        <div class="links">
+                        <div class="links hidden">
                             <img class="backgroud-links" src="fotos/fotos-slide/ft15.jpg" alt="foto de gestante">
                             <div  class="links-text">
-                                <a href="">
-                                    <p>Gestante</p>
-                                </a>
+                               <button class="button-link">Gestante</button>
                             </div>
                         </div>
-                        <div class="links">
+                        <div class="links hidden">
                             <img class="backgroud-links" src="fotos/fotos-slide/ft14.jpg" alt="">
                             <div  class="links-text">
-                                <a href="">
-                                    <p>Familia</p>
-                                </a>
+                                <button class="button-link">Familia</button>
                             </div>
                         </div>
-                        <div  class="links">
+                        <div  class="links hidden">
                             <img class="backgroud-links" src="fotos/fotos-slide/ft4.jpg" alt="">
                             <div  class="links-text">
-                                <a href="">
-                                    <p>Casal</p>
-                                </a>
+                              <button class="button-link">Casal</button>
                             </div>
                         </div>
                     </div>
 
                 </div>
-            </section>
+            </section>            
+           <section id="portifolio">
+            <div class="portifolio">
+                <h1>NOSSOS ULTIMOS ENSAIOS</h1>
+            </div>
+           </section>
+           <section id="insta" class="hidden">
+            <div class="tagembed-widget" style="width:100%;height:100%" data-widget-id="2133091" data-tags="false"  view-url="https://widget.tagembed.com/2133091"></div><script src="https://widget.tagembed.com/embed.min.js" type="text/javascript"></script>
+        </section>
         </main>
-        <script src="script.js"></script>
+        <footer class="hidden">
+
+            <div class="separator"></div>
+            <div class="botton">
+                <div class="top">
+                    <div class="logo">
+                        <img src="fotos/fotos-slide/logo1.png" alt="">
+                    </div>
+                    <ul>
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#">Contato</a></li>
+                        <li><a href="#ensaios">Ensaios</a></li>
+                    </ul>
+                    <div class="social-links">
+                        <a href="https://https://www.instagram.com/marcosmatheusfotografias/?igsh=MTB6ZG91c3Z4NnR3YQ%3D%3D" target="_blank"><i class='bx bxl-instagram' ></i></a>
+                    </div>
+                </div>
+                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3767.112295833828!2d-44.99558242517219!3d-19.233937117010772!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xa7878eb6fda877%3A0x9946ab56dd6d4775!2sR.%20Cap.%20M%C3%A1rcio%20Roberto%20Meneses%20-%20Pomp%C3%A9u%2C%20MG%2C%2035640-000!5e0!3m2!1spt-BR!2sbr!4v1729206109873!5m2!1spt-BR!2sbr" width="500" height="200" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+
+            </div>
+        </footer>  
     </body>
+    <script src="script.js" defer></script>
 </html>
