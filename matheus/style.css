@@ -101,6 +101,67 @@ nav button#menuButton {
   padding: 7px;
 }
 
+/* From Uiverse.io by Cevorob */ 
+.burger {
+  position: relative;
+  width: 40px;
+  height: 30px;
+  background: transparent;
+  cursor: pointer;
+  display: block;
+}
+
+.burger input {
+  display: none;
+}
+
+.burger span {
+  display: block;
+  position: absolute;
+  height: 4px;
+  width: 100%;
+  background: black;
+  border-radius: 9px;
+  opacity: 1;
+  left: 0;
+  transform: rotate(0deg);
+  transition: .25s ease-in-out;
+}
+
+.burger span:nth-of-type(1) {
+  top: 0px;
+  transform-origin: left center;
+}
+
+.burger span:nth-of-type(2) {
+  top: 50%;
+  transform: translateY(-50%);
+  transform-origin: left center;
+}
+
+.burger span:nth-of-type(3) {
+  top: 100%;
+  transform-origin: left center;
+  transform: translateY(-100%);
+}
+
+.burger input:checked ~ span:nth-of-type(1) {
+  transform: rotate(45deg);
+  top: 0px;
+  left: 5px;
+}
+
+.burger input:checked ~ span:nth-of-type(2) {
+  width: 0%;
+  opacity: 0;
+}
+
+.burger input:checked ~ span:nth-of-type(3) {
+  transform: rotate(-45deg);
+  top: 28px;
+  left: 5px;
+}
+
 
 li {
   list-style-type: none;
@@ -174,9 +235,6 @@ button {
 }
 
 /*ESTILOS DO SOBRE*/
-
-/*ESTILOS Da animação scrollin*/
-
 
 span{
   color: hsl(37, 56%, 49%) ;
@@ -359,11 +417,112 @@ aside > h1 {
   color: hsl(37, 56%, 49%);
 }
 
+/*Estilos de animações scrolling*/
 
-/*ESTILOS DA PAGINA DO INSTA*/
+.hidden{
+  opacity: 0;
+  filter: blur(15px);
+  transition: all 1.5s;
+  transform: translateX(-100%);
+}
 
-#portifolio{
-  padding-top: 80px ;
+.show {
+  opacity:1;
+  transition: all 1.5s;
+  transform: translateX(0);
+  filter: blur(0); 
+
+}
+
+.foto-direita {
+  transition-delay: 200ms;
+}
+
+#options :nth-child(2) {
+  transition-delay: 300ms;
+}
+
+#options :nth-child(3) {
+
+  transition-delay: 500ms;
+}
+
+#options :nth-child(4){
+  transition-delay: 700ms;
+}
+
+/*Estilos da janela modal*/
+
+button {
+  padding: 0.6rem 1.2rem;
+  background-color: #888;
+  color: #fff;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  opacity: 0.9;
+  font-size: 1rem;
+}
+
+#open-modal {
+  background-color: #007bff;
+}
+
+button:hover {
+  opacity: 1;
+}
+
+#fade {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: 5;
+}
+
+#modal {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 500px;
+  max-width: 90%;
+  background-color: #fff;
+  padding: 1.2rem;
+  border-radius: 0.5rem;
+  z-index: 10;
+}
+
+#fade,
+#modal {
+  transition: 0.5s;
+  opacity: 1;
+  pointer-events: all;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #ccc;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+}
+
+.modal-body p {
+  margin-bottom: 1rem;
+}
+
+#modal.hide,
+#fade.hide {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#modal.hide {
+  top: 0;
 }
 
 /*ESTILOS DO FOOTER*/
@@ -419,4 +578,213 @@ footer .botton {
 footer .botton .links a{
   font-size: 12px;
   margin-left: 14px;
+}
+
+@media screen and (max-width: 1200px) {
+    
+  .main .left h5{
+      font-size: 18px;
+  }
+
+  .main .left h3{
+      font-size: 36px;
+  }
+
+  .main .left p{
+      font-size: 18px;
+  }
+
+  .main .right img{
+      width: 380px;
+  }
+
+  .skills .skill-items{
+      gap: 10px;
+      justify-content: space-between;
+      flex-wrap: wrap;
+  }
+
+  .skills .skill-items .item{
+      width: 49%;
+  }
+
+  .about .left img{
+      width: 370px;
+  }
+
+  .skills h3,
+  .about .right h3,
+  .portfolio .header h3,
+  .feedback h3{
+      font-size: 32px;
+  }
+
+  .about .right p{
+      font-size: 15px;
+  }
+
+  .feedback .customers .item .rating{
+      font-size: 20px;
+  }
+
+  .feedback .customers .item p{
+      font-size: 13px;
+  }
+
+  footer .top ul{
+      gap: 20px;
+  }
+
+}
+
+@media screen and (max-width: 992px) {
+  
+  nav button{
+      display: none;
+  }
+
+  nav ul{
+      gap: 20px;
+  }
+
+  nav ul li a{
+      font-size: 15px;
+  }
+
+  .main{
+      flex-direction: column;
+  }
+
+  .about{
+      flex-direction: column;
+      justify-content: center;
+  }
+
+  .portfolio .portfo-items{
+      gap: 22px;
+      flex-wrap: wrap;
+      justify-content: center;
+  }
+
+  .portfolio .portfo-items .item{
+      width: 48%;
+  }
+
+  .feedback .customers{
+      gap: 14px;
+      flex-wrap: wrap;
+      justify-content: center;
+  }
+
+  .feedback .customers .item{
+      width: 48%;
+  }
+
+  footer .top ul{
+      display: none;
+  }
+
+}
+
+@media screen and (max-width: 768px) {
+  
+  nav{
+      justify-content: space-between;
+      padding: 0 42px;
+  }
+
+  nav ul{
+      display: none;
+  }
+
+  nav.open .logo{
+      display: none;
+  }
+
+  nav.open ul{
+      display: flex;
+  }
+
+  nav button#menuButton{
+      display: flex;
+  }
+
+  .main{
+      padding: 42px;
+  }
+
+  .skills{
+      padding: 85px 42px 0;
+  }
+
+  .skills .skill-items{
+      gap: 8px;
+  }
+
+  .about{
+      padding: 85px 42px;
+  }
+
+  .portfolio{
+      padding: 60px 42px;
+  }
+
+  .portfolio .portfo-items{
+      gap: 18px;
+  }
+
+  .feedback{
+      padding: 85px 42px;
+  }
+
+  footer{
+      padding: 85px 42px;
+  }
+
+  footer .bottom .top{
+      flex-direction: column;
+      gap: 14px;
+  }
+
+}
+
+@media screen and (max-width: 576px) {
+  
+  nav ul li a{
+      font-size: 13px;
+  }
+
+  nav .logo a{
+      font-size: 18px;
+  }
+
+  .main .left h3{
+      font-size: 32px;
+  }
+
+  .main .left p{
+      font-size: 16px;
+  }
+
+  .main .left button{
+      width: 100%;
+  }
+
+  .skills .skill-items .item{
+      width: 100%;
+  }
+
+  .portfolio .header button{
+      font-size: 12px;
+      padding: 8px 14px;
+  }
+
+  .portfolio .portfo-items .item{
+      width: 80%;
+  }
+
+  .feedback .customers .item{
+      width: 100%;
+  }
+
 }

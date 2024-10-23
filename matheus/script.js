@@ -4,7 +4,7 @@ let slideIndex = 0;
 const slides = document.querySelectorAll('.slide');
 const nextButton = document.querySelector('[data-change-slide-button="next"]');
 const prevButton = document.querySelector('[data-change-slide-button="previous"]');
-let slideInterval = setInterval(showNextSlide, 5000); // Altera o slide a cada 3 segundos
+let slideInterval = setInterval(showNextSlide, 5000); // Altera o slide a cada 5 segundos
 
 function showNextSlide() {
     slides[slideIndex].removeAttribute('data-active'); // Remove a classe "ativa" do slide atual
@@ -21,7 +21,7 @@ function showPreviousSlide() {
 // Função para pausar o slide automático ao clicar nos botões de próximo/anterior
 function pauseSlideshow() {
     clearInterval(slideInterval);
-    slideInterval = setInterval(showNextSlide, 6000); // Retoma o slideshow após a pausa
+    slideInterval = setInterval(showNextSlide, 5000); // Retoma o slideshow após a pausa
 }
 
 // Adiciona eventos de clique aos botões para controle manual
@@ -55,3 +55,7 @@ const myObserver = new IntersectionObserver((entries) => {
 const elements = document.querySelectorAll('.hidden')
 
 elements.forEach((element) => myObserver.observe(element))
+
+//janela modal
+
+
