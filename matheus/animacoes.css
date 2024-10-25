@@ -1,1 +1,188 @@
+@charset 'UTF-8';
 
+/* Media Query para Tablets - Máx: 768px */
+@media screen and (max-width: 900px) {
+    nav button{
+        display: block;
+    }
+
+    nav ul{
+        gap: 20px;
+    }
+
+    nav ul li a{
+        font-size: 15px;
+    }
+
+
+    .main {
+        flex-direction: column;
+        padding: 20px;
+    }
+
+    .ensaios {
+        padding-top: 60px;
+    }
+
+    .fotos{
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 90%;
+    }
+
+    .foto-direita, .foto-esquerda{
+        padding: 35px 35px  10px 35px;
+        width: 90%;
+    }
+
+    #sobre {
+       
+        flex-direction: column;
+        margin: auto;
+        padding: auto;
+    }
+
+    section#sobre.hidden.show p{
+        width: 90%;
+        display: flex;
+        padding: 10px;
+        margin: auto;
+
+    }
+
+    aside {
+        margin: auto;
+        padding: 10px;
+        flex-direction: column;
+    }
+
+
+    #options{
+        display: flex;
+        flex-direction: column;
+        width: 75%;
+        height: auto;
+        z-index: 10;
+    }
+
+    .backgroud-links {
+        width: 100%;
+    }
+
+    .backgroud-links >  img{
+        position: absolute ;
+        right:0
+    }
+
+    .links {
+        width: 100%;
+        height: auto;
+    }
+
+    .button-link {
+        font-size: 1.1rem;
+    }
+
+
+    #insta {
+        position: relative;
+        padding: 30px 20px;
+    }
+
+    .portfolio .portfo-items {
+        margin-top: 5000px;
+        gap: 15px;
+    }
+    footer {
+        display: flex;
+        flex-direction: column;
+        padding: 40px 20px;
+    }
+
+    footer .top {
+        display: flex;
+        flex-direction: column;
+    }
+
+    footer .top img{
+        width: 100px;
+        height: 100px;
+        margin-top: 10px;
+    }
+
+    footer .top a {
+        display: none;
+    }
+
+
+}
+
+/* Media Query para Celulares - Máx: 576px */
+@media screen and (max-width: 1024px ) {
+
+    
+    nav{
+        justify-content: space-between;
+        padding: 0 42px;
+    }
+
+    nav button{
+        display: none;
+    }
+
+    nav ul{
+        display: none;
+    }
+
+    nav.open .logo{
+        display: none;
+    }
+
+    nav.open ul{
+        display: flex;
+    }
+
+    nav button#menuButton{
+        display: flex;
+    }
+
+    .main .left h3 {
+        font-size: 1.8rem;
+    }
+
+    .main .left p {
+        font-size: 16px;
+    }
+
+    .ensaios {
+        padding-top: 30px;
+    }
+
+    .skills .skill-items .item {
+        width: 100%;
+        font-size: 14px;
+    }
+
+    .portfolio .portfo-items .item {
+        width: 100%;
+        font-size: 14px;
+    }
+
+    .feedback .customers .item {
+        width: 100%;
+    }
+
+    footer {
+        padding: 30px 15px;
+    }
+
+    footer .botton p {
+        font-size: 10px;
+    }
+
+    .modal img {
+        max-width: 90%;
+        max-height: 90%;
+    }
+}

@@ -56,6 +56,12 @@ const elements = document.querySelectorAll('.hidden')
 
 elements.forEach((element) => myObserver.observe(element))
 
-//janela modal
 
+// Função para mudar o slide
+function changeSlide(n) {
+    currentSlide = (currentSlide + n + currentImages.length) % currentImages.length;
+    showSlide(currentSlide);
+}
+
+// Adicionando eventos aos botões de categoria
 

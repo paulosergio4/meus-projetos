@@ -1,3 +1,4 @@
+@charset 'UTF-8';
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap');
 
 * {
@@ -101,68 +102,6 @@ nav button#menuButton {
   padding: 7px;
 }
 
-/* From Uiverse.io by Cevorob */ 
-.burger {
-  position: relative;
-  width: 40px;
-  height: 30px;
-  background: transparent;
-  cursor: pointer;
-  display: block;
-}
-
-.burger input {
-  display: none;
-}
-
-.burger span {
-  display: block;
-  position: absolute;
-  height: 4px;
-  width: 100%;
-  background: black;
-  border-radius: 9px;
-  opacity: 1;
-  left: 0;
-  transform: rotate(0deg);
-  transition: .25s ease-in-out;
-}
-
-.burger span:nth-of-type(1) {
-  top: 0px;
-  transform-origin: left center;
-}
-
-.burger span:nth-of-type(2) {
-  top: 50%;
-  transform: translateY(-50%);
-  transform-origin: left center;
-}
-
-.burger span:nth-of-type(3) {
-  top: 100%;
-  transform-origin: left center;
-  transform: translateY(-100%);
-}
-
-.burger input:checked ~ span:nth-of-type(1) {
-  transform: rotate(45deg);
-  top: 0px;
-  left: 5px;
-}
-
-.burger input:checked ~ span:nth-of-type(2) {
-  width: 0%;
-  opacity: 0;
-}
-
-.burger input:checked ~ span:nth-of-type(3) {
-  transform: rotate(-45deg);
-  top: 28px;
-  left: 5px;
-}
-
-
 li {
   list-style-type: none;
 }
@@ -170,8 +109,6 @@ li {
 button {
   cursor: pointer;
 }
-
-
 
 .slideshow-container {
   position: relative;
@@ -253,11 +190,6 @@ section img {
   font-size: 1.5em;
 }
 
-i {
-  font-size: 1.55em;
-  padding: 10px 10px 10px 100px;
-}
-
 .foto-direita{
   padding:220px 20px 50px 20px ;
 }
@@ -320,8 +252,7 @@ aside > h1 {
 .ensaios{
   display: flex;
   flex-direction: column;
-  align-items: center;  
-  height: 100vh;
+  align-items: center;
   padding-top: 100px;
 
 }
@@ -453,78 +384,58 @@ aside > h1 {
 
 /*Estilos da janela modal*/
 
-button {
-  padding: 0.6rem 1.2rem;
-  background-color: #888;
-  color: #fff;
-  border: none;
-  border-radius: 0.25rem;
-  cursor: pointer;
-  opacity: 0.9;
-  font-size: 1rem;
-}
-
-#open-modal {
-  background-color: #007bff;
-}
-
-button:hover {
-  opacity: 1;
-}
-
-#fade {
+/* Estilos para o modal e slides */
+.modal {
+  display: none;
   position: fixed;
-  top: 0;
-  left: 0;
+  z-index: 1;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.6);
-  z-index: 5;
-}
-
-#modal {
-  position: fixed;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 500px;
-  max-width: 90%;
-  background-color: #fff;
-  padding: 1.2rem;
-  border-radius: 0.5rem;
-  z-index: 10;
-}
-
-#fade,
-#modal {
-  transition: 0.5s;
-  opacity: 1;
-  pointer-events: all;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #ccc;
-  margin-bottom: 1rem;
-  padding-bottom: 1rem;
-}
-
-.modal-body p {
-  margin-bottom: 1rem;
-}
-
-#modal.hide,
-#fade.hide {
-  opacity: 0;
-  pointer-events: none;
-}
-
-#modal.hide {
   top: 0;
+  left: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  overflow: hidden;
 }
 
+.modal-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.close {
+  position: absolute;
+  top: 20px;
+  right: 35px;
+  font-size: 40px;
+  color: white;
+  cursor: pointer;
+}
+
+.modal img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+}
+
+.prev, .next {
+  cursor: pointer;
+  position: absolute;
+  top: 50%;
+  font-size: 40px;
+  color: white;
+  transform: translateY(-50%);
+}
+
+.prev {
+  left: 10px;
+}
+
+.next {
+  right: 10px;
+}
 /*ESTILOS DO FOOTER*/
 
 footer{
@@ -706,7 +617,7 @@ footer .botton .links a{
   }
 
   nav button#menuButton{
-      display: flex;
+      display: none;
   }
 
   .main{

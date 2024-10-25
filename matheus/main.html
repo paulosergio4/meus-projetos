@@ -31,23 +31,19 @@
                 </ul>
                 <a href="https://api.whatsapp.com/send?phone=553784038171&text=Oi%20Matheus%21%0AGostaria%20de%20um%20or%C3%A7amento%20para%20um%20ensaio%20fotogr%C3%A1fico.%20Podemos%20conversar%20sobre%20isso%3F%0AObrigado(a)%20"
                     target="_blank"><button>Contato</button></a>
-                <button id="menuButton" onclick="openMenu()">
-                    <label class="burger" for="burger">
-                        <input type="checkbox" id="burger">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                    </label>
-                </button>
+                    <button id="menuButton" onclick="openMenu()">
+                        <i class='bx bx-menu-alt-right'></i>
+                    </button>
+            
             </nav>
         </section>
         <section class="slideshow-container  ">
             <ul class="slides">
                 <li class="slide fade" data-active><img src="fotos/ft1.jpg" alt="foto sensual"></li>
                 <li class="slide fade"><img src="fotos/ft2.jpg" alt="foto sensual"></li>
-                <li class="slide fade"><img src="fotos/gestante/ft3.jpg" alt="foto de gestante"></li>
-                <li class="slide fade"><img src="fotos/casal/ft4.jpg" alt="foto de casal"></li>
-                <li class="slide fade"><img src="fotos/casal/ft5.jpg" alt="foto de casal"></li>
+                <li class="slide fade"><img src="fotos/gestante/ft3.webp" alt="foto de gestante"></li>
+                <li class="slide fade"><img src="fotos/casal/ft4.webp" alt="foto de casal"></li>
+                <li class="slide fade"><img src="fotos/casal/ft5.webp" alt="foto de casal"></li>
                 <li class="slide fade"><img src="fotos/ft6.jpg" alt="foto sensual"></li>
                 <li class="slide fade"><img src="fotos/ft7.jpg" alt="foto individual"></li>
             </ul>
@@ -86,7 +82,7 @@
                 </p>
             </aside>
         </section>
-        <section class="ensaios" >
+        <section class="ensaios">
 
             <div id="title">
                 <div class="separator"></div>
@@ -99,30 +95,38 @@
                     para conferir!</p>
                 <div id="options">
                     <div class="links hidden">
-                        <img class="backgroud-links " src="fotos/empresarial/ft11.jpg" alt="foto">
+                        <img class="backgroud-links " src="fotos/empresarial/ft11.webp" alt="foto">
                         <div class="links-text">
                             <button class="button-link" id="open-empresarial">Empresarial</button>
                         </div>
                     </div>
                     <div class="links hidden">
-                        <img class="backgroud-links" src="fotos/gestante/ft15.jpg" alt="foto de gestante">
+                        <img class="backgroud-links" src="fotos/gestante/ft15.webp" alt="foto de gestante">
                         <div class="links-text">
                             <button class="button-link" id="open-gestante">Gestante</button>
-                            
+
                         </div>
                     </div>
                     <div class="links hidden">
-                        <img class="backgroud-links" src="fotos/familia/ft14.jpg" alt="foto de familia">
+                        <img class="backgroud-links" src="fotos/feminino/fem5.webp" alt="foto feminina">
                         <div class="links-text">
-                            <button class="button-link" id="open-familia">Familia</button>
+                            <button class="button-link" id="open-feminino">Feminino</button>
                         </div>
                     </div>
                     <div class="links hidden">
-                        <img class="backgroud-links" src="fotos/casal/ft4.jpg" alt="foto de casal">
+                        <img class="backgroud-links" src="fotos/casal/ft4.webp" alt="foto de casal">
                         <div class="links-text">
                             <button class="button-link" id="open-casal">Casal</button>
                         </div>
                     </div>
+                </div>
+                <div id="photoModal" class="modal">
+                    <span class="close" onclick="closeModal()">&times;</span>
+                    <div class="modal-content" id="modalContent">
+                        <!-- As imagens para os slides serão inseridas dinamicamente aqui -->
+                    </div>
+                    <a class="prev" onclick="changeSlide(-1)">&#10094;</a>
+                    <a class="next" onclick="changeSlide(1)">&#10095;</a>
                 </div>
             </div>
         </section>
@@ -155,11 +159,12 @@
                     <a href="https://https://www.instagram.com/marcosmatheusfotografias/?igsh=MTB6ZG91c3Z4NnR3YQ%3D%3D"
                         target="_blank"><i class='bx bxl-instagram'></i></a>
                 </div>
+                <iframe
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3767.112295833828!2d-44.99558242517219!3d-19.233937117010772!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xa7878eb6fda877%3A0x9946ab56dd6d4775!2sR.%20Cap.%20M%C3%A1rcio%20Roberto%20Meneses%20-%20Pomp%C3%A9u%2C%20MG%2C%2035640-000!5e0!3m2!1spt-BR!2sbr!4v1729206109873!5m2!1spt-BR!2sbr"
+                    width="500" height="200" style="border:0;" allowfullscreen="" loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade"></iframe>
             </div>
-            <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3767.112295833828!2d-44.99558242517219!3d-19.233937117010772!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xa7878eb6fda877%3A0x9946ab56dd6d4775!2sR.%20Cap.%20M%C3%A1rcio%20Roberto%20Meneses%20-%20Pomp%C3%A9u%2C%20MG%2C%2035640-000!5e0!3m2!1spt-BR!2sbr!4v1729206109873!5m2!1spt-BR!2sbr"
-                width="500" height="200" style="border:0;" allowfullscreen="" loading="lazy"
-                referrerpolicy="no-referrer-when-downgrade"></iframe>
+
 
         </div>
     </footer>
