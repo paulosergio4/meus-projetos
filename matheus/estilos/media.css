@@ -115,7 +115,7 @@
     }
 
     .foto-direita {
-        transition-delay: 1ms;
+        transition-delay: 1s;
     }
 
     #options :nth-child(2) {
@@ -128,7 +128,7 @@
     }
 
     #options :nth-child(4) {
-        transition-delay: 3ms;
+        transition-delay: 300ms;
     }
 
     footer {
