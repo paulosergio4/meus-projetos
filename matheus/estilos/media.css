@@ -1,7 +1,7 @@
 @charset 'UTF-8';
 
 /* Media Query para Tablets - Máx: 768px */
-@media screen and (max-width: 900px) {
+@media screen and (max-width: 350px) {
     nav button{
         display: block;
     }
