@@ -94,10 +94,13 @@
     }
 
     .portfolio .portfo-items {
-        margin-top: 5000px;
         gap: 15px;
     }
 
+    .portfolio > p{
+        display: flex;
+        width: 100%;
+    }
 
     .hidden {
         opacity: 0;
