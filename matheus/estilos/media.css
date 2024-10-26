@@ -65,6 +65,10 @@
         height: auto;
     }
 
+    .modal{
+        z-index: 10;
+    }
+
     .backgroud-links {
         width: 100%;
     }
