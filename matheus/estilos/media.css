@@ -152,6 +152,10 @@
         display: none;
     }
 
+    footer > iframe {
+        width: 100%;
+    }
+
 
 }
 
