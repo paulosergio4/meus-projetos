@@ -1,16 +1,16 @@
 @charset 'UTF-8';
 
 /* Media Query para Tablets - Máx: 768px */
-@media screen and (max-width: 350px) {
-    nav button{
+@media screen and (max-width: 900px) {
+    nav button {
         display: block;
     }
 
-    nav ul{
+    nav ul {
         gap: 20px;
     }
 
-    nav ul li a{
+    nav ul li a {
         font-size: 15px;
     }
 
@@ -23,26 +23,27 @@
         padding-top: 60px;
     }
 
-    .fotos{
+    .fotos {
         display: flex;
         flex-direction: column;
         align-items: center;
         width: 90%;
     }
 
-    .foto-direita, .foto-esquerda{
-        padding: 35px 35px  10px 35px;
+    .foto-direita,
+    .foto-esquerda {
+        padding: 35px 35px 10px 35px;
         width: 90%;
     }
 
     #sobre {
-       
+
         flex-direction: column;
         margin: auto;
         padding: auto;
     }
 
-    section#sobre.hidden.show p{
+    section#sobre.hidden.show p {
         width: 90%;
         display: flex;
         padding: 10px;
@@ -57,7 +58,7 @@
     }
 
 
-    #options{
+    #options {
         display: flex;
         flex-direction: column;
         width: 75%;
@@ -69,9 +70,9 @@
         width: 100%;
     }
 
-    .backgroud-links >  img{
-        position: absolute ;
-        right:0
+    .backgroud-links>img {
+        position: absolute;
+        right: 0
     }
 
     .links {
@@ -93,6 +94,7 @@
         margin-top: 5000px;
         gap: 15px;
     }
+
     footer {
         display: flex;
         flex-direction: column;
@@ -104,7 +106,7 @@
         flex-direction: column;
     }
 
-    footer .top img{
+    footer .top img {
         width: 100px;
         height: 100px;
         margin-top: 10px;
@@ -118,31 +120,31 @@
 }
 
 /* Media Query para Celulares - Máx: 576px */
-@media screen and (max-width: 1024px ) {
+@media screen and (max-width: 1024px) {
 
-    
-    nav{
+
+    nav {
         justify-content: space-between;
         padding: 0 42px;
     }
 
-    nav button{
+    nav button {
         display: none;
     }
 
-    nav ul{
+    nav ul {
         display: none;
     }
 
-    nav.open .logo{
+    nav.open .logo {
         display: none;
     }
 
-    nav.open ul{
+    nav.open ul {
         display: flex;
     }
 
-    nav button#menuButton{
+    nav button#menuButton {
         display: flex;
     }
 
