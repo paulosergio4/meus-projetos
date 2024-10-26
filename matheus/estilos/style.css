@@ -7,7 +7,7 @@
   box-sizing: border-box;
 }
 
-body{
+body {
   background-color: #000000;
   font-family: 'Noto Sans', sans-serif;
   color: white;
@@ -28,7 +28,7 @@ a {
 }
 
 a:hover {
-  color: hsl(37, 56%, 49%)  !important;
+  color: hsl(37, 56%, 49%) !important;
 }
 
 h5 {
@@ -42,7 +42,7 @@ li {
 
 nav {
   background-color: transparent;
-  position: absolute; 
+  position: absolute;
   top: 0;
   left: 0;
   width: 100%;
@@ -51,11 +51,11 @@ nav {
   align-items: center;
   justify-content: space-between;
   height: 75px;
-  z-index: 10; 
+  z-index: 10;
 
 }
 
-nav .logo{
+nav .logo {
   display: flex;
   align-items: center;
 }
@@ -66,7 +66,7 @@ nav .logo a {
   font-size: 20px;
 }
 
-nav .logo img{
+nav .logo img {
   width: 70px;
   height: 70px;
 }
@@ -173,8 +173,8 @@ button {
 
 /*ESTILOS DO SOBRE*/
 
-span{
-  color: hsl(37, 56%, 49%) ;
+span {
+  color: hsl(37, 56%, 49%);
 }
 
 section img {
@@ -182,42 +182,44 @@ section img {
   padding: -10px 0 0 20px;
 }
 
-.fotos{
+.fotos {
   display: flex;
   gap: 20px;
 }
-#sobre > .fotos > .foto-esquerda > a {
+
+#sobre>.fotos>.foto-esquerda>a {
   font-size: 1.5em;
 }
 
-.foto-direita{
-  padding:220px 20px 50px 20px ;
+.foto-direita {
+  padding: 220px 20px 50px 20px;
 }
 
-.foto-esquerda{
+.foto-esquerda {
   padding-top: 120px;
 }
 
-.foto-direita:hover, .foto-esquerda:hover {
-  transform: translateY(-5px) ;
+.foto-direita:hover,
+.foto-esquerda:hover {
+  transform: translateY(-5px);
   transition: linear 0.3s;
   opacity: 0.7;
-  
-  
+
+
 }
 
-div .foto-direita h1{
+div .foto-direita h1 {
   font-size: 1.5em;
 }
 
 #sobre {
-  
+
   display: flex;
   align-items: center;
   gap: 60px;
 }
 
-.separator{
+.separator {
   width: 50px;
   height: 2px;
   background-color: hsl(37, 56%, 49%);
@@ -225,31 +227,31 @@ div .foto-direita h1{
 
 }
 
-#separator1{
+#separator1 {
   display: flex;
   align-items: center;
- 
+
 }
 
 aside {
- padding: 0px 10px 0 0;
- margin-right: 100px;
+  padding: 0px 10px 0 0;
+  margin-right: 100px;
 
 }
 
-aside > p {
+aside>p {
   padding: 10px 120px 0 0;
   text-indent: 2px;
   text-align: justify;
 }
 
-aside > h1 {
-  padding: 30px 50px ;
+aside>h1 {
+  padding: 30px 50px;
 }
 
 /*ESTILOS DO ENSAIOS*/
 
-.ensaios{
+.ensaios {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -257,7 +259,7 @@ aside > h1 {
 
 }
 
-#title > h3 {
+#title>h3 {
   padding-right: 10px;
 }
 
@@ -269,7 +271,7 @@ aside > h1 {
   padding-top: 20px;
 }
 
-.portifolio{
+.portifolio {
   display: flex;
   flex-direction: column;
   justify-items: center;
@@ -277,13 +279,13 @@ aside > h1 {
   align-items: center;
 }
 
-.portifolio > h1 {
+.portifolio>h1 {
   padding: 30px;
   font-size: 3em;
 }
 
-.portifolio > p{
-  padding: 60px 90px 60px  90px;
+.portifolio>p {
+  padding: 30px;
   font-size: 1em;
 }
 
@@ -302,30 +304,30 @@ aside > h1 {
 }
 
 .links-text {
-  background: linear-gradient( to top, #0b0b0b , #0b0b0b00);
-  width: 100%;         
-  height: 100%; 
+  background: linear-gradient(to top, #0b0b0b, #0b0b0b00);
+  width: 100%;
+  height: 100%;
   position: relative;
 }
 
-.links-text > a > p {
-  padding: 210px 10px  0 20px;
-  height: 100%; 
+.links-text>a>p {
+  padding: 210px 10px 0 20px;
+  height: 100%;
   font-size: 1.2em;
 }
 
-.backgroud-links{
+.backgroud-links {
   width: 285px;
-  height: 250px;       
-  object-fit: cover;    
+  height: 250px;
+  object-fit: cover;
   object-position: center;
-  position: absolute; 
-  transition: transform 0.3s ease-in-out; 
+  position: absolute;
+  transition: transform 0.3s ease-in-out;
 }
 
-.links:hover{
+.links:hover {
   opacity: 0.1;
-  transform: translateY(-5px)  ;
+  transform: translateY(-5px);
   transition: linear 0.3s;
   opacity: 0.7;
 }
@@ -350,7 +352,7 @@ aside > h1 {
 
 /*Estilos de animações scrolling*/
 
-.hidden{
+.hidden {
   opacity: 0;
   filter: blur(15px);
   transition: all 1.5s;
@@ -358,10 +360,10 @@ aside > h1 {
 }
 
 .show {
-  opacity:1;
+  opacity: 1;
   transition: all 1.5s;
   transform: translateX(0);
-  filter: blur(0); 
+  filter: blur(0);
 
 }
 
@@ -378,7 +380,7 @@ aside > h1 {
   transition-delay: 500ms;
 }
 
-#options :nth-child(4){
+#options :nth-child(4) {
   transition-delay: 700ms;
 }
 
@@ -420,7 +422,8 @@ aside > h1 {
   height: auto;
 }
 
-.prev, .next {
+.prev,
+.next {
   cursor: pointer;
   position: absolute;
   top: 50%;
@@ -436,9 +439,10 @@ aside > h1 {
 .next {
   right: 10px;
 }
+
 /*ESTILOS DO FOOTER*/
 
-footer{
+footer {
   background-color: #000000;
   padding: 35px;
   display: flex;
@@ -463,21 +467,21 @@ footer .top ul {
   gap: 40px;
 }
 
-footer .top{
+footer .top {
   display: flex;
   align-items: center;
   justify-content: space-between;
   width: 100%;
 }
 
-footer .separator{
+footer .separator {
   width: 100%;
   height: 1px;
   background-color: hsl(37, 56%, 49%);
   margin: 30px 0 20px;
 }
 
-footer .botton p{
+footer .botton p {
   font-size: 12px;
 }
 
@@ -486,7 +490,7 @@ footer .botton {
 
 }
 
-footer .botton .links a{
+footer .botton .links a {
   font-size: 12px;
   margin-left: 14px;
 }
