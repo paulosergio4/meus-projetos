@@ -15,7 +15,8 @@ body {
 
 h1 {
   color: white;
-  font-size: 2.5em;
+  font-size: 3.5em;
+  padding: 10px;
 }
 
 /*ESTILOS DO HEADER*/
@@ -279,7 +280,7 @@ aside>h1 {
   align-items: center;
 }
 
-.portifolio>h1 {
+.portifolio>h2 {
   padding: 30px;
   font-size: 3em;
 }

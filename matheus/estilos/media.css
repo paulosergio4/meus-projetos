@@ -2,6 +2,16 @@
 
 /* Media Query para Tablets - Máx: 768px */
 @media screen and (max-width: 900px) {
+
+    h1 {
+        font-size: 1.5rem;
+        padding: 35px;
+    }
+
+    h2 {
+        font-size: 1rem;
+    }
+
     nav button {
         display: block;
     }
@@ -32,8 +42,9 @@
 
     .foto-direita,
     .foto-esquerda {
-        padding: 35px 35px 10px 35px;
+        padding: 35px 35px 10px 0px;
         width: 90%;
+        background-size: contain;
     }
 
     #sobre {
@@ -104,6 +115,16 @@
         font-size: 1em;
     }
 
+    .portifolio>h2 {
+        padding: 30px;
+        font-size: 1.2em;
+    }
+
+    .portifolio {
+        padding: 10px;
+        font-size: 1.2em;
+    }
+
     .hidden {
         opacity: 0;
         filter: blur(15px);
@@ -157,7 +178,7 @@
         display: none;
     }
 
-    iframe{
+    iframe {
         display: flex;
         width: min-content;
     }
@@ -174,7 +195,7 @@
         padding: 5px;
     }
 
-    nav  .logo a {
+    nav .logo a {
         font-size: 1.1rem;
     }
 
@@ -217,6 +238,9 @@
         padding: 5px;
         font-size: 1em;
     }
+
+
+
 
     footer {
         padding: 30px 15px;
