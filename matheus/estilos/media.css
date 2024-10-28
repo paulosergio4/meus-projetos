@@ -112,12 +112,12 @@
         display: flex;
         width: 100%;
         padding: 5px;
-        font-size: 1em;
+        font-size: 1rem;
     }
 
     h2 {
         padding: 30px;
-        font-size: 1.8em;
+        font-size: 1.8rem;
     }
 
     .portifolio {
