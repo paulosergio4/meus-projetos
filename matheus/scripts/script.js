@@ -64,4 +64,3 @@ function changeSlide(n) {
 }
 
 // Adicionando eventos aos botões de categoria
-
