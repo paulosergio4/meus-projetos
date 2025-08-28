@@ -134,7 +134,7 @@
 
     .show {
         opacity: 1;
-        transition: all 1s;
+        transition: all 0.5s;
         transform: translateX(0);
         filter: blur(0);
 
