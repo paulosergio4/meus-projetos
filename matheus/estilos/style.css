@@ -8,49 +8,34 @@
 }
 
 body {
-  background-color: #000000;
+  background: #000;
   font-family: 'Noto Sans', sans-serif;
-  color: white;
+  color: #fff;
 }
 
-h1 {
-  color: white;
-  font-size: 3.5rem;
-  padding: 10px;
+h1, h2 {
+  color: #fff;
+  padding: 10px 0 10px 10px;
 }
 
-h2 {
-  padding: 30px;
-  font-size: 2.5rem;
-}
-
-/*ESTILOS DO HEADER*/
+h1 { font-size: 3.5rem; }
+h2 { font-size: 2.5rem; padding: 30px 0; }
 
 a {
-  font-family: "Noto Sans", sans-serif;
+  font-family: inherit;
   text-decoration: none;
-  color: white;
-  transition: color 0.3s ease;
+  color: #fff;
+  transition: color 0.3s;
 }
+a:hover { color: hsl(37, 56%, 49%) !important; }
 
-a:hover {
-  color: hsl(37, 56%, 49%) !important;
-}
-
-h5 {
-  font-size: 20px;
-}
-
-li {
-  list-style: none;
-
-}
+h5 { font-size: 20px; }
+li { list-style: none; }
 
 nav {
-  background-color: transparent;
+  background: transparent;
   position: absolute;
-  top: 0;
-  left: 0;
+  top: 0; left: 0;
   width: 100%;
   padding: 0 85px;
   display: flex;
@@ -58,50 +43,39 @@ nav {
   justify-content: space-between;
   height: 75px;
   z-index: 10;
-
 }
-
 nav .logo {
   display: flex;
   align-items: center;
-
 }
-
 nav .logo a {
-  margin-left: 8px;
   margin-left: 40px;
   font-weight: bold;
   font-size: 1.7rem;
 }
-
-nav .logo img {
+nav .logo img,
+footer .logo img {
   width: 70px;
   height: 70px;
 }
-
-nav ul,
-footer .top ul {
+nav ul, footer .top ul {
   display: flex;
   gap: 40px;
 }
-
 nav button {
-  color: white;
-  background-color: transparent;
+  color: #fff;
+  background: transparent;
   padding: 12px 16px;
   border-radius: 5px;
-  border: 1px solid white;
+  border: 1px solid #fff;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s;
 }
-
 nav button:hover {
-  background-color: hsl(37, 56%, 49%);
+  background: hsl(37, 56%, 49%);
   border-color: #fdfdfd;
   color: #fff;
 }
-
-
 nav button#menuButton {
   display: none;
   align-items: center;
@@ -110,241 +84,140 @@ nav button#menuButton {
   padding: 7px;
 }
 
-li {
-  list-style-type: none;
-}
-
-button {
-  cursor: pointer;
-}
+button { cursor: pointer; }
 
 .slideshow-container {
   position: relative;
   height: 100vh;
   overflow: hidden;
 }
-
-.slides {
-  height: 100%;
-}
-
+.slides { height: 100%; }
 .slide {
-  width: 100%;
-  height: 100%;
-
+  width: 100%; height: 100%;
   display: none;
 }
-
-.slide[data-active] {
-  display: block;
-}
-
+.slide[data-active] { display: block; }
 .slide img {
-  width: 100%;
-  height: 100%;
+  width: 100%; height: 100%;
   object-fit: cover;
   object-position: center;
 }
-
-.previous-button,
-.next-button {
+.previous-button, .next-button {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-
-  width: 56px;
-  height: 56px;
-  font-size: 32px;
-  font-weight: bold;
-
+  width: 56px; height: 56px;
+  font-size: 32px; font-weight: bold;
   color: #fff;
-  background-color: transparent;
+  background: transparent;
   border: 0;
 }
-
 .previous-button {
   left: 0;
   border-top-right-radius: 6px;
   border-bottom-right-radius: 6px;
 }
-
 .next-button {
   right: 0;
   border-top-left-radius: 6px;
   border-bottom-left-radius: 6px;
 }
-
-.previous-button:hover,
-.next-button:hover {
-  background-color: rgba(0, 0, 0, 0.4);
+.previous-button:hover, .next-button:hover {
+  background: rgba(0,0,0,0.4);
 }
 
-/*ESTILOS DO SOBRE*/
-
-span {
-  color: hsl(37, 56%, 49%);
-}
-
-section img {
-  width: 330px;
-  padding: -10px 0 0 20px;
-}
-
-.fotos {
-  display: flex;
-  gap: 20px;
-}
-
-#sobre>.fotos>.foto-esquerda>a {
-  font-size: 1.5em;
-}
-
-.foto-direita {
-  padding: 220px 20px 50px 20px;
-}
-
-.foto-esquerda {
-  padding-top: 120px;
-}
-
-.foto-direita:hover,
-.foto-esquerda:hover {
+/* SOBRE */
+span { color: hsl(37, 56%, 49%); }
+section img { width: 330px; }
+.fotos { display: flex; gap: 20px; }
+#sobre>.fotos>.foto-esquerda>a { font-size: 1.5em; }
+.foto-direita { padding: 220px 20px 50px 20px; transition-delay: 200ms; }
+.foto-esquerda { padding-top: 120px; }
+.foto-direita:hover, .foto-esquerda:hover {
   transform: translateY(-5px);
   transition: linear 0.3s;
   opacity: 0.7;
-
-
 }
-
-div .foto-direita h1 {
-  font-size: 1.5em;
-}
-
+div .foto-direita h1 { font-size: 1.5em; }
 #sobre {
-
   display: flex;
   align-items: center;
   gap: 60px;
 }
-
-.separator {
-  width: 50px;
-  height: 2px;
-  background-color: hsl(37, 56%, 49%);
-  margin-right: 10px;
-
+.separator, footer .separator {
+  background: hsl(37, 56%, 49%);
 }
-
+.separator {
+  width: 50px; height: 2px; margin-right: 10px;
+}
 #separator1 {
   display: flex;
   align-items: center;
-
 }
-
-aside {
-  padding: 0px 10px 0 0;
-  margin-right: 100px;
-
-}
-
+aside { padding: 0 10px 0 0; margin-right: 100px; }
 aside>p {
   padding: 10px 120px 0 0;
   text-indent: 2px;
   text-align: justify;
 }
+aside>h1 { padding: 30px 50px; }
 
-aside>h1 {
-  padding: 30px 50px;
-}
-
-/*ESTILOS DO ENSAIOS*/
-
+/* ENSAIOS */
 .ensaios {
   display: flex;
   flex-direction: column;
   align-items: center;
   padding-top: 100px;
-
 }
-
-#title>h3 {
-  padding-right: 10px;
-}
-
 #title {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-bottom: 20px;
-  padding-top: 20px;
+  padding: 20px 0;
 }
-
+#title>h3 { padding-right: 10px; }
 .portifolio {
   display: flex;
   flex-direction: column;
-  justify-items: center;
-  padding-bottom: 80px;
   align-items: center;
+  padding-bottom: 80px;
 }
-
-.portifolio>h2 {
-  padding: 30px;
-  font-size: 3em;
-}
-
-.portifolio>p {
-  padding: 30px;
-  font-size: 1em;
-}
-
-
-
+.portifolio>h2 { padding: 30px; font-size: 3em; }
+.portifolio>p { padding: 30px; font-size: 1em; }
 #options {
   width: 100%;
   display: flex;
-
 }
-
 .links {
-  width: 285px;
-  height: 250px;
+  width: 285px; height: 250px;
   margin: 15px;
 }
-
 .links-text {
   background: linear-gradient(to top, #0b0b0b, #0b0b0b00);
-  width: 100%;
-  height: 100%;
+  width: 100%; height: 100%;
   position: relative;
 }
-
 .links-text>a>p {
   padding: 210px 10px 0 20px;
   height: 100%;
   font-size: 1.2em;
 }
-
 .backgroud-links {
-  width: 285px;
-  height: 250px;
+  width: 285px; height: 250px;
   object-fit: cover;
   object-position: center;
   position: absolute;
-  transition: transform 0.3s ease-in-out;
+  transition: transform 0.3s;
 }
-
 .links:hover {
-  opacity: 0.1;
   transform: translateY(-5px);
   transition: linear 0.3s;
   opacity: 0.7;
 }
-
-
 .button-link {
   margin-top: 213px;
   padding: 0.6rem 1.2rem;
-  background-color: transparent;
+  background: transparent;
   color: #fff;
   border: none;
   border-radius: 0.25rem;
@@ -352,152 +225,92 @@ aside>h1 {
   opacity: 0.9;
   font-size: 1.3rem;
 }
+.button-link:hover { color: hsl(37, 56%, 49%); }
 
-
-.button-link:hover {
-  color: hsl(37, 56%, 49%);
-}
-
-/*Estilos de animações scrolling*/
-
+/* Animações scrolling */
 .hidden {
   opacity: 0;
   filter: blur(15px);
   transition: all 1.5s;
   transform: translateX(-100%);
 }
-
 .show {
   opacity: 1;
   transition: all 1.5s;
   transform: translateX(0);
   filter: blur(0);
-
 }
+#options :nth-child(2) { transition-delay: 300ms; }
+#options :nth-child(3) { transition-delay: 500ms; }
+#options :nth-child(4) { transition-delay: 700ms; }
 
-.foto-direita {
-  transition-delay: 200ms;
-}
-
-#options :nth-child(2) {
-  transition-delay: 300ms;
-}
-
-#options :nth-child(3) {
-
-  transition-delay: 500ms;
-}
-
-#options :nth-child(4) {
-  transition-delay: 700ms;
-}
-
-/*Estilos da janela modal*/
-
-/* Estilos para o modal e slides */
+/* MODAL */
 .modal {
   display: none;
   position: fixed;
   z-index: 1;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-  background-color: rgba(0, 0, 0, 0.8);
+  width: 100%; height: 100%;
+  top: 0; left: 0;
+  background: rgba(0,0,0,0.8);
   overflow: hidden;
 }
-
 .modal-content {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100%;
 }
-
 .close {
   position: absolute;
-  top: 20px;
-  right: 35px;
+  top: 20px; right: 35px;
   font-size: 40px;
-  color: white;
+  color: #fff;
   cursor: pointer;
 }
-
 .modal img {
   max-width: 100%;
   max-height: 100%;
-  width: auto;
-  height: auto;
+  width: auto; height: auto;
 }
-
-.prev,
-.next {
+.prev, .next {
   cursor: pointer;
   position: absolute;
   top: 50%;
   font-size: 40px;
-  color: white;
+  color: #fff;
   transform: translateY(-50%);
 }
+.prev { left: 10px; }
+.next { right: 10px; }
 
-.prev {
-  left: 10px;
-}
-
-.next {
-  right: 10px;
-}
-
-/*ESTILOS DO FOOTER*/
-
+/* FOOTER */
 footer {
-  background-color: #000000;
+  background: #000;
   padding: 35px;
   display: flex;
   flex-direction: column;
   color: #fdfdfd;
 }
-
 footer .logo {
   display: flex;
   align-items: center;
 }
-
-footer .logo img {
-  width: 70px;
-  height: 70px;
-  margin: 50px;
-}
-
-footer .top ul {
-  justify-items: center;
-  display: flex;
-  gap: 40px;
-}
-
+footer .logo img { margin: 50px; }
 footer .top {
   display: flex;
   align-items: center;
   justify-content: space-between;
   width: 100%;
 }
-
+footer .top ul { gap: 40px; }
 footer .separator {
-  width: 100%;
-  height: 1px;
-  background-color: hsl(37, 56%, 49%);
+  width: 100%; height: 1px;
   margin: 30px 0 20px;
 }
-
-footer .botton p {
-  font-size: 12px;
-}
-
 footer .botton {
   display: flex;
-
 }
-
+footer .botton p { font-size: 12px; }
 footer .botton .links a {
   font-size: 12px;
   margin-left: 14px;
