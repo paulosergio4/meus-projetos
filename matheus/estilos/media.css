@@ -141,7 +141,7 @@
     }
 
     .foto-direita {
-        transition-delay: 1s;
+        transition-delay: 0.5s;
     }
 
     #options :nth-child(2) {
