@@ -131,7 +131,7 @@ span { color: hsl(37, 56%, 49%); }
 section img { width: 330px; }
 .fotos { display: flex; gap: 20px; }
 #sobre>.fotos>.foto-esquerda>a { font-size: 1.5em; }
-.foto-direita { padding: 220px 20px 50px 20px; transition-delay: 200ms; }
+.foto-direita { padding: 220px 20px 50px 20px; transition-delay: 100ms; }
 .foto-esquerda { padding-top: 120px; }
 .foto-direita:hover, .foto-esquerda:hover {
   transform: translateY(-5px);
