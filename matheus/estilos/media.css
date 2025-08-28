@@ -134,14 +134,14 @@
 
     .show {
         opacity: 1;
-        transition: all 0.5s;
+        transition: all 0.1s;
         transform: translateX(0);
         filter: blur(0);
 
     }
 
     .foto-direita {
-        transition-delay: 0.5s;
+        transition-delay: 0.1s;
     }
 
     #options :nth-child(2) {
