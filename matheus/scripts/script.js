@@ -1,46 +1,67 @@
+const changSlideButton = document.querySelectorAll('[data-change-slide-button]')
+
+let slideIndex = 0;
 const slides = document.querySelectorAll('.slide');
 const nextButton = document.querySelector('[data-change-slide-button="next"]');
 const prevButton = document.querySelector('[data-change-slide-button="previous"]');
-let slideIndex = 0;
-let slideInterval = setInterval(nextSlide, 5000);
+let slideInterval = setInterval(showNextSlide, 5000); // Altera o slide a cada 5 segundos
 
-function updateSlide(newIndex) {
-    slides[slideIndex].removeAttribute('data-active');
-    slideIndex = (newIndex + slides.length) % slides.length;
-    slides[slideIndex].setAttribute('data-active', true);
+function showNextSlide() {
+    slides[slideIndex].removeAttribute('data-active'); // Remove a classe "ativa" do slide atual
+    slideIndex = (slideIndex + 1) % slides.length; // Incrementa o índice do slide
+    slides[slideIndex].setAttribute('data-active', true); // Mostra o próximo slide
 }
 
-function nextSlide() {
-    updateSlide(slideIndex + 1);
+function showPreviousSlide() {
+    slides[slideIndex].removeAttribute('data-active'); // Remove a classe "ativa" do slide atual
+    slideIndex = (slideIndex - 1 + slides.length) % slides.length; // Decrementa o índice do slide
+    slides[slideIndex].setAttribute('data-active', true); // Mostra o slide anterior
 }
 
-function prevSlide() {
-    updateSlide(slideIndex - 1);
-}
-
-function resetSlideshow() {
+// Função para pausar o slide automático ao clicar nos botões de próximo/anterior
+function pauseSlideshow() {
     clearInterval(slideInterval);
-    slideInterval = setInterval(nextSlide, 5000);
+    slideInterval = setInterval(showNextSlide, 5000); // Retoma o slideshow após a pausa
 }
 
+// Adiciona eventos de clique aos botões para controle manual
 nextButton.addEventListener('click', () => {
-    nextSlide();
-    resetSlideshow();
+    showNextSlide();
+    pauseSlideshow();
 });
 
 prevButton.addEventListener('click', () => {
-    prevSlide();
-    resetSlideshow();
+    showPreviousSlide();
+    pauseSlideshow();
 });
 
-function openMenu() {
-    document.querySelector('nav').classList.toggle('open');
+function openMenu(){
+    const nav = document.querySelector('nav');
+    nav.classList.toggle('open');
 }
 
-const observer = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-        entry.target.classList.toggle('show', entry.isIntersecting);
-    });
-});
+const myObserver = new IntersectionObserver((entries) => {
+    entries.forEach( (entry) => {
+        if  (entry.isIntersecting){
+            entry.target.classList.add('show')
+        }  else {
+            entry.target.classList.remove('show')
+        }
 
-document.querySelectorAll('.hidden').forEach(el => observer.observe(el));
+
+    })
+})
+
+const elements = document.querySelectorAll('.hidden')
+
+elements.forEach((element) => myObserver.observe(element))
+
+
+// Função para mudar o slide
+function changeSlide(n) {
+    currentSlide = (currentSlide + n + currentImages.length) % currentImages.length;
+    showSlide(currentSlide);
+}
+
+// Adicionando eventos aos botões de categoria
+
