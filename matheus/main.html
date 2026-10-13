@@ -1,170 +1,270 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Marcos Matheus Fotografias</title>
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <link rel="shortcut icon" href="fotos/favicon-32x32.png" type="image/x-icon">
-    <script src="scripts/modal.js" defer></script>
-    <script src="scripts/script.js" defer></script>
-    <link rel="stylesheet" href="estilos/style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marcos Matheus Fotografias | Fotógrafo em Pompéu – MG</title>
+    <meta name="description"
+        content="Ensaios gestante, casal, feminino e empresarial em Pompéu – MG. Fotografia que conta histórias desde 2016.">
+    <meta name="theme-color" content="#0b0b0b">
+    <link rel="icon" href="fotos/favicon-32x32.png" type="image/png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Noto+Sans:wght@300;400;500&display=swap"
+        rel="stylesheet">
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="estilos/style.css">
     <link rel="stylesheet" href="estilos/media.css">
+
+    <!-- Marca que o JS está ativo (as animações de entrada só rodam com JS) -->
+    <script>document.documentElement.classList.add('js');</script>
+    <script src="scripts/script.js" defer></script>
+    <script src="scripts/modal.js" defer></script>
 </head>
 
 <body>
-    <header name="header">
-        <section class="nav ">
-            <nav>
-                <div class="logo">
-                    <img src="fotos/logo1.png" alt="Matheus-Fotografias">
-                    <a href="">Marcos Matheus Fotografias</a>
-                </div>
-                <ul>
-                    <li><a href="#header">HOME</a></li>
-                    <li><a href="#ensaios">PORTFÓLIO</a></li>
-                    <li><a href="#sobre">QUEM SOU</a></li>
-                    <li><a href="https://api.whatsapp.com/send?phone=553784038171&text=Oi%20Matheus%21%0AGostaria%20de%20um%20or%C3%A7amento%20para%20um%20ensaio%20fotogr%C3%A1fico.%20Podemos%20conversar%20sobre%20isso%3F%0AObrigado(a)%20"
-                            target="_blank">ORÇAMENTO</a></li>
-                </ul>
-                <a href="https://api.whatsapp.com/send?phone=553784038171&text=Oi%20Matheus%21%0AGostaria%20de%20um%20or%C3%A7amento%20para%20um%20ensaio%20fotogr%C3%A1fico.%20Podemos%20conversar%20sobre%20isso%3F%0AObrigado(a)%20"
-                    target="_blank"><button>Contato</button></a>
-                <button id="menuButton" onclick="openMenu()">
-                    <i class='bx bx-menu-alt-right'></i>
-                </button>
 
-            </nav>
-        </section>
-        <section class="slideshow-container  ">
-            <ul class="slides">
-                <li class="slide fade" data-active><img id="ft1" src="fotos/ft13.jpg" alt="foto sensual"></li>
-                <li class="slide fade"><img src="fotos/ft2.jpg" alt="foto sensual"></li>
-                <li class="slide fade"><img src="fotos/gestante/ft3.webp" alt="foto de gestante"></li>
-                <li class="slide fade"><img src="fotos/casal/ft4.webp" alt="foto de casal"></li>
-                <li class="slide fade"><img src="fotos/casal/ft5.webp" alt="foto de casal"></li>
-                <li class="slide fade"><img src="fotos/ft6.jpg" alt="foto sensual"></li>
-                <li class="slide fade"><img src="fotos/ft7.jpg" alt="foto individual"></li>
+    <!-- ===================== CABEÇALHO ===================== -->
+    <header class="site-header" id="topo">
+        <nav class="nav" aria-label="Menu principal">
+            <a href="#topo" class="logo">
+                <img src="fotos/logo1.png" alt="" width="48" height="48">
+                <span>Marcos Matheus <em>Fotografias</em></span>
+            </a>
+
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#topo">Home</a></li>
+                <li><a href="#ensaios">Portfólio</a></li>
+                <li><a href="#sobre">Quem sou</a></li>
+                <li><a href="#instagram">Últimos ensaios</a></li>
+                <li class="nav-cta-mobile">
+                    <a class="btn btn-gold" target="_blank" rel="noopener"
+                        href="https://wa.me/553784038171?text=Oi%20Matheus!%20Gostaria%20de%20um%20or%C3%A7amento%20para%20um%20ensaio%20fotogr%C3%A1fico.%20Podemos%20conversar%3F">
+                        <i class='bx bxl-whatsapp'></i> Pedir orçamento
+                    </a>
+                </li>
             </ul>
-            <button class="previous-button" data-change-slide-button="previous">&lt;</button>
-            <button class="next-button" data-change-slide-button="next">&gt;</button>
-        </section>
+
+            <a class="btn btn-outline nav-cta" target="_blank" rel="noopener"
+                href="https://wa.me/553784038171?text=Oi%20Matheus!%20Gostaria%20de%20um%20or%C3%A7amento%20para%20um%20ensaio%20fotogr%C3%A1fico.%20Podemos%20conversar%3F">
+                Orçamento
+            </a>
+
+            <button class="menu-toggle" id="menuButton" type="button" aria-label="Abrir menu" aria-expanded="false"
+                aria-controls="navLinks">
+                <i class='bx bx-menu-alt-right'></i>
+            </button>
+        </nav>
     </header>
+
+    <!-- ===================== HERO / SLIDESHOW ===================== -->
+    <section class="hero" aria-label="Destaques">
+        <ul class="slides">
+            <li class="slide is-active"><img src="fotos/ft13.jpg" alt="Ensaio sensual"></li>
+            <li class="slide"><img src="fotos/ft2.jpg" alt="Ensaio sensual" loading="lazy"></li>
+            <li class="slide"><img src="fotos/gestante/ft3.webp" alt="Ensaio gestante" loading="lazy"></li>
+            <li class="slide"><img src="fotos/casal/ft4.webp" alt="Ensaio de casal" loading="lazy"></li>
+            <li class="slide"><img src="fotos/casal/ft5.webp" alt="Ensaio de casal" loading="lazy"></li>
+            <li class="slide"><img src="fotos/ft6.jpg" alt="Ensaio sensual" loading="lazy"></li>
+            <li class="slide"><img src="fotos/ft7.jpg" alt="Ensaio individual" loading="lazy"></li>
+        </ul>
+
+        <div class="hero-overlay"></div>
+
+        <div class="hero-content">
+            <p class="eyebrow">Fotógrafo em Pompéu – MG</p>
+            <h1>Histórias que merecem <em>ser eternizadas</em></h1>
+            <p class="hero-sub">Ensaios gestante, casal, feminino e empresarial com um olhar sensível para cada
+                detalhe.</p>
+            <div class="hero-actions">
+                <a class="btn btn-gold" target="_blank" rel="noopener"
+                    href="https://wa.me/553784038171?text=Oi%20Matheus!%20Gostaria%20de%20um%20or%C3%A7amento%20para%20um%20ensaio%20fotogr%C3%A1fico.%20Podemos%20conversar%3F">
+                    Pedir orçamento
+                </a>
+                <a class="btn btn-ghost" href="#ensaios">Ver portfólio</a>
+            </div>
+        </div>
+
+        <button class="slide-btn prev" type="button" data-slide="prev" aria-label="Foto anterior">
+            <i class='bx bx-chevron-left'></i>
+        </button>
+        <button class="slide-btn next" type="button" data-slide="next" aria-label="Próxima foto">
+            <i class='bx bx-chevron-right'></i>
+        </button>
+        <div class="slide-dots" aria-label="Escolher foto"></div>
+    </section>
+
     <main>
-        <section class="hidden" id="sobre">
-            <div class="fotos hidden">
-                <div class="foto-direita hidden">
-                    <img src="fotos/ftsobre2.jpg" alt="">
-                </div>
-                <div class="foto-esquerda hidden">
-                    <img src="fotos/ftsobre.jpg" alt="">
-                    <h2><span>8 Anos</span> como Fotógrafo</h2>
-                </div>
-            </div>
-            <aside class="hidden ">
-                <div id="separator1">
 
-                    <div class="separator"></div>
-                    <h3>Fotógrafo </h3>
-                </div>
-                <h1>Conheça Marcos Matheus</h1>
-                <p>
-                    Desde 2016, venho dedicando minha trajetória a capturar momentos especiais através das lentes da
-                    minha câmera. Para mim, fotografar é mais do que apenas registrar imagens; é narrar histórias. Cada
-                    foto representa uma chance de imortalizar memórias e criar laços. Minha paixão pela fotografia
-                    ultrapassa os limites do estúdio: adoro captar a essência da vida em cada pessoa que fotografa.
-                </p>
-                <p>
-                    Quando não estou atrás das câmeras, estou sempre em busca de novas inspirações e explorando
-                    diferentes formas de arte, o que me permite trazer uma abordagem fresca e única para cada ensaio.
-                    Fotografar, para mim, é um estilo de vida que se reflete em tudo o que faço.
-                </p>
-            </aside>
-        </section>
-        <section class="ensaios">
-
-            <div id="title">
-                <div class="separator"></div>
-                <h3>Ensaios</h3>
-                <div class="separator"></div>
-            </div>
-            <div class="portifolio">
-                <h1>Ensaios para Cada Momento da Sua História</h1>
-                <p>De Cada Capítulo, Uma Lente: Ensaio Gestante, Casamento, empresarial, feminino e Muito mais. Clique
-                    para conferir!</p>
-
-                <div id="options">
-                    <div class="links hidden">
-                        <img class="backgroud-links " src="fotos/empresarial/ft11.webp" alt="foto">
-                        <div class="links-text">
-                            <button class="button-link" id="open-empresarial">Empresarial</button>
-                        </div>
-                    </div>
-                    <div class="links hidden">
-                        <img class="backgroud-links" src="fotos/gestante/ft15.webp" alt="foto de gestante">
-                        <div class="links-text">
-                            <button class="button-link" id="open-gestante">Gestante</button>
-
-                        </div>
-                    </div>
-                    <div class="links hidden">
-                        <img class="backgroud-links" src="fotos/feminino/fem5.webp" alt="foto feminina">
-                        <div class="links-text">
-                            <button class="button-link" id="open-feminino">Feminino</button>
-                        </div>
-                    </div>
-                    <div class="links hidden">
-                        <img class="backgroud-links" src="fotos/casal/ft4.webp" alt="foto de casal">
-                        <div class="links-text">
-                            <button class="button-link" id="open-casal">Casal</button>
-                        </div>
+        <!-- ===================== QUEM SOU ===================== -->
+        <section class="section">
+            <div class="about" id="sobre">
+                <div class="about-photos reveal">
+                    <figure class="photo photo-main">
+                        <img src="fotos/ftsobre.jpg" alt="Marcos Matheus, fotógrafo" loading="lazy">
+                    </figure>
+                    <figure class="photo photo-secondary">
+                        <img src="fotos/ftsobre2.jpg" alt="Marcos Matheus durante um ensaio" loading="lazy">
+                    </figure>
+                    <div class="badge">
+                        <strong data-years-since="2016">10</strong>
+                        <span>anos como<br>fotógrafo</span>
                     </div>
                 </div>
-                <div id="photoModal" class="modal">
-                    <span class="close" onclick="closeModal()">&times;</span>
-                    <div class="modal-content" id="modalContent">
-                        <!-- As imagens para os slides serão inseridas dinamicamente aqui -->
-                    </div>
-                    <a class="prev" onclick="changeSlide(-1)">&#10094;</a>
-                    <a class="next" onclick="changeSlide(1)">&#10095;</a>
+
+                <div class="about-text reveal">
+                    <p class="eyebrow">Fotógrafo</p>
+                    <h2>Conheça Marcos Matheus</h2>
+                    <p>
+                        Desde 2016, venho dedicando minha trajetória a capturar momentos especiais através das lentes
+                        da minha câmera. Para mim, fotografar é mais do que apenas registrar imagens; é narrar
+                        histórias. Cada foto representa uma chance de imortalizar memórias e criar laços. Minha paixão
+                        pela fotografia ultrapassa os limites do estúdio: adoro captar a essência de cada pessoa que
+                        fotografo.
+                    </p>
+                    <p>
+                        Quando não estou atrás das câmeras, estou sempre em busca de novas inspirações e explorando
+                        diferentes formas de arte, o que me permite trazer uma abordagem fresca e única para cada
+                        ensaio. Fotografar, para mim, é um estilo de vida que se reflete em tudo o que faço.
+                    </p>
+                    <a class="link-arrow" href="#ensaios">Ver ensaios <i class='bx bx-right-arrow-alt'></i></a>
                 </div>
             </div>
         </section>
-        <section id="portifolio">
-            <div class="portifolio">
-                <h2>NOSSOS ULTIMOS ENSAIOS</h2>
+
+        <!-- ===================== ENSAIOS ===================== -->
+        <section class="section ensaios" id="ensaios">
+            <header class="section-head reveal">
+                <p class="eyebrow eyebrow-center">Ensaios</p>
+                <h2>Ensaios para cada momento da sua história</h2>
+                <p>Gestante, casal, feminino, empresarial e muito mais. Toque em uma categoria para ver as fotos.</p>
+            </header>
+
+            <div class="categories">
+                <button class="category reveal" type="button" data-category="empresarial">
+                    <img src="fotos/empresarial/ft11.webp" alt="" loading="lazy">
+                    <span class="category-info">
+                        <span class="category-name">Empresarial</span>
+                        <span class="category-count">Ver fotos</span>
+                    </span>
+                </button>
+                <button class="category reveal" type="button" data-category="gestante">
+                    <img src="fotos/gestante/ft15.webp" alt="" loading="lazy">
+                    <span class="category-info">
+                        <span class="category-name">Gestante</span>
+                        <span class="category-count">Ver fotos</span>
+                    </span>
+                </button>
+                <button class="category reveal" type="button" data-category="feminino">
+                    <img src="fotos/feminino/fem5.webp" alt="" loading="lazy">
+                    <span class="category-info">
+                        <span class="category-name">Feminino</span>
+                        <span class="category-count">Ver fotos</span>
+                    </span>
+                </button>
+                <button class="category reveal" type="button" data-category="casal">
+                    <img src="fotos/casal/ft4.webp" alt="" loading="lazy">
+                    <span class="category-info">
+                        <span class="category-name">Casal</span>
+                        <span class="category-count">Ver fotos</span>
+                    </span>
+                </button>
             </div>
         </section>
-        <section id="insta" class="hidden">
-            <div class="tagembed-widget" style="width:100%;height:100%" data-widget-id="2133091" data-tags="false"  view-url="https://widget.tagembed.com/2133091"></div><script src="https://widget.tagembed.com/embed.min.js" type="text/javascript"></script>
+
+        <!-- ===================== INSTAGRAM ===================== -->
+        <section class="section" id="instagram">
+            <header class="section-head reveal">
+                <p class="eyebrow eyebrow-center">Instagram</p>
+                <h2>Nossos últimos ensaios</h2>
+            </header>
+            <div class="insta-widget">
+                <div class="tagembed-widget" style="width:100%;height:100%" data-widget-id="2133091"
+                    data-tags="false" view-url="https://widget.tagembed.com/2133091"></div>
+            </div>
+        </section>
+
+        <!-- ===================== CHAMADA FINAL ===================== -->
+        <section class="cta">
+            <div class="reveal">
+                <h2>Vamos criar algo <em>bonito</em> juntos?</h2>
+                <p>Me chame no WhatsApp e conte sobre o ensaio que você imagina.</p>
+                <a class="btn btn-gold" target="_blank" rel="noopener"
+                    href="https://wa.me/553784038171?text=Oi%20Matheus!%20Gostaria%20de%20um%20or%C3%A7amento%20para%20um%20ensaio%20fotogr%C3%A1fico.%20Podemos%20conversar%3F">
+                    <i class='bx bxl-whatsapp'></i> Falar no WhatsApp
+                </a>
+            </div>
         </section>
     </main>
-    <footer class="hidden">
 
-        <div class="separator"></div>
-        <div class="botton">
-            <div class="top">
-                <div class="logo">
-                    <img src="fotos/logo1.png" alt="">
-                </div>
-                <ul>
-                    <li><a href="#home">Home</a></li>
-                    <li><a href="https://api.whatsapp.com/send?phone=553784038171&text=Oi%20Matheus%21%0AGostaria%20de%20um%20or%C3%A7amento%20para%20um%20ensaio%20fotogr%C3%A1fico.%20Podemos%20conversar%20sobre%20isso%3F%0AObrigado(a)%20"
-                            target=_blank>Contato</a></li>
-                    <li><a href="#ensaios">Ensaios</a></li>
-                </ul>
-
-                <iframe
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3767.112295833828!2d-44.99558242517219!3d-19.233937117010772!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xa7878eb6fda877%3A0x9946ab56dd6d4775!2sR.%20Cap.%20M%C3%A1rcio%20Roberto%20Meneses%20-%20Pomp%C3%A9u%2C%20MG%2C%2035640-000!5e0!3m2!1spt-BR!2sbr!4v1729206109873!5m2!1spt-BR!2sbr"
-                    width="500" height="200" style="border:0;" allowfullscreen="" loading="lazy"
-                    referrerpolicy="no-referrer-when-downgrade"></iframe>
-
+    <!-- ===================== RODAPÉ ===================== -->
+    <footer class="footer">
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <img src="fotos/logo1.png" alt="Marcos Matheus Fotografias" width="64" height="64" loading="lazy">
+                <p>Fotografia que conta histórias desde 2016.</p>
             </div>
 
+            <div>
+                <h3>Navegação</h3>
+                <ul>
+                    <li><a href="#topo">Home</a></li>
+                    <li><a href="#ensaios">Ensaios</a></li>
+                    <li><a href="#sobre">Quem sou</a></li>
+                </ul>
+            </div>
 
+            <div>
+                <h3>Contato</h3>
+                <ul>
+                    <li>
+                        <a target="_blank" rel="noopener"
+                            href="https://wa.me/553784038171?text=Oi%20Matheus!%20Gostaria%20de%20um%20or%C3%A7amento%20para%20um%20ensaio%20fotogr%C3%A1fico.%20Podemos%20conversar%3F">
+                            <i class='bx bxl-whatsapp'></i> WhatsApp
+                        </a>
+                    </li>
+                    <li><i class='bx bx-map'></i> Pompéu – MG</li>
+                </ul>
+            </div>
+
+            <div class="footer-map">
+                <iframe title="Localização em Pompéu – MG"
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3767.112295833828!2d-44.99558242517219!3d-19.233937117010772!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xa7878eb6fda877%3A0x9946ab56dd6d4775!2sR.%20Cap.%20M%C3%A1rcio%20Roberto%20Meneses%20-%20Pomp%C3%A9u%2C%20MG%2C%2035640-000!5e0!3m2!1spt-BR!2sbr!4v1729206109873!5m2!1spt-BR!2sbr"
+                    allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            </div>
         </div>
+
+        <p class="copyright">© <span id="year">2026</span> Marcos Matheus Fotografias. Todos os direitos reservados.</p>
     </footer>
+
+    <!-- Botão flutuante do WhatsApp -->
+    <a class="whats-float" target="_blank" rel="noopener" aria-label="Falar no WhatsApp"
+        href="https://wa.me/553784038171?text=Oi%20Matheus!%20Gostaria%20de%20um%20or%C3%A7amento%20para%20um%20ensaio%20fotogr%C3%A1fico.%20Podemos%20conversar%3F">
+        <i class='bx bxl-whatsapp'></i>
+    </a>
+
+    <!-- ===================== GALERIA (LIGHTBOX) ===================== -->
+    <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Galeria de fotos"
+        aria-hidden="true">
+        <button class="lb-close" type="button" aria-label="Fechar galeria"><i class='bx bx-x'></i></button>
+        <button class="lb-nav lb-prev" type="button" aria-label="Foto anterior"><i
+                class='bx bx-chevron-left'></i></button>
+
+        <figure class="lb-stage">
+            <img id="lbImage" src="" alt="">
+            <figcaption class="lb-caption" id="lbCaption"></figcaption>
+        </figure>
+
+        <button class="lb-nav lb-next" type="button" aria-label="Próxima foto"><i
+                class='bx bx-chevron-right'></i></button>
+        <div class="lb-thumbs" id="lbThumbs"></div>
+    </div>
+
+    <script src="https://widget.tagembed.com/embed.min.js" defer></script>
 </body>
 
 </html>

@@ -1,40 +1,138 @@
-// Imagens de cada categoria
-const images = {
-    empresarial: ["fotos/empresarial/ft11.webp", "fotos/empresarial/empresarial1.webp", "fotos/empresarial/empresarial2.webp", "fotos/empresarial/empresarial3.webp"],
-    gestante: ["fotos/gestante/ft15.webp", "fotos/gestante/ft3.webp", "fotos/gestante/ft12.webp", "fotos/gestante/ft16.jpg",  "fotos/gestante/ft17.jpg"],
-    feminino: ["fotos/feminino/fem1.webp", "fotos/feminino/fem2.webp","fotos/feminino/fem3.webp","fotos/feminino/fem4.webp","fotos/feminino/fem5.webp","fotos/feminino/fem6.webp"],
-    casal: ["fotos/casal/ft4.webp", "fotos/casal/ft5.webp", "fotos/casal/casal3.webp", "fotos/casal/casal4.webp"]
+// =========================================================
+// GALERIA DE ENSAIOS (LIGHTBOX)
+// Para adicionar fotos, basta incluir o caminho na lista da categoria.
+// =========================================================
+const galleries = {
+    empresarial: {
+        title: 'Empresarial',
+        images: [
+            'fotos/empresarial/ft11.webp',
+            'fotos/empresarial/empresarial1.webp',
+            'fotos/empresarial/empresarial2.webp',
+            'fotos/empresarial/empresarial3.webp',
+        ],
+    },
+    gestante: {
+        title: 'Gestante',
+        images: [
+            'fotos/gestante/ft15.webp',
+            'fotos/gestante/ft3.webp',
+            'fotos/gestante/ft12.webp',
+            'fotos/gestante/ft16.jpg',
+            'fotos/gestante/ft17.jpg',
+        ],
+    },
+    feminino: {
+        title: 'Feminino',
+        images: [
+            'fotos/feminino/fem1.webp',
+            'fotos/feminino/fem2.webp',
+            'fotos/feminino/fem3.webp',
+            'fotos/feminino/fem4.webp',
+            'fotos/feminino/fem5.webp',
+            'fotos/feminino/fem6.webp',
+        ],
+    },
+    casal: {
+        title: 'Casal',
+        images: [
+            'fotos/casal/ft4.webp',
+            'fotos/casal/ft5.webp',
+            'fotos/casal/casal3.webp',
+            'fotos/casal/casal4.webp',
+        ],
+    },
 };
-let currentSlide = 0;
-let currentImages = [];
 
-// Função para abrir o modal com a categoria de fotos
-function openModal(category) {
-    currentImages = images[category];
-    currentSlide = 0;
-    showSlide(currentSlide);
-    document.getElementById("photoModal").style.display = "block";
+const lightbox = document.getElementById('lightbox');
+const lbImage = document.getElementById('lbImage');
+const lbCaption = document.getElementById('lbCaption');
+const lbThumbs = document.getElementById('lbThumbs');
+
+let gallery = null;      // categoria aberta
+let photoIndex = 0;      // foto atual
+let lastFocused = null;  // para devolver o foco ao fechar
+
+function openGallery(category) {
+    gallery = galleries[category];
+    if (!gallery) return;
+
+    lastFocused = document.activeElement;
+
+    // Miniaturas
+    lbThumbs.innerHTML = '';
+    gallery.images.forEach((src, i) => {
+        const thumb = document.createElement('button');
+        thumb.type = 'button';
+        thumb.setAttribute('aria-label', `Ver foto ${i + 1}`);
+        thumb.innerHTML = `<img src="${src}" alt="" loading="lazy">`;
+        thumb.addEventListener('click', () => showPhoto(i));
+        lbThumbs.appendChild(thumb);
+    });
+
+    showPhoto(0);
+    lightbox.classList.add('is-open');
+    lightbox.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('no-scroll');
+    lightbox.querySelector('.lb-close').focus();
 }
 
-// Função para fechar o modal
-function closeModal() {
-    document.getElementById("photoModal").style.display = "none";
+function closeGallery() {
+    lightbox.classList.remove('is-open');
+    lightbox.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('no-scroll');
+    if (lastFocused) lastFocused.focus();
 }
 
-// Função para mostrar um slide específico
-function showSlide(n) {
-    const modalContent = document.getElementById("modalContent");
-    modalContent.innerHTML = `<img src="${currentImages[n]}" alt="Foto">`;
+function showPhoto(i) {
+    const total = gallery.images.length;
+    photoIndex = (i + total) % total;
+
+    lbImage.classList.add('is-loading');
+    lbImage.onload = () => lbImage.classList.remove('is-loading');
+    lbImage.src = gallery.images[photoIndex];
+    lbImage.alt = `Ensaio ${gallery.title} – foto ${photoIndex + 1}`;
+    lbCaption.textContent = `${gallery.title} · ${photoIndex + 1} / ${total}`;
+
+    lbThumbs.querySelectorAll('button').forEach((btn, n) => {
+        btn.classList.toggle('is-active', n === photoIndex);
+    });
+    const active = lbThumbs.children[photoIndex];
+    if (active) active.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+
+    // Pré-carrega a próxima foto
+    new Image().src = gallery.images[(photoIndex + 1) % total];
 }
 
-// Função para mudar o slide
-function changeSlide(n) {
-    currentSlide = (currentSlide + n + currentImages.length) % currentImages.length;
-    showSlide(currentSlide);
-}
+// Botões das categorias
+document.querySelectorAll('[data-category]').forEach((btn) => {
+    btn.addEventListener('click', () => openGallery(btn.dataset.category));
+});
 
-// Adicionando eventos aos botões de categoria
-document.getElementById("open-empresarial").onclick = () => openModal("empresarial");
-document.getElementById("open-gestante").onclick = () => openModal("gestante");
-document.getElementById("open-feminino").onclick = () => openModal("feminino");
-document.getElementById("open-casal").onclick = () => openModal("casal");
+// Controles
+lightbox.querySelector('.lb-close').addEventListener('click', closeGallery);
+lightbox.querySelector('.lb-prev').addEventListener('click', () => showPhoto(photoIndex - 1));
+lightbox.querySelector('.lb-next').addEventListener('click', () => showPhoto(photoIndex + 1));
+
+// Clicar no fundo escuro fecha
+lightbox.addEventListener('click', (e) => {
+    if (e.target === lightbox || e.target.classList.contains('lb-stage')) closeGallery();
+});
+
+// Teclado: setas e ESC
+document.addEventListener('keydown', (e) => {
+    if (!lightbox.classList.contains('is-open')) return;
+    if (e.key === 'Escape') closeGallery();
+    if (e.key === 'ArrowRight') showPhoto(photoIndex + 1);
+    if (e.key === 'ArrowLeft') showPhoto(photoIndex - 1);
+});
+
+// Arrastar o dedo no celular
+let lbTouchX = 0;
+lightbox.addEventListener('touchstart', (e) => {
+    lbTouchX = e.touches[0].clientX;
+}, { passive: true });
+lightbox.addEventListener('touchend', (e) => {
+    const diff = e.changedTouches[0].clientX - lbTouchX;
+    if (Math.abs(diff) > 50) showPhoto(photoIndex + (diff < 0 ? 1 : -1));
+});
