@@ -1,0 +1,65 @@
+# Painel de controle do site Marcos Matheus Fotografias
+# Tudo que é salvo aqui vira um commit no GitHub e o site se atualiza sozinho.
+
+backend:
+  name: github
+  repo: paulosergio4/meus-projetos
+  branch: main
+  commit_messages:
+    update: "Painel: atualiza {{slug}}"
+    uploadMedia: "Painel: envia foto {{path}}"
+    deleteMedia: "Painel: apaga foto {{path}}"
+
+site_url: https://paulosergio4.github.io/meus-projetos/matheus/main.html
+display_url: https://paulosergio4.github.io/meus-projetos/matheus/main.html
+logo_url: https://paulosergio4.github.io/meus-projetos/matheus/fotos/logo1.png
+
+# Onde as fotos enviadas pelo painel ficam guardadas
+media_folder: matheus/fotos
+public_folder: /meus-projetos/matheus/fotos
+
+collections:
+  - name: site
+    label: Fotos do site
+    editor:
+      preview: false
+    files:
+      - name: fotos
+        label: Fotos do site
+        file: matheus/dados/fotos.json
+        fields:
+          - label: Slideshow do topo
+            name: slideshow
+            widget: list
+            label_singular: foto
+            summary: "{{fields.descricao}}"
+            hint: Arraste para mudar a ordem. A primeira foto é a que aparece ao abrir o site.
+            min: 1
+            fields:
+              - { label: Foto, name: foto, widget: image }
+              - { label: Descrição (para acessibilidade), name: descricao, widget: string, required: false }
+
+          - label: Quem sou
+            name: sobre
+            widget: object
+            collapsed: false
+            fields:
+              - { label: Foto principal (maior), name: foto_principal, widget: image }
+              - { label: Foto secundária (menor), name: foto_secundaria, widget: image }
+
+          - label: Categorias de ensaio
+            name: categorias
+            widget: list
+            label_singular: categoria
+            summary: "{{fields.nome}}"
+            hint: Cada categoria vira um card na seção Ensaios. Arraste para reordenar.
+            fields:
+              - { label: Nome, name: nome, widget: string }
+              - { label: Foto de capa, name: capa, widget: image }
+              - label: Fotos da galeria
+                name: fotos
+                widget: list
+                label_singular: foto
+                hint: Arraste para mudar a ordem.
+                min: 1
+                field: { label: Foto, name: foto, widget: image }

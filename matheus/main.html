@@ -17,13 +17,13 @@
         rel="stylesheet">
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
 
-    <link rel="stylesheet" href="estilos/style.css?v=2">
-    <link rel="stylesheet" href="estilos/media.css?v=2">
+    <link rel="stylesheet" href="estilos/style.css?v=3">
+    <link rel="stylesheet" href="estilos/media.css?v=3">
 
     <!-- Marca que o JS está ativo (as animações de entrada só rodam com JS) -->
     <script>document.documentElement.classList.add('js');</script>
-    <script src="scripts/script.js?v=2" defer></script>
-    <script src="scripts/modal.js?v=2" defer></script>
+    <script src="scripts/script.js?v=3" defer></script>
+    <script src="scripts/modal.js?v=3" defer></script>
 </head>
 
 <body>
@@ -105,10 +105,10 @@
             <div class="about" id="sobre">
                 <div class="about-photos reveal">
                     <figure class="photo photo-main">
-                        <img src="fotos/ftsobre.jpg" alt="Marcos Matheus, fotógrafo" loading="lazy">
+                        <img id="sobreFoto1" src="fotos/ftsobre.jpg" alt="Marcos Matheus, fotógrafo" loading="lazy">
                     </figure>
                     <figure class="photo photo-secondary">
-                        <img src="fotos/ftsobre2.jpg" alt="Marcos Matheus durante um ensaio" loading="lazy">
+                        <img id="sobreFoto2" src="fotos/ftsobre2.jpg" alt="Marcos Matheus durante um ensaio" loading="lazy">
                     </figure>
                     <div class="badge">
                         <strong data-years-since="2016">10</strong>
@@ -144,7 +144,7 @@
                 <p>Gestante, casal, feminino, empresarial e muito mais. Toque em uma categoria para ver as fotos.</p>
             </header>
 
-            <div class="categories">
+            <div class="categories" id="categorias">
                 <button class="category reveal" type="button" data-category="empresarial">
                     <img src="fotos/empresarial/ft11.webp" alt="" loading="lazy">
                     <span class="category-info">

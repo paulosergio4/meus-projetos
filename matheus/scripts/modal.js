@@ -1,6 +1,7 @@
 // =========================================================
 // GALERIA DE ENSAIOS (LIGHTBOX)
-// Para adicionar fotos, basta incluir o caminho na lista da categoria.
+// As fotos vêm do painel (dados/fotos.json). A lista abaixo é só a reserva
+// usada se o arquivo de dados não carregar.
 // =========================================================
 const galleries = {
     empresarial: {
@@ -54,7 +55,7 @@ let photoIndex = 0;      // foto atual
 let lastFocused = null;  // para devolver o foco ao fechar
 
 function openGallery(category) {
-    gallery = galleries[category];
+    gallery = (window.siteGalleries || galleries)[category];
     if (!gallery) return;
 
     lastFocused = document.activeElement;
@@ -104,9 +105,10 @@ function showPhoto(i) {
     new Image().src = gallery.images[(photoIndex + 1) % total];
 }
 
-// Botões das categorias
-document.querySelectorAll('[data-category]').forEach((btn) => {
-    btn.addEventListener('click', () => openGallery(btn.dataset.category));
+// Botões das categorias (funciona mesmo quando o painel recria os botões)
+document.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-category]');
+    if (btn) openGallery(btn.dataset.category);
 });
 
 // Controles
