@@ -1,0 +1,45 @@
+# Quando uma foto nova chega (pelo painel ou por upload), reduz o tamanho
+# e gera a miniatura automaticamente, para o site continuar leve.
+name: Otimizar fotos
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "matheus/fotos/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: otimizar-fotos
+  cancel-in-progress: false
+
+jobs:
+  otimizar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar Pillow
+        run: pip install pillow
+
+      - name: Otimizar
+        run: python matheus/scripts/otimizar_fotos.py
+
+      - name: Salvar no repositório
+        run: |
+          if [ -n "$(git status --porcelain matheus/fotos)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add matheus/fotos
+            git commit -m "Otimiza fotos automaticamente"
+            git push
+          else
+            echo "Nada para otimizar."
+          fi
