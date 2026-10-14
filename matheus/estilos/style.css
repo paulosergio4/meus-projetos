@@ -221,8 +221,8 @@ em {
 }
 
 .logo img {
-  width: 48px;
-  height: 48px;
+  width: 60px;
+  height: 60px;
   object-fit: contain;
 }
 
@@ -686,8 +686,8 @@ em {
 }
 
 .footer-brand img {
-  width: 64px;
-  height: 64px;
+  width: 88px;
+  height: 88px;
   margin-bottom: 16px;
   object-fit: contain;
 }
