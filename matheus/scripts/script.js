@@ -56,6 +56,23 @@ function fixPath(path) {
     return p.startsWith('/') && i > 0 ? p.slice(i) : p;
 }
 
+// Versão pequena da foto (fotos/mini/...), usada nos cards e miniaturas.
+// Se a miniatura ainda não existir, a imagem volta sozinha para a foto normal.
+function miniPath(path) {
+    const p = fixPath(path);
+    return p.startsWith('fotos/') && !p.startsWith('fotos/mini/') ? 'fotos/mini/' + p.slice(6) : p;
+}
+
+function useMini(img, path) {
+    const full = fixPath(path);
+    img.src = miniPath(full);
+    img.onerror = () => {
+        img.onerror = null;
+        img.src = full;
+    };
+}
+window.useMini = useMini;
+
 async function loadSiteData() {
     try {
         // ?t= evita que o navegador mostre uma versão antiga depois de salvar no painel
@@ -78,6 +95,7 @@ function renderSlides(list) {
         img.src = fixPath(s.foto);
         img.alt = s.descricao || 'Ensaio fotográfico';
         if (i > 0) img.loading = 'lazy';
+        img.decoding = 'async';
         li.appendChild(img);
         return li;
     }));
@@ -107,9 +125,10 @@ function renderCategories(list) {
         btn.dataset.category = slug;
 
         const img = document.createElement('img');
-        img.src = fixPath(c.capa || c.fotos[0]);
+        useMini(img, c.capa || c.fotos[0]);
         img.alt = '';
         img.loading = 'lazy';
+        img.decoding = 'async';
 
         const info = document.createElement('span');
         info.className = 'category-info';

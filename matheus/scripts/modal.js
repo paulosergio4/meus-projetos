@@ -61,12 +61,18 @@ function openGallery(category) {
     lastFocused = document.activeElement;
 
     // Miniaturas
-    lbThumbs.innerHTML = '';
+    lbThumbs.replaceChildren();
     gallery.images.forEach((src, i) => {
         const thumb = document.createElement('button');
         thumb.type = 'button';
         thumb.setAttribute('aria-label', `Ver foto ${i + 1}`);
-        thumb.innerHTML = `<img src="${src}" alt="" loading="lazy">`;
+        const img = document.createElement('img');
+        img.alt = '';
+        img.loading = 'lazy';
+        img.decoding = 'async';
+        if (window.useMini) window.useMini(img, src);
+        else img.src = src;
+        thumb.appendChild(img);
         thumb.addEventListener('click', () => showPhoto(i));
         lbThumbs.appendChild(thumb);
     });

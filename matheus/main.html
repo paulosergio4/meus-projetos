@@ -17,13 +17,13 @@
         rel="stylesheet">
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
 
-    <link rel="stylesheet" href="estilos/style.css?v=3">
-    <link rel="stylesheet" href="estilos/media.css?v=3">
+    <link rel="stylesheet" href="estilos/style.css?v=4">
+    <link rel="stylesheet" href="estilos/media.css?v=4">
 
     <!-- Marca que o JS está ativo (as animações de entrada só rodam com JS) -->
     <script>document.documentElement.classList.add('js');</script>
-    <script src="scripts/script.js?v=3" defer></script>
-    <script src="scripts/modal.js?v=3" defer></script>
+    <script src="scripts/script.js?v=4" defer></script>
+    <script src="scripts/modal.js?v=4" defer></script>
 </head>
 
 <body>
@@ -65,12 +65,12 @@
     <section class="hero" aria-label="Destaques">
         <ul class="slides">
             <li class="slide is-active"><img src="fotos/ft13.jpg" alt="Ensaio sensual"></li>
-            <li class="slide"><img src="fotos/ft2.jpg" alt="Ensaio sensual" loading="lazy"></li>
-            <li class="slide"><img src="fotos/gestante/ft3.webp" alt="Ensaio gestante" loading="lazy"></li>
-            <li class="slide"><img src="fotos/casal/ft4.webp" alt="Ensaio de casal" loading="lazy"></li>
-            <li class="slide"><img src="fotos/casal/ft5.webp" alt="Ensaio de casal" loading="lazy"></li>
-            <li class="slide"><img src="fotos/ft6.jpg" alt="Ensaio sensual" loading="lazy"></li>
-            <li class="slide"><img src="fotos/ft7.jpg" alt="Ensaio individual" loading="lazy"></li>
+            <li class="slide"><img src="fotos/ft2.jpg" alt="Ensaio sensual" loading="lazy" decoding="async"></li>
+            <li class="slide"><img src="fotos/gestante/ft3.webp" alt="Ensaio gestante" loading="lazy" decoding="async"></li>
+            <li class="slide"><img src="fotos/casal/ft4.webp" alt="Ensaio de casal" loading="lazy" decoding="async"></li>
+            <li class="slide"><img src="fotos/casal/ft5.webp" alt="Ensaio de casal" loading="lazy" decoding="async"></li>
+            <li class="slide"><img src="fotos/ft6.jpg" alt="Ensaio sensual" loading="lazy" decoding="async"></li>
+            <li class="slide"><img src="fotos/ft7.jpg" alt="Ensaio individual" loading="lazy" decoding="async"></li>
         </ul>
 
         <div class="hero-overlay"></div>
@@ -105,10 +105,10 @@
             <div class="about" id="sobre">
                 <div class="about-photos reveal">
                     <figure class="photo photo-main">
-                        <img id="sobreFoto1" src="fotos/ftsobre.jpg" alt="Marcos Matheus, fotógrafo" loading="lazy">
+                        <img id="sobreFoto1" src="fotos/ftsobre.jpg" alt="Marcos Matheus, fotógrafo" loading="lazy" decoding="async">
                     </figure>
                     <figure class="photo photo-secondary">
-                        <img id="sobreFoto2" src="fotos/ftsobre2.jpg" alt="Marcos Matheus durante um ensaio" loading="lazy">
+                        <img id="sobreFoto2" src="fotos/ftsobre2.jpg" alt="Marcos Matheus durante um ensaio" loading="lazy" decoding="async">
                     </figure>
                     <div class="badge">
                         <strong data-years-since="2016">10</strong>
@@ -146,28 +146,28 @@
 
             <div class="categories" id="categorias">
                 <button class="category reveal" type="button" data-category="empresarial">
-                    <img src="fotos/empresarial/ft11.webp" alt="" loading="lazy">
+                    <img src="fotos/mini/empresarial/ft11.webp" alt="" loading="lazy" decoding="async">
                     <span class="category-info">
                         <span class="category-name">Empresarial</span>
                         <span class="category-count">Ver fotos</span>
                     </span>
                 </button>
                 <button class="category reveal" type="button" data-category="gestante">
-                    <img src="fotos/gestante/ft15.webp" alt="" loading="lazy">
+                    <img src="fotos/mini/gestante/ft15.webp" alt="" loading="lazy" decoding="async">
                     <span class="category-info">
                         <span class="category-name">Gestante</span>
                         <span class="category-count">Ver fotos</span>
                     </span>
                 </button>
                 <button class="category reveal" type="button" data-category="feminino">
-                    <img src="fotos/feminino/fem5.webp" alt="" loading="lazy">
+                    <img src="fotos/mini/feminino/fem5.webp" alt="" loading="lazy" decoding="async">
                     <span class="category-info">
                         <span class="category-name">Feminino</span>
                         <span class="category-count">Ver fotos</span>
                     </span>
                 </button>
                 <button class="category reveal" type="button" data-category="casal">
-                    <img src="fotos/casal/ft4.webp" alt="" loading="lazy">
+                    <img src="fotos/mini/casal/ft4.webp" alt="" loading="lazy" decoding="async">
                     <span class="category-info">
                         <span class="category-name">Casal</span>
                         <span class="category-count">Ver fotos</span>
@@ -211,7 +211,7 @@
     <footer class="footer">
         <div class="footer-grid">
             <div class="footer-brand">
-                <img src="fotos/logo1.png" alt="Marcos Matheus Fotografias" width="64" height="64" loading="lazy">
+                <img src="fotos/logo1.png" alt="Marcos Matheus Fotografias" width="64" height="64" loading="lazy" decoding="async">
                 <p>Fotografia que conta histórias desde 2016.</p>
             </div>
 
