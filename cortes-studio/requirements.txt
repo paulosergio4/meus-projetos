@@ -1,0 +1,9 @@
+yt-dlp[default]
+faster-whisper
+anthropic
+requests
+google-api-python-client
+google-auth-oauthlib
+customtkinter>=5.2
+pillow
+windnd

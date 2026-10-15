@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Build do PyInstaller
+build/
+dist/
+*.spec
+
+# Gerados pelo app
+cortes_prontos/
+downloads/
+*.palavras.json
+
+# Credenciais (NUNCA subir)
+client_secret*.json
+token_*.json
+postados.json
+config.json
+.env
