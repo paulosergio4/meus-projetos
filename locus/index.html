@@ -203,6 +203,29 @@ footer{background:var(--olive-deep);color:#C7C9B5;font-size:.85rem}
 .reveal{animation:rise .8s cubic-bezier(.2,.7,.2,1) both}
 .reveal.d1{animation-delay:.08s}.reveal.d2{animation-delay:.16s}.reveal.d3{animation-delay:.24s}
 @keyframes rise{from{transform:translateY(14px)}to{transform:none}}
+
+/* ===== Efeitos de rolagem ===== */
+html,body{overflow-x:clip}
+.progress{position:fixed;left:0;top:env(safe-area-inset-top,0px);height:3px;width:100%;transform-origin:0 50%;transform:scaleX(0);background:linear-gradient(90deg,var(--olive),#B9C38E,#C98B5E);z-index:20;pointer-events:none}
+header{transition:box-shadow .3s ease,background .3s ease}
+header .nav{transition:padding .3s ease}
+header.scrolled{box-shadow:0 10px 30px -18px rgba(20,24,14,.55)}
+header.scrolled .nav{padding-block:8px}
+.brand svg{transition:transform .3s ease}
+header.scrolled .brand svg{transform:scale(.86)}
+.sr{transition:opacity .8s cubic-bezier(.2,.7,.2,1),transform .8s cubic-bezier(.2,.7,.2,1);transition-delay:var(--d,0s)}
+.sr.pre{opacity:0;transform:translateY(28px)}
+.sr.pre.from-left{transform:translateX(-36px)}
+.sr.pre.from-right{transform:translateX(36px)}
+.sr.pre.zoom{transform:scale(.94)}
+.panel{will-change:transform}
+.draw{stroke-dasharray:var(--len);stroke-dashoffset:var(--len);transition:stroke-dashoffset 1.6s cubic-bezier(.4,.1,.2,1) .3s}
+.draw.on{stroke-dashoffset:0}
+.nav ul a{position:relative}
+.nav ul a::after{content:"";position:absolute;left:0;right:0;bottom:-6px;height:2px;border-radius:2px;background:var(--olive);transform:scaleX(0);transition:transform .3s ease}
+.nav ul a.active{color:var(--ink)}
+.nav ul a.active::after{transform:scaleX(1)}
+@media (prefers-reduced-motion:reduce){.sr.pre{opacity:1!important;transform:none!important}.draw{stroke-dashoffset:0!important}.progress{display:none}}
 </style>
 <style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 </head>
@@ -219,7 +242,8 @@ footer{background:var(--olive-deep);color:#C7C9B5;font-size:.85rem}
   </symbol>
 </svg>
 
-<header>
+<div class="progress" id="progress" aria-hidden="true"></div>
+<header id="topo">
   <div class="wrap nav">
     <a class="brand" href="#inicio" aria-label="Lócus Contabilidade Estratégica, início">
       <svg width="38" height="38" style="color:var(--olive)"><use href="#logo"/></svg>
@@ -271,7 +295,7 @@ footer{background:var(--olive-deep);color:#C7C9B5;font-size:.85rem}
               <text x="30" y="146">abr</text><text x="94" y="146">mai</text><text x="158" y="146">jun</text><text x="222" y="146">jul</text><text x="286" y="146">ago</text><text x="334" y="146">set</text>
             </g>
             <path d="M36 92 L100 84 L164 76 L228 64 L292 50 L342 37 L342 130 L36 130 Z" fill="var(--olive)" opacity=".12"/>
-            <path d="M36 92 L100 84 L164 76 L228 64 L292 50 L342 37" fill="none" stroke="var(--olive)" stroke-width="2.4" stroke-linejoin="round"/>
+            <path class="draw" d="M36 92 L100 84 L164 76 L228 64 L292 50 L342 37" fill="none" stroke="var(--olive)" stroke-width="2.4" stroke-linejoin="round"/>
             <path d="M36 110 L100 106 L164 108 L228 101 L292 96 L342 92" fill="none" stroke="var(--line)" stroke-width="2" stroke-dasharray="4 4"/>
             <circle cx="342" cy="37" r="4" fill="var(--olive)"/>
           </svg>
@@ -468,6 +492,56 @@ document.getElementById('form-contato').addEventListener('submit', function(e){
   if(!nome.value.trim()){ msg.textContent = 'Preencha o seu nome para continuar.'; nome.focus(); return; }
   msg.textContent = 'Obrigado, ' + nome.value.trim().split(' ')[0] + '. Esta é uma versão de demonstração; o envio será ativado quando o site for publicado no domínio da Lócus.';
 });
+
+/* ===== Efeitos de rolagem ===== */
+(function(){
+  var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var hdr=document.getElementById('topo'), bar=document.getElementById('progress');
+  var panel=document.querySelector('.hero .panel');
+  var links=[].slice.call(document.querySelectorAll('.nav ul a'));
+  var secs=links.map(function(a){return document.querySelector(a.getAttribute('href'));});
+  var ticking=false;
+  function onScroll(){
+    var y=window.scrollY||document.documentElement.scrollTop;
+    var h=document.documentElement.scrollHeight-window.innerHeight;
+    if(bar) bar.style.transform='scaleX('+(h>0?Math.min(1,y/h):0)+')';
+    if(hdr) hdr.classList.toggle('scrolled',y>24);
+    if(panel&&!reduce&&window.innerWidth>900) panel.style.transform='translateY('+Math.min(60,y*0.12)+'px)';
+    var cur=-1; secs.forEach(function(s,i){ if(s&&s.getBoundingClientRect().top<window.innerHeight*0.4) cur=i; });
+    links.forEach(function(a,i){a.classList.toggle('active',i===cur);});
+    ticking=false;
+  }
+  window.addEventListener('scroll',function(){ if(!ticking){ticking=true;requestAnimationFrame(onScroll);} },{passive:true});
+  onScroll();
+
+  // linha do gráfico se desenhando
+  var line=document.querySelector('.draw');
+  if(line&&line.getTotalLength){ line.style.setProperty('--len',Math.ceil(line.getTotalLength())); requestAnimationFrame(function(){requestAnimationFrame(function(){line.classList.add('on');});}); }
+
+  if(reduce||!('IntersectionObserver' in window)) return;
+  var groups=[
+    ['.sec-head > div','from-left'],['.sec-head > .lede','from-right'],
+    ['.service',''],['.step',''],['.feature','from-left'],['.phone','zoom'],
+    ['.cta','zoom'],['.mvv article',''],['.value',''],['.person',''],
+    ['.contact > div','from-left'],['.contact form','from-right'],['.hero-meta > div','']
+  ];
+  var vh=window.innerHeight, els=[];
+  groups.forEach(function(g){
+    var list=[].slice.call(document.querySelectorAll(g[0]));
+    list.forEach(function(el,i){
+      el.classList.add('sr'); if(g[1]) el.classList.add(g[1]);
+      el.style.setProperty('--d',(Math.min(i,5)*0.08)+'s');
+      // só esconde o que ainda está abaixo da tela: a página fica completa ao carregar
+      if(el.getBoundingClientRect().top>vh*0.92){ el.classList.add('pre'); els.push(el); }
+    });
+  });
+  var io=new IntersectionObserver(function(es){
+    es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.remove('pre'); io.unobserve(e.target);} });
+  },{rootMargin:'0px 0px -8% 0px',threshold:0.12});
+  els.forEach(function(el){io.observe(el);});
+  // segurança: se algo não disparar, mostra tudo depois de alguns segundos parado no fim
+  window.addEventListener('scroll',function(){ if(window.innerHeight+window.scrollY>=document.documentElement.scrollHeight-4){ els.forEach(function(el){el.classList.remove('pre');}); } },{passive:true});
+})();
 </script>
 </body>
 </html>
