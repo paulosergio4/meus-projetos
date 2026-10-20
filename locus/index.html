@@ -59,11 +59,12 @@ header{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:col
 .nav ul{display:flex;gap:28px;list-style:none;margin:0;padding:0;font-size:.88rem;font-weight:500}
 .nav ul a{text-decoration:none;color:var(--muted);transition:color .2s}
 .nav ul a:hover{color:var(--ink)}
-.btn{display:inline-flex;align-items:center;gap:10px;font-family:var(--font-body);font-weight:600;font-size:.9rem;text-decoration:none;padding:13px 22px;border-radius:999px;border:1px solid var(--olive);background:var(--olive);color:var(--on-olive);cursor:pointer;transition:transform .2s,background .2s}
+.btn{display:inline-flex;align-items:center;gap:10px;font-family:var(--font-body);font-weight:600;font-size:.9rem;text-decoration:none;padding:13px 22px;border-radius:999px;border:1px solid var(--olive);background:var(--olive);color:var(--on-olive);cursor:pointer;transition:transform .2s,background .2s;white-space:nowrap;line-height:1.2}
 .btn:hover{transform:translateY(-1px);background:var(--olive-deep);border-color:var(--olive-deep);color:var(--on-olive)}
 .btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
 .btn.ghost:hover{border-color:var(--olive);background:transparent;color:var(--olive)}
 @media (max-width:860px){.nav ul{display:none}.nav .btn{padding:10px 16px;font-size:.82rem}}
+@media (max-width:480px){.nav{gap:12px}.nav .btn{padding:9px 14px;font-size:.78rem}.brand svg{width:32px;height:32px}.brand-name b{font-size:1.1rem}.brand-name small{letter-spacing:.14em;font-size:.54rem}}
 
 /* Hero */
 .hero{padding-block:clamp(56px,9vw,112px) clamp(48px,7vw,88px)}
