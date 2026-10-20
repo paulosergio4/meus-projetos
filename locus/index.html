@@ -201,7 +201,7 @@ footer{background:var(--olive-deep);color:#C7C9B5;font-size:.85rem}
 @media (max-width:640px){.foot-meta{text-align:left}}
 
 .reveal{animation:rise .8s cubic-bezier(.2,.7,.2,1) both}
-.reveal.d1{animation-delay:.08s}.reveal.d2{animation-delay:.16s}.reveal.d3{animation-delay:.24s}
+.reveal{animation-delay:.15s}.reveal.d1{animation-delay:.3s}.reveal.d2{animation-delay:.45s}.reveal.d3{animation-delay:.6s}
 @keyframes rise{from{transform:translateY(14px)}to{transform:none}}
 
 /* ===== Efeitos de rolagem ===== */
@@ -213,13 +213,13 @@ header.scrolled{box-shadow:0 10px 30px -18px rgba(20,24,14,.55)}
 header.scrolled .nav{padding-block:8px}
 .brand svg{transition:transform .3s ease}
 header.scrolled .brand svg{transform:scale(.86)}
-.sr{transition:opacity .8s cubic-bezier(.2,.7,.2,1),transform .8s cubic-bezier(.2,.7,.2,1);transition-delay:var(--d,0s)}
+.sr{transition:opacity .95s cubic-bezier(.2,.7,.2,1),transform .95s cubic-bezier(.2,.7,.2,1);transition-delay:var(--d,0s)}
 .sr.pre{opacity:0;transform:translateY(28px)}
 .sr.pre.from-left{transform:translateX(-36px)}
 .sr.pre.from-right{transform:translateX(36px)}
 .sr.pre.zoom{transform:scale(.94)}
 .panel{will-change:transform}
-.draw{stroke-dasharray:var(--len);stroke-dashoffset:var(--len);transition:stroke-dashoffset 1.6s cubic-bezier(.4,.1,.2,1) .3s}
+.draw{stroke-dasharray:var(--len);stroke-dashoffset:var(--len);transition:stroke-dashoffset 1.8s cubic-bezier(.4,.1,.2,1) .7s}
 .draw.on{stroke-dashoffset:0}
 .nav ul a{position:relative}
 .nav ul a::after{content:"";position:absolute;left:0;right:0;bottom:-6px;height:2px;border-radius:2px;background:var(--olive);transform:scaleX(0);transition:transform .3s ease}
@@ -530,7 +530,7 @@ document.getElementById('form-contato').addEventListener('submit', function(e){
     var list=[].slice.call(document.querySelectorAll(g[0]));
     list.forEach(function(el,i){
       el.classList.add('sr'); if(g[1]) el.classList.add(g[1]);
-      el.style.setProperty('--d',(Math.min(i,5)*0.08)+'s');
+      el.style.setProperty('--d',(0.15+Math.min(i,5)*0.12)+'s');
       // só esconde o que ainda está abaixo da tela: a página fica completa ao carregar
       if(el.getBoundingClientRect().top>vh*0.92){ el.classList.add('pre'); els.push(el); }
     });
