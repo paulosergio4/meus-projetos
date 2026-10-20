@@ -83,10 +83,11 @@ header{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:col
 .panel-head span{font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:600}
 .panel-head i{font-style:normal;font-family:var(--font-data);font-size:.72rem;color:var(--muted)}
 .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:20px}
-.kpi{padding:14px;border-radius:12px;background:var(--beige)}
+.kpi{padding:14px;border-radius:12px;background:var(--beige);min-width:0;display:flex;flex-direction:column;gap:2px}
 .kpi small{display:block;font-size:.68rem;color:var(--muted);font-weight:500}
-.kpi b{font-family:var(--font-data);font-size:1.15rem;font-weight:500;font-variant-numeric:tabular-nums}
-.kpi em{font-style:normal;font-size:.7rem;color:var(--olive);font-weight:600}
+.kpi b{display:block;font-family:var(--font-data);font-size:1.15rem;font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap}
+.kpi em{display:block;font-style:normal;font-size:.7rem;color:var(--olive);font-weight:600}
+@media (max-width:560px){.kpis{grid-template-columns:1fr;gap:10px}.kpi{flex-direction:row;flex-wrap:wrap;align-items:baseline;justify-content:space-between;column-gap:12px}.kpi small{width:100%}.panel{padding:20px}.panel-head{flex-wrap:wrap}}
 .chart{margin-top:22px}
 .chart svg{width:100%;height:auto;display:block}
 .chart-legend{display:flex;gap:18px;font-size:.72rem;color:var(--muted);margin-top:8px}
@@ -153,8 +154,8 @@ section{padding-block:clamp(64px,9vw,112px)}
 .cta ol{margin:0;padding:0;list-style:none;display:grid;gap:14px;font-size:.92rem}
 .cta ol li{display:grid;grid-template-columns:30px 1fr;gap:10px;align-items:start}
 .cta ol li b{font-family:var(--font-data);font-weight:500;opacity:.7}
-.cta .btn{background:var(--on-olive);color:var(--olive-deep);border-color:var(--on-olive);margin-top:26px}
-.cta .btn:hover{background:var(--paper);color:var(--olive-deep)}
+.cta .btn{background:var(--paper);color:var(--ink);border-color:var(--paper);margin-top:26px}
+.cta .btn:hover{background:var(--card);border-color:var(--card);color:var(--ink)}
 @media (max-width:820px){.cta{grid-template-columns:1fr}}
 
 /* Missão, visão, valores */
