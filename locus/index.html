@@ -200,8 +200,8 @@ footer{background:var(--olive-deep);color:#C7C9B5;font-size:.85rem}
 .foot-meta{display:grid;gap:4px;text-align:right;font-family:var(--font-data);font-size:.76rem}
 @media (max-width:640px){.foot-meta{text-align:left}}
 
-.reveal{animation:rise .8s cubic-bezier(.2,.7,.2,1) both}
-.reveal{animation-delay:.15s}.reveal.d1{animation-delay:.3s}.reveal.d2{animation-delay:.45s}.reveal.d3{animation-delay:.6s}
+.reveal{animation:rise .6s cubic-bezier(.2,.7,.2,1) both}
+.reveal{animation-delay:.1s}.reveal.d1{animation-delay:.2s}.reveal.d2{animation-delay:.3s}.reveal.d3{animation-delay:.4s}
 @keyframes rise{from{transform:translateY(14px)}to{transform:none}}
 
 /* ===== Efeitos de rolagem ===== */
@@ -213,18 +213,24 @@ header.scrolled{box-shadow:0 10px 30px -18px rgba(20,24,14,.55)}
 header.scrolled .nav{padding-block:8px}
 .brand svg{transition:transform .3s ease}
 header.scrolled .brand svg{transform:scale(.86)}
-.sr{transition:opacity .95s cubic-bezier(.2,.7,.2,1),transform .95s cubic-bezier(.2,.7,.2,1);transition-delay:var(--d,0s)}
+.sr{transition:opacity .6s cubic-bezier(.2,.7,.2,1),transform .6s cubic-bezier(.2,.7,.2,1);transition-delay:var(--d,0s)}
 .sr.pre{opacity:0;transform:translateY(28px)}
 .sr.pre.from-left{transform:translateX(-36px)}
 .sr.pre.from-right{transform:translateX(36px)}
 .sr.pre.zoom{transform:scale(.94)}
 .panel{will-change:transform}
-.draw{stroke-dasharray:var(--len);stroke-dashoffset:var(--len);transition:stroke-dashoffset 1.8s cubic-bezier(.4,.1,.2,1) .7s}
+.draw{stroke-dasharray:var(--len);stroke-dashoffset:var(--len);transition:stroke-dashoffset 1.2s cubic-bezier(.4,.1,.2,1) .3s}
 .draw.on{stroke-dashoffset:0}
 .nav ul a{position:relative}
 .nav ul a::after{content:"";position:absolute;left:0;right:0;bottom:-6px;height:2px;border-radius:2px;background:var(--olive);transform:scaleX(0);transition:transform .3s ease}
 .nav ul a.active{color:var(--ink)}
 .nav ul a.active::after{transform:scaleX(1)}
+.kpi.sr.pre{transform:translateY(16px) scale(.97)}
+.doc.sr.pre{opacity:0;transform:translateX(48px)}
+.chart .area{transition:opacity .8s ease .6s}
+.chart .area.pre{opacity:0}
+.chart circle.pre{transform:scale(0)}
+.chart circle{transform-box:fill-box;transform-origin:center;transition:transform .45s cubic-bezier(.3,1.6,.5,1) 1.2s}
 @media (prefers-reduced-motion:reduce){.sr.pre{opacity:1!important;transform:none!important}.draw{stroke-dashoffset:0!important}.progress{display:none}}
 </style>
 <style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
@@ -281,9 +287,9 @@ header.scrolled .brand svg{transform:scale(.86)}
       <div class="panel reveal d2" aria-label="Exemplo ilustrativo do painel mensal entregue ao cliente">
         <div class="panel-head"><span>Painel mensal · exemplo</span><i>competência 09/2026</i></div>
         <div class="kpis">
-          <div class="kpi"><small>Faturamento</small><b>R$ 184 mil</b><em>+8,4% no mês</em></div>
-          <div class="kpi"><small>Margem líquida</small><b>11,7%</b><em>+1,9 p.p.</em></div>
-          <div class="kpi"><small>Carga tributária</small><b>6,1%</b><em>Simples Nacional</em></div>
+          <div class="kpi"><small>Faturamento</small><b data-to="184" data-pre="R$ " data-suf=" mil" data-dec="0">R$ 184 mil</b><em data-to="8.4" data-pre="+" data-suf="% no mês" data-dec="1">+8,4% no mês</em></div>
+          <div class="kpi"><small>Margem líquida</small><b data-to="11.7" data-suf="%" data-dec="1">11,7%</b><em data-to="1.9" data-pre="+" data-suf=" p.p." data-dec="1">+1,9 p.p.</em></div>
+          <div class="kpi"><small>Carga tributária</small><b data-to="6.1" data-suf="%" data-dec="1">6,1%</b><em>Simples Nacional</em></div>
         </div>
         <div class="chart">
           <svg viewBox="0 0 360 150" role="img" aria-label="Gráfico de faturamento e despesas de abril a setembro">
@@ -294,7 +300,7 @@ header.scrolled .brand svg{transform:scale(.86)}
               <text x="0" y="23">200</text><text x="0" y="63">150</text><text x="0" y="103">100</text><text x="6" y="133">75</text>
               <text x="30" y="146">abr</text><text x="94" y="146">mai</text><text x="158" y="146">jun</text><text x="222" y="146">jul</text><text x="286" y="146">ago</text><text x="334" y="146">set</text>
             </g>
-            <path d="M36 92 L100 84 L164 76 L228 64 L292 50 L342 37 L342 130 L36 130 Z" fill="var(--olive)" opacity=".12"/>
+            <path class="area" d="M36 92 L100 84 L164 76 L228 64 L292 50 L342 37 L342 130 L36 130 Z" fill="var(--olive)" opacity=".12"/>
             <path class="draw" d="M36 92 L100 84 L164 76 L228 64 L292 50 L342 37" fill="none" stroke="var(--olive)" stroke-width="2.4" stroke-linejoin="round"/>
             <path d="M36 110 L100 106 L164 108 L228 101 L292 96 L342 92" fill="none" stroke="var(--line)" stroke-width="2" stroke-dasharray="4 4"/>
             <circle cx="342" cy="37" r="4" fill="var(--olive)"/>
@@ -514,23 +520,42 @@ document.getElementById('form-contato').addEventListener('submit', function(e){
   window.addEventListener('scroll',function(){ if(!ticking){ticking=true;requestAnimationFrame(onScroll);} },{passive:true});
   onScroll();
 
-  // linha do gráfico se desenhando
-  var line=document.querySelector('.draw');
-  if(line&&line.getTotalLength){ line.style.setProperty('--len',Math.ceil(line.getTotalLength())); requestAnimationFrame(function(){requestAnimationFrame(function(){line.classList.add('on');});}); }
+  // painel de exemplo: linha, área, ponto e números contando quando o painel aparece
+  var line=document.querySelector('.draw'), area=document.querySelector('.chart .area'), dot=document.querySelector('.chart circle');
+  if(line&&line.getTotalLength) line.style.setProperty('--len',Math.ceil(line.getTotalLength()));
+  var counters=[].slice.call(document.querySelectorAll('.kpi [data-to]'));
+  function fmt(el,v){var d=+el.dataset.dec||0;return (el.dataset.pre||'')+v.toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d})+(el.dataset.suf||'');}
+  function contar(el,atraso){var alvo=+el.dataset.to,dur=900,t0=performance.now()+atraso;el.textContent=fmt(el,0);
+    (function passo(t){var x=Math.max(0,Math.min(1,(t-t0)/dur));el.textContent=fmt(el,alvo*(1-Math.pow(1-x,3)));if(x<1)requestAnimationFrame(passo);else el.textContent=fmt(el,alvo);})(performance.now());}
+  var kpis=[].slice.call(document.querySelectorAll('.hero .kpi'));
+  function playPanel(){
+    if(line) line.classList.add('on'); if(area) area.classList.remove('pre'); if(dot) dot.classList.remove('pre');
+    kpis.forEach(function(k){k.classList.remove('pre');});
+    counters.forEach(function(el,i){contar(el,150+Math.floor(i/2)*110);});
+  }
+  if(!reduce&&panel){
+    if(area) area.classList.add('pre'); if(dot) dot.classList.add('pre');
+    kpis.forEach(function(k,i){k.classList.add('sr','pre');k.style.setProperty('--d',(0.1+i*0.1)+'s');});
+    counters.forEach(function(el){el.textContent=fmt(el,0);});
+    if('IntersectionObserver' in window){
+      var po=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){po.disconnect();requestAnimationFrame(function(){requestAnimationFrame(playPanel);});}});},{threshold:.25});
+      po.observe(panel);
+    } else playPanel();
+  } else if(line){ line.classList.add('on'); }
 
   if(reduce||!('IntersectionObserver' in window)) return;
   var groups=[
     ['.sec-head > div','from-left'],['.sec-head > .lede','from-right'],
     ['.service',''],['.step',''],['.feature','from-left'],['.phone','zoom'],
-    ['.cta','zoom'],['.mvv article',''],['.value',''],['.person',''],
+    ['.cta','zoom'],['.doc','doc'],['.mvv article',''],['.value',''],['.person',''],
     ['.contact > div','from-left'],['.contact form','from-right'],['.hero-meta > div','']
   ];
   var vh=window.innerHeight, els=[];
   groups.forEach(function(g){
     var list=[].slice.call(document.querySelectorAll(g[0]));
     list.forEach(function(el,i){
-      el.classList.add('sr'); if(g[1]) el.classList.add(g[1]);
-      el.style.setProperty('--d',(0.15+Math.min(i,5)*0.12)+'s');
+      el.classList.add('sr'); if(g[1]&&g[1]!=='doc') el.classList.add(g[1]);
+      el.style.setProperty('--d',(g[1]==='doc'?0.25+i*0.1:0.08+Math.min(i,5)*0.08)+'s');
       // só esconde o que ainda está abaixo da tela: a página fica completa ao carregar
       if(el.getBoundingClientRect().top>vh*0.92){ el.classList.add('pre'); els.push(el); }
     });
