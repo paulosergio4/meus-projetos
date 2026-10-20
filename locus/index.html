@@ -213,13 +213,13 @@ header.scrolled{box-shadow:0 10px 30px -18px rgba(20,24,14,.55)}
 header.scrolled .nav{padding-block:8px}
 .brand svg{transition:transform .3s ease}
 header.scrolled .brand svg{transform:scale(.86)}
-.sr{transition:opacity .6s cubic-bezier(.2,.7,.2,1),transform .6s cubic-bezier(.2,.7,.2,1);transition-delay:var(--d,0s)}
+.sr{transition:opacity .42s cubic-bezier(.2,.7,.2,1),transform .42s cubic-bezier(.2,.7,.2,1);transition-delay:var(--d,0s)}
 .sr.pre{opacity:0;transform:translateY(28px)}
 .sr.pre.from-left{transform:translateX(-36px)}
 .sr.pre.from-right{transform:translateX(36px)}
 .sr.pre.zoom{transform:scale(.94)}
 .panel{will-change:transform}
-.draw{stroke-dasharray:var(--len);stroke-dashoffset:var(--len);transition:stroke-dashoffset 1.2s cubic-bezier(.4,.1,.2,1) .3s}
+.draw{stroke-dasharray:var(--len);stroke-dashoffset:var(--len);transition:stroke-dashoffset 2.2s cubic-bezier(.4,.1,.2,1) .35s}
 .draw.on{stroke-dashoffset:0}
 .nav ul a{position:relative}
 .nav ul a::after{content:"";position:absolute;left:0;right:0;bottom:-6px;height:2px;border-radius:2px;background:var(--olive);transform:scaleX(0);transition:transform .3s ease}
@@ -227,10 +227,10 @@ header.scrolled .brand svg{transform:scale(.86)}
 .nav ul a.active::after{transform:scaleX(1)}
 .kpi.sr.pre{transform:translateY(16px) scale(.97)}
 .doc.sr.pre{opacity:0;transform:translateX(48px)}
-.chart .area{transition:opacity .8s ease .6s}
+.chart .area{transition:opacity 1.2s ease 1.2s}
 .chart .area.pre{opacity:0}
 .chart circle.pre{transform:scale(0)}
-.chart circle{transform-box:fill-box;transform-origin:center;transition:transform .45s cubic-bezier(.3,1.6,.5,1) 1.2s}
+.chart circle{transform-box:fill-box;transform-origin:center;transition:transform .5s cubic-bezier(.3,1.6,.5,1) 2.4s}
 @media (prefers-reduced-motion:reduce){.sr.pre{opacity:1!important;transform:none!important}.draw{stroke-dashoffset:0!important}.progress{display:none}}
 
 /* ===== Logo: ponto no lugar do acento do Ó ===== */
@@ -526,7 +526,7 @@ document.getElementById('form-contato').addEventListener('submit', function(e){
   if(line&&line.getTotalLength) line.style.setProperty('--len',Math.ceil(line.getTotalLength()));
   var counters=[].slice.call(document.querySelectorAll('.kpi [data-to]'));
   function fmt(el,v){var d=+el.dataset.dec||0;return (el.dataset.pre||'')+v.toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d})+(el.dataset.suf||'');}
-  function contar(el,atraso){var alvo=+el.dataset.to,dur=900,t0=performance.now()+atraso;el.textContent=fmt(el,0);
+  function contar(el,atraso){var alvo=+el.dataset.to,dur=1500,t0=performance.now()+atraso;el.textContent=fmt(el,0);
     (function passo(t){var x=Math.max(0,Math.min(1,(t-t0)/dur));el.textContent=fmt(el,alvo*(1-Math.pow(1-x,3)));if(x<1)requestAnimationFrame(passo);else el.textContent=fmt(el,alvo);})(performance.now());}
   var kpis=[].slice.call(document.querySelectorAll('.hero .kpi'));
   function playPanel(){
@@ -556,7 +556,7 @@ document.getElementById('form-contato').addEventListener('submit', function(e){
     var list=[].slice.call(document.querySelectorAll(g[0]));
     list.forEach(function(el,i){
       el.classList.add('sr'); if(g[1]&&g[1]!=='doc') el.classList.add(g[1]);
-      el.style.setProperty('--d',(g[1]==='doc'?0.25+i*0.1:0.08+Math.min(i,5)*0.08)+'s');
+      el.style.setProperty('--d',(g[1]==='doc'?0.18+i*0.07:0.04+Math.min(i,5)*0.05)+'s');
       // só esconde o que ainda está abaixo da tela: a página fica completa ao carregar
       if(el.getBoundingClientRect().top>vh*0.92){ el.classList.add('pre'); els.push(el); }
     });
