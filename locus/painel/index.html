@@ -135,7 +135,14 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
 @keyframes entra{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
 .sr{transition:opacity .9s cubic-bezier(.2,.7,.2,1),transform .9s cubic-bezier(.2,.7,.2,1);transition-delay:var(--d,.15s)}
 .sr.pre{opacity:0;transform:translateY(26px)}
-.ring circle+circle{transition:stroke-dasharray 1.4s cubic-bezier(.4,.1,.2,1) .5s}
+.arc,.slice{transition:stroke-dasharray 1.5s cubic-bezier(.3,.1,.2,1),opacity .15s linear;transition-delay:var(--ad,.3s)}
+.sline{transition:stroke-dashoffset 1.6s cubic-bezier(.4,.1,.2,1);transition-delay:var(--ad,.3s)}
+.sarea{transition:opacity 1.2s ease;transition-delay:calc(var(--ad,.3s) + .5s)}
+.pt{transform-box:fill-box;transform-origin:center}
+.pt.go{animation:pop .6s cubic-bezier(.3,1.6,.5,1) both;animation-delay:var(--ad,.6s)}
+.ptl.go{animation:sobe .6s ease both;animation-delay:calc(var(--ad,.6s) + .15s)}
+@keyframes pop{from{transform:scale(0)}to{transform:none}}
+@keyframes sobe{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .chart rect{transform-box:fill-box;transform-origin:bottom;animation:cresce .9s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(.4s + var(--i,0) * .1s)}
 @keyframes cresce{from{transform:scaleY(0)}to{transform:none}}
 .chart path[stroke]{stroke-dasharray:2000;stroke-dashoffset:2000;animation:traca 1.8s cubic-bezier(.4,.1,.2,1) .5s forwards}
@@ -309,7 +316,7 @@ function spark(id,vals,cor){
   const pts=vals.map((v,i)=>[i/(vals.length-1)*196+2,34-(v-mn)/r*28]);
   const p=pts.map(q=>q.join(",")).join(" ");
   el.innerHTML=`<defs><linearGradient id="g${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${cor}" stop-opacity=".35"/><stop offset="1" stop-color="${cor}" stop-opacity="0"/></linearGradient></defs>
-  <polygon points="2,38 ${p} 198,38" fill="url(#g${id})"/><polyline points="${p}" fill="none" stroke="${cor}" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>`;
+  <polygon class="sarea" points="2,38 ${p} 198,38" fill="url(#g${id})"/><polyline class="sline" pathLength="1" points="${p}" fill="none" stroke="${cor}" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>`;
 }
 function variacao(vals,inverso){
   if(vals.length<2||!vals[0]) return {t:"",c:"neu"};
@@ -321,8 +328,8 @@ function ring(v,cor,nome){
   const r=46,c=2*Math.PI*r,f=Math.max(0,Math.min(1,v));
   return `<div class="ring"><svg viewBox="0 0 120 120" role="img" aria-label="${esc(nome)}: ${pct(v)}">
    <circle cx="60" cy="60" r="${r}" fill="none" stroke="${C.line}" stroke-width="11"/>
-   ${f>0.005?`<circle cx="60" cy="60" r="${r}" fill="none" stroke="${cor}" stroke-width="11" stroke-linecap="round" stroke-dasharray="${c*f} ${c}" transform="rotate(-90 60 60)"/>`:""}
-   <text x="60" y="66" text-anchor="middle" fill="${C.txt}" font-family="IBM Plex Mono, monospace" font-size="19" font-weight="500">${pct(v)}</text></svg>
+   ${f>0.005?`<circle cx="60" cy="60" r="${r}" fill="none" stroke="${cor}" stroke-width="11" stroke-linecap="round" class="arc" data-dash="${c*f}" data-tot="${c}" stroke-dasharray="${c*f} ${c}" transform="rotate(-90 60 60)"/>`:""}
+   <text x="60" y="66" text-anchor="middle" fill="${C.txt}" font-family="IBM Plex Mono, monospace" font-size="19" font-weight="500" data-count="${v}" data-fmt="pct">${pct(v)}</text></svg>
    <span class="n">${esc(nome)}</span></div>`;
 }
 function nice(mx){if(mx<=0)return 1;const p=Math.pow(10,Math.floor(Math.log10(mx)));const f=mx/p;return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*p;}
@@ -353,7 +360,7 @@ function linha(M){
   for(let i=1;i<pts.length;i++){const [x0,y0]=pts[i-1],[x1,y1]=pts[i],cx=(x0+x1)/2;d+=` C${cx},${y0} ${cx},${y1} ${x1},${y1}`;}
   if(pts.length>1) s+=`<path d="${d} L${pts[pts.length-1][0]},${y(Math.max(bot,0))} L${pts[0][0]},${y(Math.max(bot,0))}Z" fill="url(#gl)"/><path d="${d}" fill="none" stroke="${C.sage}" stroke-width="3" stroke-linecap="round"/>`;
   M.forEach((m,i)=>{const [px,py]=pts[i],cor=m.res<0?C.bad:C.gold;
-    s+=`<circle cx="${px}" cy="${py}" r="5.5" fill="${cor}" stroke="#1C2216" stroke-width="2"/><text x="${Math.min(W-R,Math.max(L+20,px))}" y="${py-12}" text-anchor="${i===M.length-1&&M.length>1?"end":i===0&&M.length>1?"start":"middle"}" fill="${C.txt}" font-size="11.5" font-weight="600" font-family="IBM Plex Mono, monospace">${brl.format(m.res)}</text>
+    s+=`<circle class="pt" style="--ad:${(0.9+i*0.2).toFixed(2)}s" cx="${px}" cy="${py}" r="5.5" fill="${cor}" stroke="#1C2216" stroke-width="2"/><text class="ptl" style="--ad:${(0.9+i*0.2).toFixed(2)}s" x="${Math.min(W-R,Math.max(L+20,px))}" y="${py-12}" text-anchor="${i===M.length-1&&M.length>1?"end":i===0&&M.length>1?"start":"middle"}" fill="${C.txt}" font-size="11.5" font-weight="600" font-family="IBM Plex Mono, monospace">${brl.format(m.res)}</text>
     <text x="${px}" y="${H-8}" text-anchor="middle" fill="${C.muted}" font-size="12" font-family="Montserrat, sans-serif">${MES[m.mes]}/${String(m.ano).slice(2)}</text>`;});
   return s+"</svg>";
 }
@@ -363,9 +370,9 @@ function rosca(lista,total){
   const fatias=top.map(x=>({n:x.c,v:x.v})); if(resto>0) fatias.push({n:"Demais despesas",v:resto});
   const r=70,c=2*Math.PI*r; let acc=0;
   let s=`<svg viewBox="0 0 190 190" role="img" aria-label="Para onde vai o dinheiro"><g transform="rotate(-90 95 95)">`;
-  fatias.forEach((f,i)=>{const fr=total?f.v/total:0; s+=`<circle cx="95" cy="95" r="${r}" fill="none" stroke="${cores[i]}" stroke-width="26" stroke-dasharray="${Math.max(0,c*fr-2)} ${c}" stroke-dashoffset="${-c*acc}"><title>${esc(f.n)}: ${pct(fr)}</title></circle>`; acc+=fr;});
+  fatias.forEach((f,i)=>{const fr=total?f.v/total:0; s+=`<circle cx="95" cy="95" r="${r}" fill="none" stroke="${cores[i]}" stroke-width="26" class="slice" style="--ad:${(0.3+i*0.15).toFixed(2)}s" data-dash="${Math.max(0,c*fr-2)}" data-tot="${c}" stroke-dasharray="${Math.max(0,c*fr-2)} ${c}" stroke-dashoffset="${-c*acc}"><title>${esc(f.n)}: ${pct(fr)}</title></circle>`; acc+=fr;});
   s+=`</g><text x="95" y="90" text-anchor="middle" fill="${C.muted}" font-size="10" font-family="Montserrat, sans-serif" letter-spacing="1.5">SAÍDAS</text>
-  <text x="95" y="110" text-anchor="middle" fill="${C.txt}" font-size="15" font-weight="600" font-family="IBM Plex Mono, monospace">${kfmt(total)}</text></svg>`;
+  <text x="95" y="110" text-anchor="middle" fill="${C.txt}" font-size="15" font-weight="600" font-family="IBM Plex Mono, monospace" data-count="${total}" data-fmt="kfmt">${kfmt(total)}</text></svg>`;
   s+="<ul>"+fatias.map((f,i)=>`<li><i style="background:${cores[i]}"></i><span>${esc(f.n)}</span><b>${pct(total?f.v/total:0,0)}</b></li>`).join("")+"</ul>";
   return s;
 }
@@ -382,11 +389,11 @@ function render(d){
   const bd=$("badge"); bd.textContent=d.exemplo?"Dados de exemplo":`${d.rows.length} lançamentos`; bd.className="badge"+(d.exemplo?"":" ok");
 
   const ent=M.map(m=>m.ent),sai=M.map(m=>m.sai),res=M.map(m=>m.res),mar=M.map(m=>m.mar);
-  $("k-rec").textContent=brl.format(k.ent/k.n); let v=variacao(ent); $("k-rec-s").textContent=v.t; $("k-rec-s").className="sub "+v.c;
-  $("k-desp").textContent=brl.format(k.sai/k.n); v=variacao(sai,true); $("k-desp-s").textContent=v.t; $("k-desp-s").className="sub "+v.c;
-  $("k-res").textContent=brl.format(k.res/k.n); $("k-res").className="val "+(k.res<0?"down":"");
+  $("k-rec").textContent=brl.format(k.ent/k.n); $("k-rec").dataset.count=k.ent/k.n; $("k-rec").dataset.fmt="brl"; let v=variacao(ent); $("k-rec-s").textContent=v.t; $("k-rec-s").className="sub "+v.c;
+  $("k-desp").textContent=brl.format(k.sai/k.n); $("k-desp").dataset.count=k.sai/k.n; $("k-desp").dataset.fmt="brl"; v=variacao(sai,true); $("k-desp-s").textContent=v.t; $("k-desp-s").className="sub "+v.c;
+  $("k-res").textContent=brl.format(k.res/k.n); $("k-res").dataset.count=k.res/k.n; $("k-res").dataset.fmt="brl"; $("k-res").className="val "+(k.res<0?"down":"");
   $("k-res-s").textContent=k.res>=0?"Empresa no azul":"Empresa no vermelho"; $("k-res-s").className="sub "+(k.res>=0?"up":"down");
-  $("k-mar").textContent=pct(k.mar); $("k-mar-s").textContent=k.mar>=.1?"Saudável, acima de 10%":"Atenção, abaixo de 10%"; $("k-mar-s").className="sub "+(k.mar>=.1?"up":"down");
+  $("k-mar").textContent=pct(k.mar); $("k-mar").dataset.count=k.mar; $("k-mar").dataset.fmt="pct"; $("k-mar-s").textContent=k.mar>=.1?"Saudável, acima de 10%":"Atenção, abaixo de 10%"; $("k-mar-s").className="sub "+(k.mar>=.1?"up":"down");
   spark("s-rec",ent,C.sage); spark("s-desp",sai,C.copper); spark("s-res",res,C.gold); spark("s-mar",mar,C.olive);
 
   const R=x=>k.ent?x/k.ent:0;
@@ -400,7 +407,7 @@ function render(d){
   $("line").innerHTML=linha(M);
   $("donut").innerHTML=k.sai?rosca(k.lista,k.sai):'<p style="color:var(--muted)">Sem saídas no período.</p>';
   const mx=k.lista[0]?.m||1, cores=[C.copper,C.gold,C.sage,C.sage,C.olive,C.olive,C.moss,C.moss];
-  $("rank").innerHTML=k.lista.slice(0,8).map((x,i)=>`<div class="rk"><span title="${esc(x.c)}">${esc(x.c)}</span><div class="bar"><i style="--i:${i};width:${Math.max(2,x.m/mx*100)}%;background:${cores[i]}"></i></div><b>${brl.format(x.m)}</b></div>`).join("")||'<p style="color:var(--muted)">Sem saídas no período.</p>';
+  $("rank").innerHTML=k.lista.slice(0,8).map((x,i)=>`<div class="rk"><span title="${esc(x.c)}">${esc(x.c)}</span><div class="bar"><i style="--i:${i};width:${Math.max(2,x.m/mx*100)}%;background:${cores[i]}"></i></div><b data-count="${x.m}" data-fmt="brl">${brl.format(x.m)}</b></div>`).join("")||'<p style="color:var(--muted)">Sem saídas no período.</p>';
 
   // alertas
   const al=[];
@@ -415,6 +422,7 @@ function render(d){
   const neg=M.filter(m=>m.res<0).length; if(neg) al.push([C.bad,`${neg} ${neg>1?"meses":"mês"} com resultado negativo no período.`]);
   al.push(k.mar<.1?[C.copper,`Margem de ${pct(k.mar)}, abaixo de 10%: revisar preços, compras e despesas fixas.`]:[C.good,`Margem de ${pct(k.mar)}, em nível saudável.`]);
   $("alerts").innerHTML=al.map(([c,t])=>`<li><i style="background:${c}"></i><span>${t}</span></li>`).join("");
+  if(typeof animarIndicadores==="function") requestAnimationFrame(()=>requestAnimationFrame(animarIndicadores));
 }
 
 /* ---------- arquivo ---------- */
@@ -436,6 +444,39 @@ const dz=$("drop");
 ["dragleave","drop"].forEach(ev=>document.addEventListener(ev,e=>{e.preventDefault();if(ev==="drop"||e.target===document.documentElement)dz.classList.remove("over");}));
 document.addEventListener("drop",e=>{dz.classList.remove("over");abrir(e.dataTransfer.files[0]);});
 
+
+/* ---------- animação dos indicadores ---------- */
+const semMov=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+const FMT={brl:v=>brl.format(v),pct:v=>pct(v),kfmt:v=>kfmt(v)};
+const ease=t=>1-Math.pow(1-t,3);
+function contar(el,atraso){
+  const alvo=+el.dataset.count, f=FMT[el.dataset.fmt]||(v=>v); if(!isFinite(alvo)) return;
+  const dur=1300, t0=performance.now()+atraso*1000; el.textContent=f(0);
+  (function passo(t){ const x=Math.max(0,Math.min(1,(t-t0)/dur)); el.textContent=f(alvo*ease(x)); if(x<1&&!el._parar) requestAnimationFrame(passo); else el.textContent=f(alvo); })(performance.now());
+}
+function animarQuadro(q){
+  if(semMov) return;
+  const base=parseFloat(getComputedStyle(q).getPropertyValue("--d"))||0.2;
+  q.querySelectorAll(".arc,.slice").forEach(a=>{const tot=a.dataset.tot; a.style.transition="none"; a.style.opacity=0; a.setAttribute("stroke-dasharray","0 "+tot);
+    if(!a.style.getPropertyValue("--ad")) a.style.setProperty("--ad",(base+0.3)+"s"); else a.style.setProperty("--ad",(base+parseFloat(a.style.getPropertyValue("--ad")))+"s");
+    void a.getBoundingClientRect(); a.style.transition=""; requestAnimationFrame(()=>{a.style.opacity=1;a.setAttribute("stroke-dasharray",a.dataset.dash+" "+tot);});});
+  q.querySelectorAll(".sline").forEach(l=>{l.style.transition="none"; l.style.strokeDasharray=1; l.style.strokeDashoffset=1; l.style.setProperty("--ad",(base+0.25)+"s"); void l.getBoundingClientRect(); l.style.transition=""; requestAnimationFrame(()=>l.style.strokeDashoffset=0);
+    const fim=()=>{l.style.transition="none";l.style.strokeDasharray="";l.style.strokeDashoffset="";}; l.addEventListener("transitionend",fim,{once:true}); setTimeout(fim,(base+2.2)*1000);});
+  q.querySelectorAll(".sarea").forEach(a=>{a.style.transition="none";a.style.opacity=0;a.style.setProperty("--ad",(base+0.25)+"s");void a.getBoundingClientRect();a.style.transition="";requestAnimationFrame(()=>a.style.opacity=1);});
+  q.querySelectorAll(".pt,.ptl").forEach(p=>{p.classList.remove("go"); const d=parseFloat(p.style.getPropertyValue("--ad"))||0.9; p.style.setProperty("--ad",(base+d)+"s"); void p.getBoundingClientRect(); p.classList.add("go");});
+  q.querySelectorAll("[data-count]").forEach(el=>contar(el,base+0.25));
+}
+let obsQ=null;
+function animarIndicadores(){
+  if(semMov) return;
+  const qs=[...document.querySelectorAll(".grid > .p")];
+  if(obsQ) obsQ.disconnect();
+  obsQ=("IntersectionObserver" in window)?new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){animarQuadro(e.target);obsQ.unobserve(e.target);}}),{threshold:.15}):null;
+  qs.forEach(q=>obsQ?obsQ.observe(q):animarQuadro(q));
+}
+window.addEventListener("beforeprint",()=>{document.querySelectorAll("[data-count]").forEach(el=>{el._parar=true;el.textContent=(FMT[el.dataset.fmt]||(v=>v))(+el.dataset.count);});
+  document.querySelectorAll(".arc,.slice").forEach(a=>{a.style.transition="none";a.style.opacity=1;a.setAttribute("stroke-dasharray",a.dataset.dash+" "+a.dataset.tot);});
+  document.querySelectorAll(".sline").forEach(l=>{l.style.transition="none";l.style.strokeDashoffset=0;});document.querySelectorAll(".sarea").forEach(a=>{a.style.transition="none";a.style.opacity=1;});});
 render(exemplo());
 let rt; window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>ultimo&&render(ultimo),150);});
 })();
