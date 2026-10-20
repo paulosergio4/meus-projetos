@@ -82,10 +82,10 @@ header{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:col
 .panel-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
 .panel-head span{font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:600}
 .panel-head i{font-style:normal;font-family:var(--font-data);font-size:.72rem;color:var(--muted)}
-.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:20px}
+.kpis{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:12px;margin-top:20px}
 .kpi{padding:14px;border-radius:12px;background:var(--beige);min-width:0;display:flex;flex-direction:column;gap:2px}
 .kpi small{display:block;font-size:.68rem;color:var(--muted);font-weight:500}
-.kpi b{display:block;font-family:var(--font-data);font-size:1.15rem;font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap}
+.kpi b{display:block;font-family:var(--font-data);font-size:clamp(.95rem,1.15vw,1.15rem);font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap}
 .kpi em{display:block;font-style:normal;font-size:.7rem;color:var(--olive);font-weight:600}
 @media (max-width:560px){.kpis{grid-template-columns:1fr;gap:10px}.kpi{flex-direction:row;flex-wrap:wrap;align-items:baseline;justify-content:space-between;column-gap:12px}.kpi small{width:100%}.panel{padding:20px}.panel-head{flex-wrap:wrap}}
 .chart{margin-top:22px}
@@ -257,9 +257,9 @@ footer{background:var(--olive-deep);color:#C7C9B5;font-size:.85rem}
       <div class="panel reveal d2" aria-label="Exemplo ilustrativo do painel mensal entregue ao cliente">
         <div class="panel-head"><span>Painel mensal · exemplo</span><i>competência 09/2026</i></div>
         <div class="kpis">
-          <div class="kpi"><small>Faturamento</small><b>R$ 184,2 mil</b><em>+8,4% no mês</em></div>
+          <div class="kpi"><small>Faturamento</small><b>R$ 184 mil</b><em>+8,4% no mês</em></div>
           <div class="kpi"><small>Margem líquida</small><b>11,7%</b><em>+1,9 p.p.</em></div>
-          <div class="kpi"><small>Carga tributária</small><b>6,1%</b><em>Simples · Anexo I</em></div>
+          <div class="kpi"><small>Carga tributária</small><b>6,1%</b><em>Simples Nacional</em></div>
         </div>
         <div class="chart">
           <svg viewBox="0 0 360 150" role="img" aria-label="Gráfico de faturamento e despesas de abril a setembro">
