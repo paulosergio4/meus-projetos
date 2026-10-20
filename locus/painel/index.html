@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Painel Lócus</title>
+<meta name="description" content="Painel de Diagnóstico Financeiro da Lócus Contabilidade Estratégica. Arraste a planilha do cliente e veja a análise.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#12160D">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='10' fill='%2356623A'/%3E%3Crect x='10' y='8' width='6' height='32' rx='1' fill='%23F3EEE2'/%3E%3Crect x='10' y='34' width='28' height='6' rx='1' fill='%23F3EEE2'/%3E%3Crect x='30' y='14' width='5' height='17' rx='1' fill='%23F3EEE2'/%3E%3Crect x='22' y='21' width='5' height='10' rx='1' fill='%23F3EEE2'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+/* Layout: painel escuro em grade de 12 colunas; faixa de topo com marca e ações; cartões, anéis e gráficos em quadros arredondados */
+:root{
+  --bg:#12160D; --bg2:#0C0F09; --panel:#1C2216; --panel2:#232A1B; --line:#2F3826; --line2:#262E1E;
+  --txt:#EDE7D8; --muted:#9AA08A; --dim:#6F7562;
+  --sage:#B9C38E; --olive:#8C9866; --moss:#5A6447; --copper:#D4895A; --gold:#E6B95C; --sand:#E8DCC2;
+  --good:#A8CF72; --bad:#E57B6B;
+  --font:"Montserrat",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:14px;line-height:1.5;min-height:100vh;
+  background-image:radial-gradient(600px 400px at 0% 0%,rgba(185,195,142,.10),transparent 70%),radial-gradient(700px 500px at 100% 100%,rgba(212,137,90,.10),transparent 70%);background-attachment:fixed}
+.wrap{max-width:1320px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:6px}
+
+/* topo */
+.top{background:rgba(12,15,9,.85);backdrop-filter:blur(8px);border-bottom:1px solid var(--line2);position:sticky;top:0;z-index:10}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:14px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit}
+.brand b{font-weight:800;letter-spacing:.12em;font-size:17px}
+.brand span{font-weight:600;font-size:13px;letter-spacing:.08em;color:var(--muted)}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.btn{font:600 13px var(--font);border-radius:999px;padding:10px 18px;border:1px solid var(--line);background:var(--panel);color:var(--txt);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;white-space:nowrap;transition:border-color .2s,background .2s}
+.btn:hover{border-color:var(--sage)}
+.btn.primary{background:var(--sage);color:#141810;border-color:var(--sage)}
+.btn.primary:hover{background:#cad3a3}
+.btn svg{width:16px;height:16px}
+
+/* cabeçalho do relatório */
+.head{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;padding-block:28px 18px}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--copper)}
+.head h1{margin:6px 0 0;font-size:clamp(24px,3vw,34px);font-weight:800;letter-spacing:-.02em;line-height:1.1}
+.head p{margin:6px 0 0;color:var(--muted)}
+.badge{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:600;padding:6px 12px;border-radius:999px;background:rgba(230,185,92,.12);color:var(--gold);border:1px solid rgba(230,185,92,.3)}
+.badge.ok{background:rgba(168,207,114,.1);color:var(--good);border-color:rgba(168,207,114,.3)}
+
+/* zona de arrastar */
+.drop{border:1.5px dashed var(--line);border-radius:16px;padding:18px 20px;display:flex;align-items:center;gap:16px;background:rgba(28,34,22,.6);margin-bottom:18px;transition:border-color .2s,background .2s;flex-wrap:wrap}
+.drop.over{border-color:var(--sage);background:rgba(185,195,142,.08)}
+.drop .ic{width:44px;height:44px;border-radius:12px;background:var(--panel2);display:grid;place-items:center;flex:none}
+.drop .ic svg{width:22px;height:22px;stroke:var(--sage)}
+.drop div.t{flex:1;min-width:200px}
+.drop b{display:block;font-size:14px}
+.drop small{color:var(--muted);font-size:12px}
+.err{color:var(--bad);font-size:13px;font-weight:600;margin:-8px 0 14px}
+
+/* grade */
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px;padding-bottom:28px}
+.p{background:var(--panel);border:1px solid var(--line2);border-radius:16px;padding:18px 20px;position:relative;overflow:hidden;min-width:0}
+.p::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--a,var(--sage))}
+.p h2{margin:0 0 14px;font-size:13px;font-weight:700;letter-spacing:.01em;display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.p h2 small{font-size:11px;font-weight:600;color:var(--dim);letter-spacing:.08em;text-transform:uppercase}
+.c3{grid-column:span 3}.c4{grid-column:span 4}.c5{grid-column:span 5}.c6{grid-column:span 6}.c7{grid-column:span 7}.c8{grid-column:span 8}.c12{grid-column:span 12}
+@media (max-width:1100px){.c3{grid-column:span 6}.c4,.c5{grid-column:span 6}.c7,.c8{grid-column:span 12}}
+@media (max-width:680px){.c3,.c4,.c5,.c6,.c7,.c8{grid-column:span 12}}
+
+/* KPI */
+.kpi .lab{font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.kpi .val{font-family:var(--mono);font-weight:500;font-size:clamp(22px,2.2vw,28px);margin-top:6px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.kpi .sub{font-size:12px;font-weight:600;margin-top:2px}
+.kpi .spark{display:block;width:100%;height:38px;margin-top:10px}
+.up{color:var(--good)}.down{color:var(--bad)}.neu{color:var(--gold)}
+
+/* anéis */
+.rings{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+@media (max-width:480px){.rings{grid-template-columns:repeat(2,1fr);row-gap:18px}}
+.ring{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;min-width:0}
+.ring svg{width:100%;max-width:120px;height:auto}
+.ring .n{font-size:11px;color:var(--muted);font-weight:600;line-height:1.3}
+
+/* tabela */
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-align:right;font-weight:700;padding:0 0 10px;border-bottom:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left}
+td{padding:10px 0;border-bottom:1px solid var(--line2);text-align:right;font-family:var(--mono);font-size:13px}
+td:first-child{font-family:var(--font);font-weight:600}
+tr.avg td{color:var(--gold);font-weight:600;border-bottom:none}
+.tscroll{overflow-x:auto}
+
+/* gráficos */
+.chart svg{width:100%;height:auto;display:block}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.donut{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.donut svg{width:190px;max-width:100%;flex:none}
+.donut ul{list-style:none;margin:0;padding:0;flex:1;min-width:160px;display:grid;gap:8px;font-size:12px}
+.donut li{display:grid;grid-template-columns:12px 1fr auto;gap:8px;align-items:center}
+.donut li i{width:10px;height:10px;border-radius:3px}
+.donut li b{font-family:var(--mono);font-weight:500;color:var(--muted)}
+
+/* ranking */
+.rank{display:grid;gap:11px}
+.rk{display:grid;grid-template-columns:minmax(120px,190px) 1fr auto;gap:12px;align-items:center;font-size:12.5px}
+.rk span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rk .bar{height:10px;background:var(--panel2);border-radius:99px;overflow:hidden}
+.rk .bar i{display:block;height:100%;border-radius:99px}
+.rk b{font-family:var(--mono);font-weight:500;color:var(--muted);font-size:12px;min-width:80px;text-align:right}
+@media (max-width:480px){.rk{grid-template-columns:1fr auto}.rk .bar{grid-column:1/-1;grid-row:2}}
+
+/* alertas */
+.alerts{display:grid;gap:12px;margin:0;padding:0;list-style:none}
+.alerts li{display:grid;grid-template-columns:10px 1fr;gap:12px;font-size:13px;line-height:1.45}
+.alerts li i{width:10px;height:10px;border-radius:50%;margin-top:5px}
+
+footer{border-top:1px solid var(--line2);color:var(--dim);font-size:12px}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-block:18px}
+
+@media print{
+  @page{size:A4 landscape;margin:10mm}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .top,.drop,.err,footer .actions{display:none!important}
+  body{background-image:none}
+  .grid{gap:10px}.p{break-inside:avoid}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="../" title="Site da Lócus">
+      <svg width="30" height="30" viewBox="0 0 48 48" aria-hidden="true"><rect x="6" y="5" width="7" height="38" rx="1.5" fill="#B9C38E"/><rect x="6" y="36" width="36" height="7" rx="1.5" fill="#B9C38E"/><rect x="17" y="26" width="5" height="8" rx="1" fill="#B9C38E" opacity=".55"/><rect x="25" y="20" width="5" height="14" rx="1" fill="#B9C38E" opacity=".75"/><rect x="33" y="12" width="5" height="22" rx="1" fill="#B9C38E"/><path d="M17 22 L27 15 L39 6" stroke="#B9C38E" stroke-width="2.2" fill="none" stroke-linecap="round"/><circle cx="39" cy="6" r="2.4" fill="#B9C38E"/></svg>
+      <b>LÓCUS</b><span>PAINEL</span>
+    </a>
+    <div class="actions">
+      <a class="btn" href="Planilha_Lancamentos_Locus.xlsx" download>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Planilha para o cliente</a>
+      <button class="btn" type="button" id="btn-pdf">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a1 1 0 0 1-1 1h-2M7 14h10v7H7z"/></svg>Salvar PDF</button>
+      <button class="btn primary" type="button" id="btn-open">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>Abrir planilha</button>
+      <input type="file" id="file" accept=".xlsx,.xls,.csv" hidden>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="head">
+    <div>
+      <span class="eyebrow">Diagnóstico financeiro</span>
+      <h1 id="cliente">Empresa Exemplo</h1>
+      <p id="periodo">Julho a setembro de 2026</p>
+    </div>
+    <span class="badge" id="badge">Dados de exemplo</span>
+  </section>
+
+  <div class="drop" id="drop">
+    <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M4 4h10l6 6v10H4z"/><path d="M14 4v6h6M8 14h8M8 17h5"/></svg></div>
+    <div class="t"><b>Arraste aqui a planilha do cliente</b><small>Funciona com a Planilha de Lançamentos da Lócus e com o arquivo de Diagnóstico. Os dados são lidos só neste navegador e não saem do seu computador.</small></div>
+    <button class="btn" type="button" id="btn-open2">Escolher arquivo</button>
+  </div>
+  <p class="err" id="err" hidden></p>
+
+  <div class="grid" id="grid">
+    <section class="p kpi c3" style="--a:var(--sage)"><div class="lab">Receita média / mês</div><div class="val" id="k-rec"></div><div class="sub" id="k-rec-s"></div><svg class="spark" id="s-rec" viewBox="0 0 200 38" preserveAspectRatio="none"></svg></section>
+    <section class="p kpi c3" style="--a:var(--copper)"><div class="lab">Despesas médias / mês</div><div class="val" id="k-desp"></div><div class="sub" id="k-desp-s"></div><svg class="spark" id="s-desp" viewBox="0 0 200 38" preserveAspectRatio="none"></svg></section>
+    <section class="p kpi c3" style="--a:var(--gold)"><div class="lab">Resultado médio / mês</div><div class="val" id="k-res"></div><div class="sub" id="k-res-s"></div><svg class="spark" id="s-res" viewBox="0 0 200 38" preserveAspectRatio="none"></svg></section>
+    <section class="p kpi c3" style="--a:var(--olive)"><div class="lab">Margem média</div><div class="val" id="k-mar"></div><div class="sub" id="k-mar-s"></div><svg class="spark" id="s-mar" viewBox="0 0 200 38" preserveAspectRatio="none"></svg></section>
+
+    <section class="p c6" style="--a:var(--sage)"><h2>Indicadores do período <small>% da receita</small></h2><div class="rings" id="rings"></div></section>
+    <section class="p c6" style="--a:var(--gold)"><h2>Resumo por mês</h2><div class="tscroll"><table id="tab"></table></div></section>
+
+    <section class="p c7 chart" style="--a:var(--sage)"><h2>Entradas x saídas por mês <small>R$</small></h2><div id="bars"></div>
+      <div class="legend"><span><i style="background:var(--sage)"></i>Entradas</span><span><i style="background:var(--copper)"></i>Saídas</span></div></section>
+    <section class="p c5" style="--a:var(--copper)"><h2>Para onde vai o dinheiro</h2><div class="donut" id="donut"></div></section>
+
+    <section class="p c5" style="--a:var(--copper)"><h2>Maiores despesas <small>média mensal</small></h2><div class="rank" id="rank"></div></section>
+    <section class="p c7 chart" style="--a:var(--sage)"><h2>Resultado mês a mês <small>R$</small></h2><div id="line"></div></section>
+
+    <section class="p c12" style="--a:var(--gold)"><h2>Pontos de atenção</h2><ul class="alerts" id="alerts"></ul></section>
+  </div>
+</main>
+
+<footer><div class="wrap"><span>Lócus Contabilidade Estratégica · Pompéu – MG</span><span>Painel de diagnóstico · os números vêm da planilha carregada</span></div></footer>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const C={sage:"#B9C38E",olive:"#8C9866",moss:"#5A6447",copper:"#D4895A",gold:"#E6B95C",sand:"#E8DCC2",line:"#2F3826",panel2:"#232A1B",muted:"#9AA08A",txt:"#EDE7D8",good:"#A8CF72",bad:"#E57B6B"};
+const brl=new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL",maximumFractionDigits:0});
+const num=new Intl.NumberFormat("pt-BR",{maximumFractionDigits:0});
+const pct=(v,d=1)=>new Intl.NumberFormat("pt-BR",{style:"percent",minimumFractionDigits:d,maximumFractionDigits:d}).format(isFinite(v)?v:0);
+const MES=["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+const MESL=["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+const ENTRADAS=["vendas / receita de serviços","outras entradas"];
+const norm=s=>String(s??"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().trim();
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ---------- dados de exemplo ---------- */
+function exemplo(){
+  const r=[],add=(y,m,d,desc,v,t,c)=>r.push({date:new Date(y,m-1,d),desc,valor:v,tipo:t,cat:c});
+  [7,8,9].forEach(m=>{
+    add(2026,m,5,"Recebimentos cartão/PIX",58000+m*900,"Entrada","Vendas / Receita de serviços");
+    add(2026,m,10,"Boleto distribuidora",31000+m*400,"Saída","Fornecedores / Mercadorias");
+    add(2026,m,6,"Folha de pagamento",9800,"Saída","Folha e encargos");
+    add(2026,m,20,"DAS Simples Nacional",3600+m*50,"Saída","Impostos");
+    add(2026,m,5,"Aluguel loja",3200,"Saída","Aluguel e condomínio");
+    add(2026,m,15,"Energia e internet",1450,"Saída","Energia, água e internet");
+    add(2026,m,28,"Retirada sócio",6000,"Saída","Pró-labore e retiradas");
+    add(2026,m,30,"Tarifas e juros",480+(m-7)*120,"Saída","Tarifas bancárias e juros");
+    add(2026,m,12,"Impulsionamento",350,"Saída","Marketing");
+  });
+  return {cliente:"Empresa Exemplo",rows:r,exemplo:true};
+}
+
+/* ---------- leitura da planilha ---------- */
+function toNumber(v){
+  if(typeof v==="number") return v;
+  if(v==null) return NaN;
+  let s=String(v).replace(/[R$\s]/g,"");
+  if(s.includes(",")) s=s.replace(/\./g,"").replace(",",".");
+  return parseFloat(s);
+}
+function toDate(v){
+  if(v instanceof Date && !isNaN(v)) return v;
+  if(typeof v==="number" && v>20000 && v<80000){const d=XLSX.SSF.parse_date_code(v);return new Date(d.y,d.m-1,d.d);}
+  if(typeof v==="string"){
+    const m=v.trim().match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/);
+    if(m){let y=+m[3]; if(y<100) y+=2000; return new Date(y,+m[2]-1,+m[1]);}
+    const m2=v.trim().match(/^(\d{4})-(\d{2})-(\d{2})/); if(m2) return new Date(+m2[1],+m2[2]-1,+m2[3]);
+  }
+  return null;
+}
+function lerPlanilha(buf,nomeArquivo){
+  const wb=XLSX.read(buf,{type:"array",cellDates:true});
+  let nome=wb.SheetNames.find(n=>norm(n).includes("lancamento"))||wb.SheetNames[0];
+  const ws=wb.Sheets[nome];
+  const aoa=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:null});
+  let h=-1,col={};
+  for(let i=0;i<Math.min(aoa.length,40);i++){
+    const row=aoa[i].map(norm);
+    const iData=row.findIndex(x=>x==="data"), iVal=row.findIndex(x=>x.startsWith("valor"));
+    if(iData>=0&&iVal>=0){h=i;col={data:iData,valor:iVal,desc:row.findIndex(x=>x.startsWith("descri")),tipo:row.findIndex(x=>x==="tipo"),cat:row.findIndex(x=>x.startsWith("categ"))};break;}
+  }
+  if(h<0) throw new Error("Não encontrei as colunas Data e Valor. Use a Planilha de Lançamentos da Lócus.");
+  let cliente="";
+  for(let i=0;i<h;i++){const row=aoa[i]||[];for(let j=0;j<row.length;j++){const t=norm(row[j]).replace(/:$/,"");
+    if(t==="empresa"||t==="cliente"){const v=row.slice(j+1).find(x=>x!=null&&String(x).trim()!=="");if(v)cliente=String(v).trim();}}}
+  if(!cliente) cliente=nomeArquivo.replace(/\.[^.]+$/,"").replace(/[_-]+/g," ");
+  let rows=[];
+  for(let i=h+1;i<aoa.length;i++){
+    const r=aoa[i]; if(!r) continue;
+    const date=toDate(r[col.data]); const v=toNumber(r[col.valor]);
+    if(!date||!isFinite(v)||v===0) continue;
+    const desc=col.desc>=0?String(r[col.desc]??""):"";
+    const cat=col.cat>=0&&r[col.cat]?String(r[col.cat]).trim():(v<0?"Outras despesas":"Outras entradas");
+    let tipo=col.tipo>=0?norm(r[col.tipo]):"";
+    tipo=tipo.startsWith("e")?"Entrada":tipo.startsWith("s")?"Saída":(v<0?"Saída":ENTRADAS.includes(norm(cat))?"Entrada":"Saída");
+    rows.push({date,desc,valor:Math.abs(v),tipo,cat});
+  }
+  const reais=rows.filter(r=>!norm(r.desc).startsWith("exemplo"));
+  if(reais.length) rows=reais;
+  if(!rows.length) throw new Error("A planilha não tem lançamentos preenchidos.");
+  return {cliente,rows,exemplo:false};
+}
+
+/* ---------- cálculos ---------- */
+function calcular(d){
+  const key=dt=>dt.getFullYear()*100+dt.getMonth();
+  const meses=[...new Set(d.rows.map(r=>key(r.date)))].sort((a,b)=>a-b).slice(-12);
+  const M=meses.map(k=>({k,ano:Math.floor(k/100),mes:k%100,ent:0,sai:0}));
+  const idx=new Map(meses.map((k,i)=>[k,i]));
+  const cats={},catMes={};
+  d.rows.forEach(r=>{const i=idx.get(key(r.date)); if(i==null) return;
+    if(r.tipo==="Entrada") M[i].ent+=r.valor; else {M[i].sai+=r.valor; cats[r.cat]=(cats[r.cat]||0)+r.valor;
+      (catMes[norm(r.cat)]??=meses.map(()=>0))[i]+=r.valor;}});
+  M.forEach(m=>{m.res=m.ent-m.sai;m.mar=m.ent?m.res/m.ent:0;});
+  const n=M.length||1, ent=M.reduce((a,m)=>a+m.ent,0), sai=M.reduce((a,m)=>a+m.sai,0), res=ent-sai;
+  const lista=Object.entries(cats).map(([c,v])=>({c,v,m:v/n})).sort((a,b)=>b.v-a.v);
+  const porNome=t=>lista.filter(x=>norm(x.c).includes(t)).reduce((a,x)=>a+x.v,0);
+  return {M,n,ent,sai,res,mar:ent?res/ent:0,lista,catMes,porNome};
+}
+
+/* ---------- desenho ---------- */
+function spark(id,vals,cor){
+  const el=$(id); if(vals.length<2){el.innerHTML="";return;}
+  const mn=Math.min(...vals),mx=Math.max(...vals),r=mx-mn||1;
+  const pts=vals.map((v,i)=>[i/(vals.length-1)*196+2,34-(v-mn)/r*28]);
+  const p=pts.map(q=>q.join(",")).join(" ");
+  el.innerHTML=`<defs><linearGradient id="g${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${cor}" stop-opacity=".35"/><stop offset="1" stop-color="${cor}" stop-opacity="0"/></linearGradient></defs>
+  <polygon points="2,38 ${p} 198,38" fill="url(#g${id})"/><polyline points="${p}" fill="none" stroke="${cor}" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>`;
+}
+function variacao(vals,inverso){
+  if(vals.length<2||!vals[0]) return {t:"",c:"neu"};
+  const v=(vals[vals.length-1]-vals[0])/Math.abs(vals[0]);
+  const bom=inverso?v<=0:v>=0;
+  return {t:`${v>=0?"▲":"▼"} ${pct(Math.abs(v))} do 1º ao último mês`,c:bom?"up":"down"};
+}
+function ring(v,cor,nome){
+  const r=46,c=2*Math.PI*r,f=Math.max(0,Math.min(1,v));
+  return `<div class="ring"><svg viewBox="0 0 120 120" role="img" aria-label="${esc(nome)}: ${pct(v)}">
+   <circle cx="60" cy="60" r="${r}" fill="none" stroke="${C.line}" stroke-width="11"/>
+   <circle cx="60" cy="60" r="${r}" fill="none" stroke="${cor}" stroke-width="11" stroke-linecap="round" stroke-dasharray="${c*f} ${c}" transform="rotate(-90 60 60)"/>
+   <text x="60" y="66" text-anchor="middle" fill="${C.txt}" font-family="IBM Plex Mono, monospace" font-size="19" font-weight="500">${pct(v)}</text></svg>
+   <span class="n">${esc(nome)}</span></div>`;
+}
+function nice(mx){if(mx<=0)return 1;const p=Math.pow(10,Math.floor(Math.log10(mx)));const f=mx/p;return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*p;}
+const num1=new Intl.NumberFormat("pt-BR",{maximumFractionDigits:1});
+function kfmt(v){return Math.abs(v)>=1000?num1.format(v/1000)+" mil":num.format(v);}
+const cw=id=>Math.max(300,Math.min(680,Math.round(($(id).clientWidth||640))));
+function barras(M){
+  const W=cw("bars"),H=Math.round(W<480?230:260),L=58,R=12,T=14,B=30,iw=W-L-R,ih=H-T-B;
+  const top=nice(Math.max(1,...M.map(m=>Math.max(m.ent,m.sai))));
+  const y=v=>T+ih-v/top*ih, g=iw/M.length, bw=Math.min(34,g*0.32);
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Entradas e saídas por mês">`;
+  for(let i=0;i<=4;i++){const v=top*i/4;s+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="${C.line}"/><text x="${L-8}" y="${y(v)+4}" text-anchor="end" fill="${C.muted}" font-size="11" font-family="IBM Plex Mono, monospace">${kfmt(v)}</text>`;}
+  M.forEach((m,i)=>{const cx=L+g*i+g/2;
+    s+=`<rect x="${cx-bw-3}" y="${y(m.ent)}" width="${bw}" height="${Math.max(0,T+ih-y(m.ent))}" rx="5" fill="${C.sage}"><title>Entradas ${MES[m.mes]}: ${brl.format(m.ent)}</title></rect>`;
+    s+=`<rect x="${cx+3}" y="${y(m.sai)}" width="${bw}" height="${Math.max(0,T+ih-y(m.sai))}" rx="5" fill="${C.copper}"><title>Saídas ${MES[m.mes]}: ${brl.format(m.sai)}</title></rect>`;
+    s+=`<text x="${cx}" y="${H-8}" text-anchor="middle" fill="${C.muted}" font-size="12" font-family="Montserrat, sans-serif">${MES[m.mes]}/${String(m.ano).slice(2)}</text>`;});
+  return s+"</svg>";
+}
+function linha(M){
+  const W=cw("line"),H=W<480?210:230,L=58,R=28,T=28,B=30,iw=W-L-R,ih=H-T-B;
+  const vals=M.map(m=>m.res),mn=Math.min(0,...vals),mxr=Math.max(0,...vals);
+  const top=nice(Math.max(Math.abs(mn),mxr))*(mxr>0?1:0)||1, bot=mn<0?-nice(Math.abs(mn)):0;
+  const y=v=>T+(top-v)/(top-bot)*ih, x=i=>M.length>1?L+i/(M.length-1)*iw:L+iw/2;
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Resultado mês a mês"><defs><linearGradient id="gl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${C.sage}" stop-opacity=".3"/><stop offset="1" stop-color="${C.sage}" stop-opacity="0"/></linearGradient></defs>`;
+  for(let i=0;i<=4;i++){const v=bot+(top-bot)*i/4;s+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="${v===0?C.muted:C.line}" ${v===0?'stroke-dasharray="3 4"':''}/><text x="${L-8}" y="${y(v)+4}" text-anchor="end" fill="${C.muted}" font-size="11" font-family="IBM Plex Mono, monospace">${kfmt(v)}</text>`;}
+  const pts=M.map((m,i)=>[x(i),y(m.res)]);
+  let d=`M${pts[0][0]},${pts[0][1]}`;
+  for(let i=1;i<pts.length;i++){const [x0,y0]=pts[i-1],[x1,y1]=pts[i],cx=(x0+x1)/2;d+=` C${cx},${y0} ${cx},${y1} ${x1},${y1}`;}
+  if(pts.length>1) s+=`<path d="${d} L${pts[pts.length-1][0]},${y(Math.max(bot,0))} L${pts[0][0]},${y(Math.max(bot,0))}Z" fill="url(#gl)"/><path d="${d}" fill="none" stroke="${C.sage}" stroke-width="3" stroke-linecap="round"/>`;
+  M.forEach((m,i)=>{const [px,py]=pts[i],cor=m.res<0?C.bad:C.gold;
+    s+=`<circle cx="${px}" cy="${py}" r="5.5" fill="${cor}" stroke="#1C2216" stroke-width="2"/><text x="${Math.min(W-R,Math.max(L+20,px))}" y="${py-12}" text-anchor="${i===M.length-1&&M.length>1?"end":i===0&&M.length>1?"start":"middle"}" fill="${C.txt}" font-size="11.5" font-weight="600" font-family="IBM Plex Mono, monospace">${brl.format(m.res)}</text>
+    <text x="${px}" y="${H-8}" text-anchor="middle" fill="${C.muted}" font-size="12" font-family="Montserrat, sans-serif">${MES[m.mes]}/${String(m.ano).slice(2)}</text>`;});
+  return s+"</svg>";
+}
+function rosca(lista,total){
+  const cores=[C.copper,C.gold,C.sage,C.olive,C.sand,C.moss];
+  const top=lista.slice(0,5), resto=lista.slice(5).reduce((a,x)=>a+x.v,0);
+  const fatias=top.map(x=>({n:x.c,v:x.v})); if(resto>0) fatias.push({n:"Demais despesas",v:resto});
+  const r=70,c=2*Math.PI*r; let acc=0;
+  let s=`<svg viewBox="0 0 190 190" role="img" aria-label="Para onde vai o dinheiro"><g transform="rotate(-90 95 95)">`;
+  fatias.forEach((f,i)=>{const fr=total?f.v/total:0; s+=`<circle cx="95" cy="95" r="${r}" fill="none" stroke="${cores[i]}" stroke-width="26" stroke-dasharray="${Math.max(0,c*fr-2)} ${c}" stroke-dashoffset="${-c*acc}"><title>${esc(f.n)}: ${pct(fr)}</title></circle>`; acc+=fr;});
+  s+=`</g><text x="95" y="90" text-anchor="middle" fill="${C.muted}" font-size="10" font-family="Montserrat, sans-serif" letter-spacing="1.5">SAÍDAS</text>
+  <text x="95" y="110" text-anchor="middle" fill="${C.txt}" font-size="15" font-weight="600" font-family="IBM Plex Mono, monospace">${kfmt(total)}</text></svg>`;
+  s+="<ul>"+fatias.map((f,i)=>`<li><i style="background:${cores[i]}"></i><span>${esc(f.n)}</span><b>${pct(total?f.v/total:0,0)}</b></li>`).join("")+"</ul>";
+  return s;
+}
+
+/* ---------- render ---------- */
+let ultimo=null;
+function render(d){
+  ultimo=d;
+  const k=calcular(d), M=k.M;
+  $("cliente").textContent=d.cliente;
+  const a=M[0],b=M[M.length-1];
+  $("periodo").textContent=M.length===1?`${MESL[a.mes]} de ${a.ano}`:
+    `${MESL[a.mes][0].toUpperCase()+MESL[a.mes].slice(1)}${a.ano!==b.ano?" de "+a.ano:""} a ${MESL[b.mes]} de ${b.ano} · ${M.length} meses`;
+  const bd=$("badge"); bd.textContent=d.exemplo?"Dados de exemplo":`${d.rows.length} lançamentos`; bd.className="badge"+(d.exemplo?"":" ok");
+
+  const ent=M.map(m=>m.ent),sai=M.map(m=>m.sai),res=M.map(m=>m.res),mar=M.map(m=>m.mar);
+  $("k-rec").textContent=brl.format(k.ent/k.n); let v=variacao(ent); $("k-rec-s").textContent=v.t; $("k-rec-s").className="sub "+v.c;
+  $("k-desp").textContent=brl.format(k.sai/k.n); v=variacao(sai,true); $("k-desp-s").textContent=v.t; $("k-desp-s").className="sub "+v.c;
+  $("k-res").textContent=brl.format(k.res/k.n); $("k-res").className="val "+(k.res<0?"down":"");
+  $("k-res-s").textContent=k.res>=0?"Empresa no azul":"Empresa no vermelho"; $("k-res-s").className="sub "+(k.res>=0?"up":"down");
+  $("k-mar").textContent=pct(k.mar); $("k-mar-s").textContent=k.mar>=.1?"Saudável, acima de 10%":"Atenção, abaixo de 10%"; $("k-mar-s").className="sub "+(k.mar>=.1?"up":"down");
+  spark("s-rec",ent,C.sage); spark("s-desp",sai,C.copper); spark("s-res",res,C.gold); spark("s-mar",mar,C.olive);
+
+  const R=x=>k.ent?x/k.ent:0;
+  $("rings").innerHTML=ring(k.mar,C.sage,"Margem")+ring(R(k.porNome("imposto")),C.gold,"Impostos")+ring(R(k.porNome("folha")),C.copper,"Folha e encargos")+ring(R(k.porNome("fornecedor")),C.sand,"Fornecedores");
+
+  $("tab").innerHTML=`<tr><th>Mês</th><th>Entradas</th><th>Saídas</th><th>Resultado</th></tr>`+
+    M.map(m=>`<tr><td>${MES[m.mes]}/${String(m.ano).slice(2)}</td><td style="color:${C.sage}">${brl.format(m.ent)}</td><td style="color:${C.copper}">${brl.format(m.sai)}</td><td style="color:${m.res<0?C.bad:C.txt}">${brl.format(m.res)}</td></tr>`).join("")+
+    `<tr class="avg"><td>Média</td><td>${brl.format(k.ent/k.n)}</td><td>${brl.format(k.sai/k.n)}</td><td>${brl.format(k.res/k.n)}</td></tr>`;
+
+  $("bars").innerHTML=barras(M);
+  $("line").innerHTML=linha(M);
+  $("donut").innerHTML=k.sai?rosca(k.lista,k.sai):'<p style="color:var(--muted)">Sem saídas no período.</p>';
+  const mx=k.lista[0]?.m||1, cores=[C.copper,C.gold,C.sage,C.sage,C.olive,C.olive,C.moss,C.moss];
+  $("rank").innerHTML=k.lista.slice(0,8).map((x,i)=>`<div class="rk"><span title="${esc(x.c)}">${esc(x.c)}</span><div class="bar"><i style="width:${Math.max(2,x.m/mx*100)}%;background:${cores[i]}"></i></div><b>${brl.format(x.m)}</b></div>`).join("")||'<p style="color:var(--muted)">Sem saídas no período.</p>';
+
+  // alertas
+  const al=[];
+  if(k.lista[0]) al.push([C.copper,`Maior despesa: <b>${esc(k.lista[0].c)}</b>, com ${pct(R(k.lista[0].v),0)} da receita.`]);
+  const j=k.catMes[norm("Tarifas bancárias e juros")];
+  if(j&&j[0]>0&&j[j.length-1]>j[0]) al.push([C.gold,`Juros e tarifas subiram ${pct((j[j.length-1]-j[0])/j[0],0)} no período. Vale renegociar com o banco.`]);
+  else if(j) al.push([C.sage,"Juros e tarifas estáveis no período."]);
+  const ret=k.lista.filter(x=>/retirada|pro-labore|pro labore/.test(norm(x.c))).reduce((a,x)=>a+x.v,0);
+  if(ret>0) al.push(ret>k.res?[C.copper,"Retiradas dos sócios acima do resultado: o caixa da empresa está diminuindo."]:[C.sage,"Retiradas dos sócios dentro do resultado da empresa."]);
+  const imp=k.porNome("imposto"); if(imp>0) al.push([C.gold,`Impostos consomem ${pct(R(imp))} da receita. Vale conferir se o regime tributário é o mais vantajoso.`]);
+  const fol=k.porNome("folha"); if(fol>0) al.push([C.sage,`Folha e encargos representam ${pct(R(fol),0)} da receita.`]);
+  const neg=M.filter(m=>m.res<0).length; if(neg) al.push([C.bad,`${neg} ${neg>1?"meses":"mês"} com resultado negativo no período.`]);
+  al.push(k.mar<.1?[C.copper,`Margem de ${pct(k.mar)}, abaixo de 10%: revisar preços, compras e despesas fixas.`]:[C.good,`Margem de ${pct(k.mar)}, em nível saudável.`]);
+  $("alerts").innerHTML=al.map(([c,t])=>`<li><i style="background:${c}"></i><span>${t}</span></li>`).join("");
+}
+
+/* ---------- arquivo ---------- */
+function abrir(f){
+  if(!f) return;
+  const err=$("err"); err.hidden=true;
+  if(typeof XLSX==="undefined"){err.textContent="Não consegui carregar o leitor de planilhas. Verifique a internet e recarregue a página.";err.hidden=false;return;}
+  const rd=new FileReader();
+  rd.onload=e=>{try{render(lerPlanilha(new Uint8Array(e.target.result),f.name));window.scrollTo({top:0,behavior:"smooth"});}
+    catch(x){err.textContent=x.message||"Não consegui ler esta planilha.";err.hidden=false;}};
+  rd.readAsArrayBuffer(f);
+}
+const inp=$("file");
+$("btn-open").onclick=()=>inp.click(); $("btn-open2").onclick=()=>inp.click();
+inp.onchange=()=>{abrir(inp.files[0]); inp.value="";};
+$("btn-pdf").onclick=()=>window.print();
+const dz=$("drop");
+["dragenter","dragover"].forEach(ev=>document.addEventListener(ev,e=>{e.preventDefault();dz.classList.add("over");}));
+["dragleave","drop"].forEach(ev=>document.addEventListener(ev,e=>{e.preventDefault();if(ev==="drop"||e.target===document.documentElement)dz.classList.remove("over");}));
+document.addEventListener("drop",e=>{dz.classList.remove("over");abrir(e.dataTransfer.files[0]);});
+
+render(exemplo());
+let rt; window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>ultimo&&render(ultimo),150);});
+})();
+</script>
+</body>
+</html>
