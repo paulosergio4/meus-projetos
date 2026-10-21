@@ -24,9 +24,24 @@ Modelo **freemium com login obrigatório**: a pessoa entra com a conta Google, u
 - **A revisão do que já foi estudado nunca é bloqueada**, em nenhum plano.
 - **Login obrigatório:** chave `EXIGIR_LOGIN` em `js/config.js`, desligada na fase de testes.
 
-## Implementação (quando sair da fase de testes)
+## Implementação
 
-1. Tabela `subscriptions` no Supabase (usuário, plano, status, validade, fim do teste) e contadores de uso por dia e por mês, com regras de segurança.
-2. Tela de planos no app e cadeados nos recursos; limites checados no app e no servidor (a geração por IA só no servidor).
-3. Cobrança com Mercado Pago ou Stripe (Pix e cartão), confirmando o pagamento por webhook numa Edge Function que atualiza o plano.
-4. Ligar `EXIGIR_LOGIN`.
+Pronto no app (versão 0.11):
+
+- Tela **Planos** (Ajustes → Seu plano → Ver planos), com mensal e anual.
+- Limites do Grátis e cadeados de Pro e Residência, em `js/plans.js`.
+- Aviso de limite com "Ver planos" e "Agora não" ou "Volto amanhã". Nunca interrompe uma revisão.
+- Teste de 7 dias do Residência contado a partir da criação da conta.
+- Tabela `subscriptions` (plano de cada pessoa) e `ai_usage` (cards de IA no mês).
+- Limite de IA checado no servidor (`gerar-cards`).
+
+Hoje a chave **`COBRANCA_ATIVA` está desligada**: todo mundo usa tudo de graça e o servidor dá 1.000 cards de IA por mês a cada pessoa.
+
+### Para começar a cobrar
+
+1. Criar a conta no meio de pagamento (Mercado Pago, que aceita Pix e cartão, ou Stripe) e cadastrar os produtos com os preços acima.
+2. Criar a função de webhook que recebe a confirmação do pagamento e grava o plano e a validade em `subscriptions`.
+3. Ligar o botão "Assinar" ao link de pagamento.
+4. Trocar `COBRANCA_ATIVA` para `true` em `js/config.js` e em `supabase/functions/gerar-cards/index.ts`, e publicar.
+
+Os passos 2 a 4 o Claude faz; o 1 precisa da sua conta.

@@ -2,12 +2,15 @@
 // Tipos de card: 'basic' (frente e verso), 'cloze' (lacuna: {{resposta}}), 'occlusion' (oclusão de imagem).
 // Todo conteúdo médico precisa ser revisado por um profissional antes de ir para produção.
 
+// Todas as grandes áreas da medicina, do ciclo básico à residência.
+// Os subtemas que já têm cards prontos mantêm o mesmo nome (o progresso fica ligado a eles).
 export const AREAS = [
-  { id: 'clinica', name: 'Clínica médica', short: 'Clínica', subtemas: ['Cardiologia', 'Endocrinologia', 'Pneumologia', 'Nefrologia'] },
-  { id: 'cirurgia', name: 'Cirurgia', short: 'Cirurgia', subtemas: ['Trauma', 'Abdome agudo', 'Queimaduras'] },
-  { id: 'go', name: 'Ginecologia e obstetrícia', short: 'GO', subtemas: ['Hipertensão na gestação', 'Sangramentos', 'Pré-natal'] },
-  { id: 'pediatria', name: 'Pediatria', short: 'Pediatria', subtemas: ['Neonatologia', 'Respiratório', 'Imunização', 'Reumatologia'] },
-  { id: 'preventiva', name: 'Medicina preventiva', short: 'Preventiva', subtemas: ['Epidemiologia', 'Bioestatística', 'SUS'] },
+  { id: 'basico', name: 'Ciclo básico', short: 'Básico', subtemas: ['Anatomia', 'Histologia', 'Embriologia', 'Fisiologia', 'Bioquímica', 'Biologia celular e molecular', 'Genética', 'Imunologia', 'Microbiologia', 'Parasitologia', 'Patologia', 'Farmacologia', 'Semiologia', 'Psicologia médica', 'Bioética'] },
+  { id: 'clinica', name: 'Clínica médica', short: 'Clínica', subtemas: ['Cardiologia', 'Pneumologia', 'Gastroenterologia', 'Hepatologia', 'Nefrologia', 'Endocrinologia', 'Reumatologia', 'Hematologia', 'Oncologia', 'Infectologia', 'Neurologia', 'Psiquiatria', 'Dermatologia', 'Geriatria', 'Alergia e imunologia clínica', 'Medicina intensiva', 'Emergência', 'Toxicologia', 'Nutrologia', 'Radiologia e imagem', 'Medicina laboratorial', 'Cuidados paliativos'] },
+  { id: 'cirurgia', name: 'Cirurgia', short: 'Cirurgia', subtemas: ['Cirurgia geral', 'Trauma', 'Abdome agudo', 'Pré e pós-operatório', 'Hérnias e parede abdominal', 'Cirurgia do aparelho digestivo', 'Coloproctologia', 'Cirurgia vascular', 'Cirurgia torácica', 'Cirurgia cardiovascular', 'Cirurgia de cabeça e pescoço', 'Cirurgia pediátrica', 'Cirurgia plástica', 'Queimaduras', 'Urologia', 'Ortopedia e traumatologia', 'Neurocirurgia', 'Otorrinolaringologia', 'Oftalmologia', 'Anestesiologia', 'Cirurgia oncológica'] },
+  { id: 'go', name: 'Ginecologia e obstetrícia', short: 'GO', subtemas: ['Pré-natal', 'Hipertensão na gestação', 'Sangramentos', 'Diabetes na gestação', 'Parto e assistência ao parto', 'Puerpério e amamentação', 'Medicina fetal', 'Infecções na gestação', 'Abortamento', 'Planejamento familiar', 'Ciclo menstrual e amenorreias', 'Endocrinologia ginecológica', 'Climatério', 'Infecções genitais e ISTs', 'Oncologia ginecológica', 'Mastologia', 'Uroginecologia', 'Infertilidade', 'Violência sexual'] },
+  { id: 'pediatria', name: 'Pediatria', short: 'Pediatria', subtemas: ['Neonatologia', 'Puericultura', 'Crescimento e desenvolvimento', 'Aleitamento e nutrição infantil', 'Imunização', 'Infectologia pediátrica', 'Doenças exantemáticas', 'Respiratório', 'Gastroenterologia pediátrica', 'Nefrologia pediátrica', 'Cardiologia pediátrica', 'Neurologia pediátrica', 'Endocrinologia pediátrica', 'Hematologia e oncologia pediátrica', 'Reumatologia', 'Emergências pediátricas', 'Adolescência', 'Genética e síndromes'] },
+  { id: 'preventiva', name: 'Medicina preventiva', short: 'Preventiva', subtemas: ['Epidemiologia', 'Bioestatística', 'SUS', 'Políticas de saúde', 'Medicina de família e comunidade', 'Atenção primária', 'Vigilância em saúde', 'Saúde do trabalhador', 'Medicina baseada em evidências', 'Rastreamento e prevenção', 'Ética médica', 'Medicina legal', 'Saúde mental na atenção básica', 'Saúde do idoso', 'Saúde indígena e populações vulneráveis'] },
 ];
 
 export const PROVAS = ['ENARE', 'SUS-SP', 'USP', 'PSU-MG', 'Faculdade', 'Outra'];

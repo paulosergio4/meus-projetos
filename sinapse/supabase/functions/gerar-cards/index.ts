@@ -5,7 +5,10 @@
 // Opcional: AI_MODEL (padrão claude-haiku-5-5).
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
-const LIMITES: Record<string, number> = { gratis: 10, pro: 300, residencia: 1000 };
+const LIMITES: Record<string, number> = { gratis: 10, pro: 300, residencia: 1000, teste: 1000 };
+// false = fase de testes: todo mundo tem o limite do Residência. Igual a COBRANCA_ATIVA em js/config.js.
+const COBRANCA_ATIVA = false;
+const TESTE_GRATIS_DIAS = 7;
 const MAX_PDF_B64 = 14_000_000; // ~10 MB de PDF
 const MAX_TEXTO = 120_000;      // caracteres
 
@@ -99,8 +102,10 @@ Deno.serve(async (req) => {
 
   // Plano vigente (sem linha ou vencido = Grátis).
   const { data: sub } = await admin.from('subscriptions').select('plan, valid_until').eq('user_id', userId).maybeSingle();
-  const vigente = sub && (!sub.valid_until || new Date(sub.valid_until).getTime() > Date.now());
-  const plan = vigente ? sub!.plan : 'gratis';
+  const vigente = sub && sub.plan !== 'gratis' && (!sub.valid_until || new Date(sub.valid_until).getTime() > Date.now());
+  const criada = who.user.created_at ? new Date(who.user.created_at).getTime() : 0;
+  const emTeste = criada && Date.now() < criada + TESTE_GRATIS_DIAS * 86400_000;
+  const plan = !COBRANCA_ATIVA ? 'teste' : vigente ? sub!.plan : emTeste ? 'residencia' : 'gratis';
   const limit = LIMITES[plan] ?? LIMITES.gratis;
   const month = mesAtual();
   const { data: uso } = await admin.from('ai_usage').select('cards').eq('user_id', userId).eq('month', month).maybeSingle();

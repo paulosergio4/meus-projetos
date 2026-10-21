@@ -21,3 +21,9 @@ export const EXIGIR_LOGIN = true;
 // Login com Google sem Supabase (opcional, só identifica a pessoa, não salva na nuvem).
 // Com o Supabase configurado, este campo não é usado: o Client ID vai no painel do Supabase.
 export const GOOGLE_CLIENT_ID = '';
+
+// Cobrança dos planos. false = fase de testes: todo mundo usa tudo de graça (inclusive
+// 1.000 cards de IA por mês) e a tela de planos mostra "em breve". Para começar a cobrar,
+// basta trocar para true aqui e em supabase/functions/gerar-cards (COBRANCA_ATIVA) e
+// ligar o pagamento (ver docs/PLANOS.md).
+export const COBRANCA_ATIVA = false;

@@ -56,7 +56,7 @@ export async function currentCloudUser() {
 
 export function userFromSession(u) {
   const m = u.user_metadata || {};
-  return { name: m.full_name || m.name || '', email: u.email || '', picture: m.avatar_url || m.picture || '', provider: 'google', cloud: true, id: u.id };
+  return { name: m.full_name || m.name || '', email: u.email || '', picture: m.avatar_url || m.picture || '', provider: 'google', cloud: true, id: u.id, createdAt: u.created_at || null };
 }
 
 export async function signOutCloud() {
@@ -104,4 +104,13 @@ export async function callGerarCards(body) {
     throw Object.assign(new Error(msg), { code: info.error || 'falha', info });
   }
   return data;
+}
+
+// Plano da pessoa (tabela subscriptions; sem linha = Grátis).
+export async function fetchSubscription(userId) {
+  const c = await loadCloud();
+  if (!c) return undefined;
+  const { data, error } = await c.from('subscriptions').select('plan, valid_until').eq('user_id', userId).maybeSingle();
+  if (error) return undefined;
+  return data || null;
 }

@@ -1,5 +1,5 @@
 // Service worker: guarda os arquivos do app para funcionar offline.
-const CACHE = 'sinapse-v21';
+const CACHE = 'sinapse-v22';
 const SHELL = [
   './',
   './index.html',
@@ -13,6 +13,7 @@ const SHELL = [
   './js/fx.js',
   './js/match.js',
   './js/plan.js',
+  './js/plans.js',
   './js/questions.js',
   './js/data.js',
   './js/fsrs.js',

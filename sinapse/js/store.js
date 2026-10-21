@@ -148,7 +148,14 @@ export const store = {
     return buildPlan({ now: this.now(), examDate: p.dataProva, newLeft: this.newCardsLeft() + this.newStudiedToday() });
   },
 
+  // Teto de cards novos por dia do plano (Infinity enquanto a cobrança está desligada).
+  capNew: Infinity,
+
   newPerDay() {
+    return Math.min(this.newPerDayRaw(), this.capNew);
+  },
+
+  newPerDayRaw() {
     const s = this.data.settings;
     if (s.newPerDayAuto) {
       const plan = this.plan();

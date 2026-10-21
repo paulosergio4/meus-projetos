@@ -1,5 +1,6 @@
 // Sinapse — protótipo. Interface em JavaScript puro, sem dependências.
 import { AREAS, PROVAS, FASES, ECG_REGIONS } from './data.js';
+import { PLANS, FEATURE_INFO, cobrancaAtiva, effectivePlan, limitsFor, planById, fmtPrice, TRIAL_DAYS } from './plans.js';
 import { QUESTIONS, CASES } from './questions.js';
 import { store } from './store.js';
 import { scheduleAll, formatInterval, DAY_MS } from './fsrs.js';
@@ -8,7 +9,7 @@ import { daysBetween } from './plan.js';
 import { GOOGLE_CLIENT_ID, EXIGIR_LOGIN } from './config.js';
 import { startSynapseFx } from './fx.js';
 import { biometricAvailable, biometricEnabled, enableBiometric, disableBiometric, unlockWithBiometric } from './biometric.js';
-import { callGerarCards, cloudEnabled, loadCloud, signInWithGoogle, currentCloudUser, userFromSession, signOutCloud, pullProgress, pushProgress, deleteCloudProgress, isOAuthReturn } from './cloud.js';
+import { callGerarCards, fetchSubscription, cloudEnabled, loadCloud, signInWithGoogle, currentCloudUser, userFromSession, signOutCloud, pullProgress, pushProgress, deleteCloudProgress, isOAuthReturn } from './cloud.js';
 
 function homeView() {
   if (!store.data.user) return 'login';
@@ -63,7 +64,7 @@ function animateCard(cls, ms, then) {
   setTimeout(() => { ui.animating = false; then(); }, ms);
 }
 
-const APP_VERSION = '0.10.0';
+const APP_VERSION = '0.11.0';
 const root = document.getElementById('app');
 
 // ---------- utilitários ----------
@@ -306,6 +307,7 @@ async function bootCloud() {
   // Guarda a conta no aparelho: nas próximas aberturas o app já começa pela biometria.
   if (!already) store.save();
   await syncOnLogin(prevSaved);
+  refreshPlan();
   // Primeiro login neste aparelho: oferece entrar com biometria nas próximas vezes.
   if (!biometricEnabled() && !bioAsked() && await biometricAvailable()) ui.bioOffer = true;
   if (ui.view === 'login' || ui.view === 'onboarding') go(store.data.profile ? 'home' : 'onboarding');
@@ -314,6 +316,119 @@ async function bootCloud() {
 }
 
 store.onSave = schedulePush;
+
+// ---------- planos ----------
+const SUB_KEY = 'sinapse:sub';
+let cachedSub = (() => { try { return JSON.parse(localStorage.getItem(SUB_KEY) || 'null'); } catch (e) { return null; } })();
+
+function currentPlan() {
+  return effectivePlan(cachedSub, store.data.user && store.data.user.createdAt);
+}
+
+function applyLimits() {
+  store.capNew = cobrancaAtiva() ? limitsFor(currentPlan().id).newPerDay : Infinity;
+}
+
+async function refreshPlan() {
+  const u = cloudUser();
+  if (!u) return;
+  const sub = await fetchSubscription(u.id).catch(() => undefined);
+  if (sub === undefined) return; // sem conexão: mantém o último plano conhecido
+  cachedSub = sub;
+  try { localStorage.setItem(SUB_KEY, JSON.stringify(sub)); } catch (e) { /* sem armazenamento */ }
+  applyLimits();
+  if (['settings', 'planos', 'home'].includes(ui.view)) render();
+}
+
+// Diz se o plano atual libera o recurso agora. Com a cobrança desligada, sempre libera.
+function allowed(feature) {
+  if (!cobrancaAtiva()) return true;
+  const L = limitsFor(currentPlan().id);
+  const month = new Date().toISOString().slice(0, 7);
+  switch (feature) {
+    case 'questoes': return store.questionsToday().length < L.questionsPerDay;
+    case 'simulado': return store.data.simulados.filter((x) => new Date(x.t).toISOString().slice(0, 7) === month).length < L.simuladosPerMonth;
+    case 'cardsProprios': return store.data.custom.filter((c) => !c.origin).length < L.customCards;
+    case 'cronograma': return L.cronograma;
+    case 'erros': return L.erros;
+    case 'casos': return L.casos;
+    default: return true;
+  }
+}
+
+// Recurso de cada ação (para checar antes de começar; nunca interrompe uma revisão em andamento).
+function gateFor(act, v) {
+  if (['start-treino', 'start-treino-area', 'start-daily-q'].includes(act)) return 'questoes';
+  if (act === 'start-simulado') return 'simulado';
+  if (act === 'start-errors') return 'erros';
+  if (act === 'start-case') return 'casos';
+  if (act === 'go' && v === 'errors') return 'erros';
+  if (act === 'go' && v === 'cases') return 'casos';
+  if (act === 'go' && v === 'plan') return 'cronograma';
+  return null;
+}
+
+function paywall(feature) {
+  ui.paywall = feature;
+  render();
+}
+
+function paywallSheet() {
+  const f = FEATURE_INFO[ui.paywall] || FEATURE_INFO.ia;
+  return `<div class="sheet-backdrop" role="dialog" aria-modal="true" aria-labelledby="pw-title">
+    <div class="sheet stack center-text">
+      <div class="lock-btn sm amber" aria-hidden="true">${icon('spark', 32)}</div>
+      <h2 id="pw-title">${esc(f.title)}</h2>
+      <p class="muted">${esc(f.text)}</p>
+      <button class="btn primary big" data-act="paywall-plans">Ver planos</button>
+      <button class="link-btn center-self" data-act="paywall-close">${f.daily ? 'Volto amanhã' : 'Agora não'}</button>
+    </div>
+  </div>`;
+}
+
+function planPanel() {
+  const cur = currentPlan();
+  const p = planById(cur.id);
+  let line;
+  if (cur.testing) line = 'Fase de testes: todos os recursos estão liberados de graça.';
+  else if (cur.trial) line = `Teste grátis do Residência até ${new Date(cur.trialEnd).toLocaleDateString('pt-BR')}.`;
+  else if (cur.validUntil) line = `Renova em ${new Date(cur.validUntil).toLocaleDateString('pt-BR')}.`;
+  else line = cur.id === 'gratis' ? 'Revisão, decks prontos e um pouco de tudo, com limites.' : 'Assinatura ativa.';
+  return `<section class="panel stack-sm">
+    <div class="row"><h2>Seu plano</h2><span class="tag ${cur.testing ? 'good' : 'violet'}">${cur.testing ? 'Tudo liberado' : esc(p.name)}</span></div>
+    <p class="muted small">${line}</p>
+    <button class="btn ghost" data-act="go" data-v="planos">Ver planos</button>
+  </section>`;
+}
+
+function viewPlanos() {
+  const cur = currentPlan();
+  const yearly = ui.planYearly ?? false;
+  const on = cobrancaAtiva();
+  return `<div class="screen stack">
+    <div class="row top"><button class="icon-btn" data-act="go" data-v="settings" aria-label="Voltar">${icon('back')}</button><h1 class="grow center-text h-sm">Planos</h1><span class="icon-spacer"></span></div>
+    ${on ? '' : '<div class="panel note"><strong>Fase de testes.</strong> Por enquanto tudo está liberado de graça para você testar. Quando as assinaturas começarem, você escolhe o plano aqui e não perde nada do que já estudou.</div>'}
+    ${on && cur.trial ? `<div class="panel note"><strong>Teste grátis.</strong> Você está usando o Residência por ${TRIAL_DAYS} dias. Depois volta ao Grátis sem perder nada.</div>` : ''}
+    <div class="segmented" role="group" aria-label="Período">
+      <button type="button" class="${yearly ? '' : 'on'}" data-act="plan-period" data-v="m" aria-pressed="${!yearly}">Mensal</button>
+      <button type="button" class="${yearly ? 'on' : ''}" data-act="plan-period" data-v="a" aria-pressed="${yearly}">Anual · 2 meses grátis</button>
+    </div>
+    ${PLANS.map((pl) => {
+      const mine = on && !cur.trial && cur.id === pl.id;
+      const price = yearly ? pl.yearly : pl.monthly;
+      return `<article class="panel stack-sm plan-card ${pl.highlight ? 'hl' : ''} ${mine ? 'mine' : ''}">
+        <div class="row"><span class="stack-xs"><strong class="plan-name">${pl.name}</strong><span class="muted small">${pl.tagline}</span></span>${pl.highlight ? '<span class="tag amber">Mais escolhido</span>' : ''}</div>
+        <p class="plan-price">${fmtPrice(price)}<span class="muted small">${price ? (yearly ? ' por ano' : ' por mês') : ''}</span></p>
+        ${yearly && pl.yearly ? `<p class="muted small">Equivale a ${fmtPrice(pl.yearly / 12)} por mês</p>` : ''}
+        <ul class="plan-feats">${pl.features.map((f) => `<li>${icon('check', 16)} ${esc(f)}</li>`).join('')}</ul>
+        ${pl.id === 'gratis' ? (mine ? '<span class="muted small center-text">Seu plano atual</span>' : '')
+          : mine ? '<span class="btn ghost" aria-disabled="true">Seu plano atual</span>'
+          : `<button class="btn ${pl.highlight ? 'primary' : 'ghost'}" data-act="subscribe" data-v="${pl.id}" ${on ? '' : 'disabled'}>${on ? `Assinar ${pl.name}` : 'Disponível em breve'}</button>`}
+      </article>`;
+    }).join('')}
+    <p class="muted small center-text">A revisão do que você já estudou nunca é bloqueada, em nenhum plano.</p>
+  </div>`;
+}
 
 // ---------- login ----------
 const GOOGLE_G = `<svg aria-hidden="true" width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>`;
@@ -443,7 +558,8 @@ function greeting() {
 // ---------- início ----------
 function deckList() {
   const today = store.dueQueue();
-  return AREAS.map((a) => {
+  // Só mostra as áreas que já têm cards (prontos, criados ou gerados por IA).
+  return AREAS.filter((a) => store.allCards().some((c) => c.area === a.id)).map((a) => {
     const cards = store.allCards().filter((c) => c.area === a.id);
     const studied = cards.filter((c) => store.stateOf(c.id).state !== 'new').length;
     const due = today.filter((c) => c.area === a.id).length;
@@ -661,7 +777,7 @@ function viewCreate() {
 
 // ---------- IA: gerar cards a partir de PDF ou texto ----------
 const IA_MAX_BYTES = 10 * 1024 * 1024;
-const PLAN_NAMES = { gratis: 'Grátis', pro: 'Pro', residencia: 'Residência' };
+const PLAN_NAMES = { gratis: 'Grátis', pro: 'Pro', residencia: 'Residência', teste: 'Fase de testes' };
 
 function iaState() {
   if (!ui.ia) ui.ia = { mode: 'pdf', file: null, text: '', target: 'clinica|Cardiologia', count: 10, types: 'misto', loading: false, usage: null, usageLoading: false, result: null };
@@ -786,7 +902,7 @@ function viewQuestions() {
     <section class="panel stack-sm" aria-label="Treino">
       <div class="row gap-md"><span class="badge violet">${icon('target')}</span><div class="stack-xs grow"><h2>Treino</h2><p class="muted small">Correção e comentário logo após cada questão.</p></div></div>
       <p class="small strong">Área</p>
-      ${chipGroup('q-area', ui.qArea, [['all', 'Todas']].concat(AREAS.map((a) => [a.id, a.short])))}
+      ${chipGroup('q-area', ui.qArea, [['all', 'Todas']].concat(AREAS.filter((a) => QUESTIONS.some((q) => q.area === a.id)).map((a) => [a.id, a.short])))}
       <p class="small strong">Quantidade</p>
       ${chipGroup('q-count', ui.qCount, [[5, '5'], [10, '10'], [20, '20']])}
       <button class="btn primary big" data-act="start-treino">Começar treino · ${plural(Math.min(ui.qCount, pool), 'questão', 'questões')}</button>
@@ -1083,7 +1199,7 @@ function viewCase() {
 
 // ---------- cronograma ----------
 function weakestAreas() {
-  return AREAS.map((a) => {
+  return AREAS.filter((a) => store.allCards().some((x) => x.area === a.id)).map((a) => {
     const c = store.accuracy((x) => x.area === a.id);
     const q = store.questionAccuracy((x) => x.area === a.id);
     const total = c.total + q.total;
@@ -1173,7 +1289,10 @@ function viewStats() {
   const mature = store.allCards().filter((c) => store.stateOf(c.id).s >= 21).length;
 
   const cells = [];
+  // No mapa de calor entram só os subtemas que têm cards.
+  const subsWithCards = new Set(store.allCards().map((c) => `${c.area}|${c.sub}`));
   for (const a of AREAS) for (const s of a.subtemas) {
+    if (!subsWithCards.has(`${a.id}|${s}`)) continue;
     const r = store.accuracy((c) => c.area === a.id && c.sub === s);
     cells.push({ area: a, sub: s, ...r, key: `${a.id}|${s}` });
   }
@@ -1181,13 +1300,13 @@ function viewStats() {
   const weakest = withData.slice().sort((x, y) => x.pct - y.pct)[0];
   const sel = cells.find((c) => c.key === ui.selectedCell) || weakest || null;
 
-  const rows = AREAS.map((a) => `<div class="heat-row">
+  const rows = AREAS.filter((a) => cells.some((c) => c.area.id === a.id)).map((a) => `<div class="heat-row">
     <span class="heat-label">${a.short}</span>
     <div class="heat-cells">${cells.filter((c) => c.area.id === a.id).map((c) => `<button class="cell ${heatTone(c.pct)} ${sel && sel.key === c.key ? 'sel' : ''}" data-act="cell" data-v="${esc(c.key)}" aria-label="${esc(c.sub)}: ${c.pct == null ? 'sem revisões' : `${c.pct}% de acerto`}">${c.pct == null ? '–' : c.pct}</button>`).join('')}</div>
   </div>`).join('');
 
   const qAcc = store.questionAccuracy();
-  const qRows = AREAS.map((a) => {
+  const qRows = AREAS.filter((a) => QUESTIONS.some((q) => q.area === a.id)).map((a) => {
     const r = store.questionAccuracy((q) => q.area === a.id);
     return `<div class="area-row"><span>${a.short}</span><span class="bar grow"><span class="fill ${r.pct == null ? 'violet' : r.pct >= 75 ? 'good' : r.pct >= 60 ? 'amber' : 'bad'}" style="width:${r.pct ?? 0}%"></span></span><span class="small strong">${r.pct == null ? '—' : `${r.pct}%`}</span></div>`;
   }).join('');
@@ -1336,6 +1455,7 @@ function viewSettings() {
   return `<div class="screen stack">
     <header><h1>Ajustes</h1></header>
     ${accountPanel()}
+    ${planPanel()}
     ${securityPanel()}
     <section class="panel stack-sm">
       <h2>Cores do app</h2>
@@ -1411,12 +1531,12 @@ function nav() {
 const FULLSCREEN = ['login', 'lock', 'onboarding', 'review', 'quiz', 'case'];
 
 function render() {
-  const views = { lock: viewLock, login: viewLogin, onboarding: viewOnboarding, home: viewHome, study: viewStudy, review: viewReview, create: viewCreate, ia: viewIA, questions: viewQuestions, quiz: viewQuiz, errors: viewErrors, cases: viewCases, case: viewCase, plan: viewPlan, stats: viewStats, settings: viewSettings };
+  const views = { lock: viewLock, login: viewLogin, onboarding: viewOnboarding, home: viewHome, study: viewStudy, review: viewReview, create: viewCreate, ia: viewIA, questions: viewQuestions, quiz: viewQuiz, errors: viewErrors, cases: viewCases, case: viewCase, plan: viewPlan, planos: viewPlanos, stats: viewStats, settings: viewSettings };
   if (ui.stopFx) { ui.stopFx(); ui.stopFx = null; }
   const showNav = !FULLSCREEN.includes(ui.view) || (ui.view === 'quiz' && ui.quiz && ui.quiz.finished);
   const showBar = ui.view !== 'login' && ui.view !== 'lock';
   const offer = ui.bioOffer && store.data.user && !['login', 'lock'].includes(ui.view);
-  root.innerHTML = (showBar ? appbar() : '') + views[ui.view]() + (showNav ? nav() : '') + (offer ? bioOfferSheet() : '');
+  root.innerHTML = (showBar ? appbar() : '') + views[ui.view]() + (showNav ? nav() : '') + (offer ? bioOfferSheet() : '') + (ui.paywall ? paywallSheet() : '');
   document.body.classList.toggle('has-bar', showBar);
   document.body.classList.toggle('has-nav', showNav);
   document.body.classList.toggle('on-login', ui.view === 'login');
@@ -1577,6 +1697,7 @@ const actions = {
       ia.result = { ...r, source, cards: (r.cards || []).map((c) => ({ ...c, status: 'pending' })) };
     } catch (e) {
       if (e.info && e.info.limit) ia.usage = { plan: e.info.plan, used: e.info.used, limit: e.info.limit };
+      if (e.code === 'limite' && cobrancaAtiva()) { ia.loading = false; paywall('ia'); return; }
       toast(e.message);
     }
     ia.loading = false;
@@ -1587,6 +1708,7 @@ const actions = {
   'ia-discard': (v) => { iaState().result.cards[v].status = 'discarded'; render(); },
   'ia-undo': (v) => { iaState().result.cards[v].status = 'pending'; render(); },
   'ia-save': () => {
+    if (!allowed('cardsProprios')) { paywall('cardsProprios'); return; }
     const ia = iaState();
     const [area, sub] = ia.target.split('|');
     const keep = ia.result.cards.filter((c) => c.status !== 'discarded');
@@ -1713,6 +1835,13 @@ const actions = {
   },
   guest: () => finishLogin({ name: '', email: '', picture: '', provider: 'guest' }),
   unlock: () => doUnlock(),
+  'paywall-plans': () => { ui.paywall = null; go('planos'); },
+  'paywall-close': () => { ui.paywall = null; render(); },
+  'plan-period': (v) => { ui.planYearly = v === 'a'; render(); },
+  subscribe: () => {
+    // O pagamento entra quando a cobrança for ligada (Mercado Pago ou Stripe, ver docs/PLANOS.md).
+    toast('As assinaturas começam em breve. Por enquanto, tudo está liberado.');
+  },
   // Login pela biometria: funciona quando este aparelho já entrou com o Google e ativou a digital.
   'bio-login': async () => {
     if (!biometricEnabled()) {
@@ -1760,6 +1889,8 @@ const actions = {
       // A biometria é da conta que saiu: no próximo login o convite aparece de novo.
       disableBiometric();
       setBioAsked(false);
+      cachedSub = null;
+      try { localStorage.removeItem(SUB_KEY); } catch (e) { /* sem armazenamento */ }
       ui.bioOffer = false;
       store.reset();
       ui.session = null;
@@ -1778,6 +1909,8 @@ root.addEventListener('click', (e) => {
   const el = e.target.closest('[data-act]');
   if (!el || el.disabled || ui.animating) return;
   const fn = actions[el.dataset.act];
+  const gate = gateFor(el.dataset.act, el.dataset.v);
+  if (gate && !allowed(gate)) { paywall(gate); return; }
   if (fn) fn(el.dataset.v);
 });
 
@@ -1859,6 +1992,7 @@ root.addEventListener('submit', (e) => {
     go(wasNew ? 'home' : 'settings');
   }
   if (e.target.id === 'create') {
+    if (!allowed('cardsProprios')) { paywall('cardsProprios'); return; }
     const err = document.getElementById('cr-error');
     const [area, sub] = String(f.get('area')).split('|');
     const extra = String(f.get('extra') || '').trim();
@@ -1911,6 +2045,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 applyPalette();
+applyLimits();
 render();
 bootCloud();
 
