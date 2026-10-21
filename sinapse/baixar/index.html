@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Baixar o Sinapse</title>
+  <meta name="description" content="Sinapse: flashcards e revisão de medicina com repetição espaçada, questões, simulados e cronograma até a prova. Instale no Android ou no iPhone.">
+  <meta name="theme-color" content="#0A1120">
+  <meta property="og:title" content="Sinapse · Revisões e flashcards de medicina">
+  <meta property="og:description" content="Revise no momento certo e chegue à prova lembrando de tudo. Instale grátis no Android e no iPhone.">
+  <meta property="og:image" content="https://paulosergio4.github.io/meus-projetos/sinapse/icons/icon-512.png">
+  <link rel="manifest" href="../manifest.webmanifest">
+  <link rel="icon" href="../icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap">
+  <link rel="stylesheet" href="../css/styles.css">
+  <style>
+    /* Página de download: herda a paleta do app (azul e laranja) e o tema escuro/claro. */
+    body { padding: 0; }
+    .wrap { max-width: 1080px; margin: 0 auto; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); }
+    section { padding-block: 56px; }
+    h2.big { font-size: clamp(26px, 4vw, 36px); letter-spacing: -0.6px; line-height: 1.15; }
+    .lead { color: var(--muted); font-size: 17px; max-width: 56ch; }
+
+    /* Topo */
+    .top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10; background: color-mix(in srgb, var(--bg) 86%, transparent); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent); }
+    .top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 12px; }
+    .brand { text-decoration: none; }
+    .top .btn { min-height: 40px; font-size: 14px; }
+
+    /* Abertura */
+    .hero { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: 40px; align-items: center; padding-block: 48px 24px; }
+    .hero h1 { font-size: clamp(36px, 6vw, 58px); letter-spacing: -1.5px; line-height: 1.05; }
+    .hero h1 em { font-style: normal; color: var(--violet-ink); }
+    .hero .lead { margin-top: 16px; }
+    .cta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
+    .cta .btn { min-height: 54px; padding: 0 22px; font-size: 16px; border-radius: 16px; }
+    .free { margin-top: 14px; font-size: 13px; color: var(--muted); }
+    .phone { width: min(300px, 78vw); margin: 0 auto; border-radius: 40px; padding: 10px; background: var(--surface); border: 1px solid var(--line); box-shadow: 0 30px 80px -30px color-mix(in srgb, var(--violet) 50%, transparent); }
+    .phone img { display: block; width: 100%; height: auto; border-radius: 32px; }
+    .hero-visual { position: relative; }
+    .hero-visual::before { content: ""; position: absolute; inset: 10% 5%; border-radius: 50%; background: radial-gradient(closest-side, color-mix(in srgb, var(--violet) 28%, transparent), transparent); z-index: -1; }
+
+    /* Instalar */
+    .install-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 28px; }
+    .platform { background: var(--surface); border: 1px solid var(--line); border-radius: 26px; padding: 24px; display: flex; flex-direction: column; gap: 14px; }
+    .platform.mine { border: 2px solid var(--violet); box-shadow: 0 0 0 6px var(--violet-soft); }
+    .platform header { display: flex; align-items: center; gap: 12px; }
+    .platform h3 { font: 800 21px var(--font-display); margin: 0; }
+    .mine-tag { margin-left: auto; font-size: 12px; font-weight: 700; color: var(--violet-ink); background: var(--violet-soft); padding: 4px 10px; border-radius: 999px; }
+    .os-icon { width: 44px; height: 44px; border-radius: 14px; display: inline-flex; align-items: center; justify-content: center; background: var(--surface-2); color: var(--fg); flex: none; }
+    .steps-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; counter-reset: s; }
+    .steps-list li { display: flex; gap: 12px; align-items: flex-start; line-height: 1.45; }
+    .steps-list li::before { counter-increment: s; content: counter(s); flex: none; width: 26px; height: 26px; border-radius: 9px; background: var(--amber-soft); color: var(--amber-ink); font: 800 13px var(--font-display); display: inline-flex; align-items: center; justify-content: center; }
+    .kbd { display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px; border-radius: 8px; background: var(--surface-2); border: 1px solid var(--line); font-weight: 600; font-size: 14px; white-space: nowrap; }
+    .kbd svg { vertical-align: -2px; }
+    .note { font-size: 13px; color: var(--muted); }
+    .installed { display: none; }
+    .is-standalone .installed { display: block; }
+
+    .desktop { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 24px; align-items: center; margin-top: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 26px; padding: 24px; }
+    .qr { width: 148px; height: 148px; background: #fff; border-radius: 16px; padding: 8px; }
+    .qr svg { width: 100%; height: 100%; display: block; }
+
+    /* Recursos */
+    .features { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 28px; }
+    .feature { background: var(--surface); border: 1px solid var(--line); border-radius: 22px; padding: 20px; display: flex; flex-direction: column; gap: 8px; }
+    .feature h3 { font: 700 17px var(--font-display); margin: 0; }
+    .feature p { color: var(--muted); font-size: 14.5px; line-height: 1.5; }
+
+    /* Telas */
+    .shots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-top: 28px; }
+    .shots figure { margin: 0; display: flex; flex-direction: column; gap: 10px; align-items: center; }
+    .shots .phone { width: 100%; max-width: 260px; box-shadow: none; }
+    .shots figcaption { font-size: 14px; color: var(--muted); text-align: center; }
+
+    /* Perguntas */
+    .faq { margin-top: 24px; display: flex; flex-direction: column; gap: 10px; max-width: 760px; }
+    .faq details { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 16px 18px; }
+    .faq summary { cursor: pointer; font-weight: 700; list-style: none; display: flex; justify-content: space-between; gap: 12px; }
+    .faq summary::-webkit-details-marker { display: none; }
+    .faq summary::after { content: "+"; color: var(--violet-ink); font-size: 20px; line-height: 1; }
+    .faq details[open] summary::after { content: "–"; }
+    .faq p { margin-top: 10px; color: var(--muted); line-height: 1.55; }
+
+    footer { border-top: 1px solid var(--line); padding-block: 28px calc(28px + env(safe-area-inset-bottom, 0px)); color: var(--muted); font-size: 14px; }
+    footer .wrap { display: flex; flex-wrap: wrap; gap: 12px 24px; justify-content: space-between; }
+    footer a { color: var(--violet-ink); }
+
+    @media (max-width: 820px) {
+      .hero { grid-template-columns: minmax(0, 1fr); text-align: center; padding-block: 32px 8px; }
+      .hero .lead { margin-inline: auto; }
+      .cta { justify-content: center; }
+      .install-grid, .features { grid-template-columns: minmax(0, 1fr); }
+      .shots { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+      .desktop { grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; }
+    }
+    @media (max-width: 520px) {
+      .shots { grid-template-columns: minmax(0, 1fr); }
+      .features { grid-template-columns: minmax(0, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="wrap">
+      <a class="brand" href="./" aria-label="Sinapse">
+        <svg class="brand-logo" viewBox="0 0 512 512" aria-hidden="true">
+          <rect width="512" height="512" rx="120" class="logo-bg"/>
+          <path class="brand-line-track" d="M96 296 H176 L208 232 L256 360 L304 152 L336 296 H416"/>
+          <path class="brand-line" d="M96 296 H176 L208 232 L256 360 L304 152 L336 296 H416" pathLength="100"/>
+          <circle class="brand-ring" cx="416" cy="296" r="30"/>
+          <circle class="brand-dot" cx="416" cy="296" r="30"/>
+        </svg>
+        <span class="brand-name">Sinapse</span>
+      </a>
+      <a class="btn ghost" href="../">Abrir no navegador</a>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrap hero">
+      <div>
+        <p class="eyebrow amber-ink">Flashcards de medicina</p>
+        <h1>Revise no momento certo e <em>chegue à prova lembrando de tudo.</em></h1>
+        <p class="lead">Repetição espaçada, questões no estilo de residência, simulados e um cronograma que se ajusta até o dia da prova. Do 1º período à residência.</p>
+        <div class="cta">
+          <a class="btn primary" href="#instalar" data-os-cta>Instalar o Sinapse</a>
+          <a class="btn ghost" href="../">Experimentar agora</a>
+        </div>
+        <p class="free">Grátis. Funciona no Android, no iPhone e no computador.</p>
+      </div>
+      <div class="hero-visual">
+        <div class="phone"><img src="img/tela-revisao.webp" alt="Tela de revisão do Sinapse com a resposta de um card de cardiologia" width="390" height="844"></div>
+      </div>
+    </div>
+
+    <section id="instalar">
+      <div class="wrap">
+        <h2 class="big">Instale no seu celular</h2>
+        <p class="lead">O Sinapse é instalado direto por aqui, sem loja. Ele fica na tela inicial com ícone próprio, abre em tela cheia e funciona sem internet.</p>
+        <p class="panel note installed">O Sinapse já está instalado neste aparelho. <a href="../">Abrir o app</a>.</p>
+
+        <div class="install-grid">
+          <article class="platform" id="android">
+            <header>
+              <span class="os-icon" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M17.6 9.48l1.84-3.18a.38.38 0 0 0-.66-.38l-1.86 3.22A11.4 11.4 0 0 0 12 8.1c-1.77 0-3.43.38-4.92 1.04L5.22 5.92a.38.38 0 0 0-.66.38L6.4 9.48A10.6 10.6 0 0 0 1 18h22a10.6 10.6 0 0 0-5.4-8.52zM7 15.25a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5zm10 0a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5z"/></svg></span>
+              <h3>Android</h3>
+              <span class="mine-tag" hidden>Seu aparelho</span>
+            </header>
+            <button class="btn primary big" id="install-btn" hidden>Instalar agora</button>
+            <ol class="steps-list" id="android-steps">
+              <li><span>Abra esta página no <strong>Chrome</strong>.</span></li>
+              <li><span>Toque no menu <span class="kbd">⋮</span> no canto de cima.</span></li>
+              <li><span>Toque em <span class="kbd">Instalar app</span> ou <span class="kbd">Adicionar à tela inicial</span>.</span></li>
+            </ol>
+            <p class="note">Funciona no Android 9 ou mais novo.</p>
+          </article>
+
+          <article class="platform" id="ios">
+            <header>
+              <span class="os-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M16.37 12.6c-.02-2.28 1.86-3.38 1.95-3.43-1.06-1.55-2.71-1.77-3.3-1.79-1.4-.14-2.74.83-3.45.83-.71 0-1.81-.81-2.98-.79-1.53.02-2.94.89-3.73 2.26-1.59 2.76-.41 6.85 1.14 9.09.76 1.1 1.66 2.33 2.84 2.28 1.14-.05 1.57-.74 2.95-.74 1.38 0 1.77.74 2.98.71 1.23-.02 2.01-1.11 2.76-2.22.87-1.27 1.23-2.5 1.25-2.57-.03-.01-2.39-.92-2.41-3.63zM14.1 5.9c.63-.76 1.05-1.82.94-2.88-.9.04-2 .6-2.65 1.36-.58.67-1.09 1.75-.95 2.79 1 .08 2.03-.51 2.66-1.27z"/></svg></span>
+              <h3>iPhone e iPad</h3>
+              <span class="mine-tag" hidden>Seu aparelho</span>
+            </header>
+            <ol class="steps-list">
+              <li><span>Abra esta página no <strong>Safari</strong>.</span></li>
+              <li><span>Toque em <span class="kbd"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M8 7l4-4 4 4"/><path d="M6 11v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-8"/></svg> Compartilhar</span>, na barra de baixo.</span></li>
+              <li><span>Role e toque em <span class="kbd">Adicionar à Tela de Início</span>, depois em <span class="kbd">Adicionar</span>.</span></li>
+            </ol>
+            <p class="note">No iOS 16.4 ou mais novo também funciona pelo Chrome, no mesmo botão Compartilhar.</p>
+          </article>
+        </div>
+
+        <div class="desktop" id="desktop">
+          <div class="qr" aria-label="QR code para abrir esta página no celular" role="img">
+            <!-- QR: https://paulosergio4.github.io/meus-projetos/sinapse/baixar/ -->
+            <img src="img/qr.svg" alt="" width="132" height="132" style="width:100%;height:100%">
+          </div>
+          <div class="stack-sm">
+            <h3 style="font: 800 21px var(--font-display); margin: 0;">Está no computador?</h3>
+            <p class="muted">Aponte a câmera do celular para o código e siga os passos do seu aparelho. Para estudar no computador, use o Sinapse direto no navegador; no Chrome e no Edge também dá para instalar pelo ícone de instalação na barra de endereço.</p>
+            <div class="row gap-sm wrap"><a class="btn primary" href="../">Abrir no navegador</a></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2 class="big">Feito para quem estuda medicina</h2>
+        <div class="features">
+          <div class="feature"><span class="badge violet" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg></span><h3>Repetição espaçada</h3><p>O algoritmo FSRS calcula o dia certo de rever cada card, para você estudar menos e lembrar mais.</p></div>
+          <div class="feature"><span class="badge amber" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg></span><h3>Digite a resposta</h3><p>Nas lacunas você escreve antes de ver. O app aceita sinônimos, ignora acentos e sugere a nota.</p></div>
+          <div class="feature"><span class="badge violet" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span><h3>Questões e simulados</h3><p>Treino por área com comentário e simulado cronometrado no ritmo da prova, com gabarito por grande área.</p></div>
+          <div class="feature"><span class="badge bad" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h6a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H4z"/><path d="M20 4h-6a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h7z"/></svg></span><h3>Caderno de erros</h3><p>Toda questão errada vira um card com o conceito que faltou, e sai do caderno quando você acerta.</p></div>
+          <div class="feature"><span class="badge good" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 10h18"/></svg></span><h3>Cronograma até a prova</h3><p>Informe a data e o app distribui o conteúdo, reserva a reta final para revisão e mostra onde focar.</p></div>
+          <div class="feature"><span class="badge violet" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 11v3"/><path d="M8.5 11a3.5 3.5 0 0 1 7 0v2a8 8 0 0 1-1.2 4.2"/><path d="M5.5 9.5a6.5 6.5 0 0 1 13 0v2"/><path d="M9.6 15.2A6 6 0 0 1 8.5 19"/></svg></span><h3>Conta Google e biometria</h3><p>Entre com o Google para salvar o progresso e usar em vários aparelhos. Proteja com digital ou Face ID.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2 class="big">Por dentro do app</h2>
+        <div class="shots">
+          <figure><div class="phone"><img src="img/tela-inicio.webp" alt="Tela inicial com as revisões de hoje e o plano do dia" width="390" height="844" loading="lazy"></div><figcaption>Revisões e plano de hoje</figcaption></figure>
+          <figure><div class="phone"><img src="img/tela-revisao.webp" alt="Card de revisão com a resposta e os botões de nota" width="390" height="844" loading="lazy"></div><figcaption>Revisão com repetição espaçada</figcaption></figure>
+          <figure><div class="phone"><img src="img/tela-questoes.webp" alt="Questão no estilo de residência com comentário da resposta" width="390" height="844" loading="lazy"></div><figcaption>Questões com comentário</figcaption></figure>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2 class="big">Perguntas frequentes</h2>
+        <div class="faq">
+          <details><summary>O Sinapse é grátis?</summary><p>Sim. Revisões, cards, questões, simulados e cronograma são gratuitos.</p></details>
+          <details><summary>Por que não está na Play Store ou na App Store?</summary><p>O Sinapse é instalado direto pelo navegador, sem loja. Ele funciona como um app comum: ícone na tela inicial, tela cheia e uso sem internet. As versões nas lojas podem vir depois.</p></details>
+          <details><summary>Precisa de internet?</summary><p>Só para entrar com a conta e sincronizar. As revisões funcionam sem internet, e o progresso é enviado quando a conexão voltar.</p></details>
+          <details><summary>Meus dados ficam seguros?</summary><p>Com a conta Google, o progresso fica salvo na sua conta, e cada pessoa só acessa os próprios dados. Sem conta, fica só no aparelho. Veja os <a href="../termos.html">Termos e a Política de Privacidade</a>.</p></details>
+          <details><summary>Como atualizo o app?</summary><p>Ele se atualiza sozinho quando você abre. Em Ajustes há o botão "Buscar atualização" para forçar.</p></details>
+          <details><summary>O conteúdo substitui livros e diretrizes?</summary><p>Não. O Sinapse é uma ferramenta de estudo e não substitui fontes oficiais nem o julgamento clínico.</p></details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>© 2026 Sinapse</span>
+      <span><a href="../termos.html">Termos de Uso e Privacidade</a> · <a href="../">Abrir o app</a></span>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      try {
+        var s = JSON.parse(localStorage.getItem('sinapse:v1') || '{}');
+        if (s.settings && s.settings.palette) document.documentElement.dataset.palette = s.settings.palette;
+      } catch (e) { /* sem armazenamento */ }
+
+      var ua = navigator.userAgent;
+      var isIOS = /iphone|ipad|ipod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      var isAndroid = /android/i.test(ua);
+      var standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+      if (standalone) document.documentElement.classList.add('is-standalone');
+
+      function mark(id) {
+        var card = document.getElementById(id);
+        if (!card) return;
+        card.classList.add('mine');
+        card.querySelector('.mine-tag').hidden = false;
+        card.parentNode.insertBefore(card, card.parentNode.firstChild);
+      }
+      if (isIOS) mark('ios');
+      if (isAndroid) mark('android');
+      // No celular, o bloco do computador fica escondido.
+      if (isIOS || isAndroid) document.getElementById('desktop').hidden = true;
+
+      // Android (Chrome): botão que abre a instalação do próprio navegador.
+      var deferred = null;
+      var btn = document.getElementById('install-btn');
+      window.addEventListener('beforeinstallprompt', function (e) {
+        e.preventDefault();
+        deferred = e;
+        btn.hidden = false;
+      });
+      btn.addEventListener('click', function () {
+        if (!deferred) return;
+        deferred.prompt();
+        deferred.userChoice.then(function (r) {
+          if (r.outcome === 'accepted') { btn.textContent = 'Instalado. Abra pela tela inicial'; btn.disabled = true; }
+          deferred = null;
+        });
+      });
+      window.addEventListener('appinstalled', function () { btn.textContent = 'Instalado. Abra pela tela inicial'; btn.disabled = true; });
+
+      // O botão principal leva direto para a instalação do aparelho.
+      var cta = document.querySelector('[data-os-cta]');
+      if (isAndroid) cta.textContent = 'Instalar no Android';
+      if (isIOS) cta.textContent = 'Instalar no iPhone';
+      cta.addEventListener('click', function (e) {
+        if (deferred) { e.preventDefault(); btn.click(); }
+      });
+
+      // O service worker do app deixa a instalação disponível e o app funcionando offline.
+      if ('serviceWorker' in navigator) navigator.serviceWorker.register('../sw.js', { scope: '../' }).catch(function () {});
+    })();
+  </script>
+</body>
+</html>

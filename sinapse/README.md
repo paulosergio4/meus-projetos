@@ -2,9 +2,10 @@
 
 App de revisões e flashcards de medicina com repetição espaçada. Acompanha o estudante do 1º período até a prova de residência.
 
-Esta pasta tem o **protótipo 0.6**: um app web instalável (PWA) que funciona offline, sem dependências e sem servidor.
+Esta pasta tem o **protótipo 0.8**: um app web instalável (PWA) que funciona offline, sem dependências e sem servidor.
 
 - App no ar: https://paulosergio4.github.io/meus-projetos/sinapse/
+- Página de download (Android e iPhone): https://paulosergio4.github.io/meus-projetos/sinapse/baixar/
 - Especificação completa: [documento do projeto](https://claude.ai/artifact/JBiZiVvTYQRgeir8dUdS1s)
 - Telas de referência: [mockups](https://claude.ai/artifact/JThCGn7LizGnhw5kqoDtDP)
 
@@ -22,6 +23,7 @@ Esta pasta tem o **protótipo 0.6**: um app web instalável (PWA) que funciona o
 | Casos clínicos | Casos em etapas (dor torácica, gestante com cefaleia): a cada etapa chega uma informação nova e a pessoa decide a conduta |
 | Cronograma | Contagem até a prova, cards novos por dia calculados para terminar o conteúdo uma semana antes, reta final só de revisão, foco nas áreas mais fracas |
 | Desempenho | Acerto dos cards, mapa por grande área e subtema, acerto em questões por área, histórico de simulados |
+| Segurança | Entrar com biometria (digital, Face ID, Touch ID ou Windows Hello), pedida ao abrir e após 5 minutos fora do app |
 | Ajustes | Conta, 4 paletas de cores, digitar resposta (liga/desliga), cards novos por dia, meta de questões, avançar o relógio para testar, apagar progresso |
 
 O agendamento usa o algoritmo **FSRS-4.5** com os pesos padrão (`js/fsrs.js`), com testes em `tests/`.
@@ -83,6 +85,8 @@ js/config.js            URL e chave publicável do Supabase
 js/cloud.js             login com Google e sincronização pelo Supabase
 supabase/               tabela, regras de segurança e guia de configuração
 termos.html             Termos de Uso e Política de Privacidade
+baixar/                 site de download com instalação no Android e no iPhone
+js/biometric.js         desbloqueio por biometria (WebAuthn)
 js/data.js              grandes áreas, subtemas e cards de exemplo
 js/store.js             estado e persistência local
 js/app.js               telas e interações

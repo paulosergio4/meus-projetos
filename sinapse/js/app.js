@@ -7,10 +7,12 @@ import { checkAnswer, parseCloze } from './match.js';
 import { daysBetween } from './plan.js';
 import { GOOGLE_CLIENT_ID } from './config.js';
 import { startSynapseFx } from './fx.js';
+import { biometricAvailable, biometricEnabled, enableBiometric, disableBiometric, unlockWithBiometric } from './biometric.js';
 import { cloudEnabled, loadCloud, signInWithGoogle, currentCloudUser, userFromSession, signOutCloud, pullProgress, pushProgress, deleteCloudProgress, isOAuthReturn } from './cloud.js';
 
 function homeView() {
   if (!store.data.user) return 'login';
+  if (biometricEnabled()) return 'lock';
   return store.data.profile ? 'home' : 'onboarding';
 }
 
@@ -59,7 +61,7 @@ function animateCard(cls, ms, then) {
   setTimeout(() => { ui.animating = false; then(); }, ms);
 }
 
-const APP_VERSION = '0.7';
+const APP_VERSION = '0.8';
 const root = document.getElementById('app');
 
 // ---------- utilitários ----------
@@ -116,6 +118,7 @@ const icons = {
   check: '<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9.5"/>',
   x: '<circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/>',
   flag: '<path d="M5 21V4h11l-2 4 2 4H5"/>',
+  finger: '<path d="M12 11v3"/><path d="M8.5 11a3.5 3.5 0 0 1 7 0v2a8 8 0 0 1-1.2 4.2"/><path d="M5.5 9.5a6.5 6.5 0 0 1 13 0v2"/><path d="M9.6 15.2A6 6 0 0 1 8.5 19"/><path d="M5.5 14.5a10 10 0 0 0 .7 3.5"/><path d="M12 17.5V21"/>',
   user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
   cards: '<rect x="6" y="3" width="14" height="18" rx="3"/><path d="M4 7v12a2 2 0 0 0 2 2"/>',
   target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
@@ -1164,6 +1167,58 @@ function accountPanel() {
   </section>`;
 }
 
+// ---------- biometria ----------
+let bioAvailable = false;
+biometricAvailable().then((ok) => { bioAvailable = ok; if (ui.view === 'settings') render(); });
+
+let hiddenAt = 0;
+const RELOCK_MS = 5 * 60 * 1000; // volta a pedir a biometria depois de 5 min fora do app
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') { hiddenAt = Date.now(); return; }
+  if (biometricEnabled() && store.data.user && ui.view !== 'lock' && ui.view !== 'login' && hiddenAt && Date.now() - hiddenAt > RELOCK_MS) {
+    ui.afterUnlock = ui.view === 'review' || ui.view === 'quiz' || ui.view === 'case' ? ui.view : ui.view;
+    go('lock');
+  }
+});
+
+function viewLock() {
+  const u = store.data.user || {};
+  const name = (u.name || store.data.profile?.nome || '').split(' ')[0];
+  return `<div class="screen lock">
+    <div class="lock-card stack center-text">
+      <button class="lock-btn" data-act="unlock" aria-label="Desbloquear com biometria">${icon('finger', 44)}</button>
+      <h1>${name ? `Olá, ${esc(name)}` : 'Sinapse bloqueado'}</h1>
+      <p class="muted">Use a digital, o rosto ou o PIN do aparelho para continuar.</p>
+      <button class="btn primary big" data-act="unlock">${icon('finger', 20)} Desbloquear</button>
+      <button class="link-btn center-self" data-act="lock-other">Entrar de outro jeito</button>
+    </div>
+  </div>`;
+}
+
+async function doUnlock() {
+  try {
+    await unlockWithBiometric();
+    const next = ui.afterUnlock && ui.afterUnlock !== 'lock' ? ui.afterUnlock : (store.data.profile ? 'home' : 'onboarding');
+    ui.afterUnlock = null;
+    go(next);
+  } catch (e) {
+    toast('Não foi possível confirmar. Tente de novo.');
+  }
+}
+
+function securityPanel() {
+  if (!bioAvailable) {
+    return `<section class="panel stack-sm"><h2>Segurança</h2><p class="muted small">Entrar com biometria não está disponível neste aparelho ou navegador. Funciona no app instalado no celular e em navegadores com digital, Face ID ou Windows Hello.</p></section>`;
+  }
+  return `<section class="panel stack-sm">
+    <h2>Segurança</h2>
+    <label class="switch-row" for="set-bio">
+      <span class="stack-xs grow"><strong>Entrar com biometria</strong><span class="muted small">Pede a digital, o rosto ou o PIN do aparelho ao abrir o app e depois de 5 minutos fora dele. Vale só para este aparelho.</span></span>
+      <input type="checkbox" id="set-bio" class="switch" data-bio="1" ${biometricEnabled() ? 'checked' : ''}>
+    </label>
+  </section>`;
+}
+
 function viewSettings() {
   const p = store.data.profile;
   const s = store.data.settings;
@@ -1173,6 +1228,7 @@ function viewSettings() {
   return `<div class="screen stack">
     <header><h1>Ajustes</h1></header>
     ${accountPanel()}
+    ${securityPanel()}
     <section class="panel stack-sm">
       <h2>Cores do app</h2>
       <div class="palettes" role="group" aria-label="Paleta de cores">${PALETTES.map((pl) => `<button class="palette ${(s.palette || 'azul') === pl.id ? 'on' : ''}" data-act="palette" data-v="${pl.id}" aria-pressed="${(s.palette || 'azul') === pl.id}">
@@ -1213,6 +1269,7 @@ function viewSettings() {
       <p class="muted small">Sinapse · protótipo ${APP_VERSION} · algoritmo FSRS-4.5. O app se atualiza sozinho ao abrir; se algo parecer antigo, busque a atualização.</p>
       <button class="btn ghost" data-act="force-update">Buscar atualização</button>
       <a class="link-btn" href="termos.html" target="_blank" rel="noopener">Termos de Uso e Política de Privacidade ${icon('next', 16)}</a>
+      <a class="link-btn" href="baixar/" target="_blank" rel="noopener">Instalar em outro aparelho ${icon('next', 16)}</a>
     </section>
   </div>`;
 }
@@ -1243,13 +1300,13 @@ function nav() {
     `<button class="${current === v ? 'on' : ''}" data-act="go" data-v="${v}" ${current === v ? 'aria-current="page"' : ''}>${icon(ic, 22)}<span>${label}</span></button>`).join('')}</nav>`;
 }
 
-const FULLSCREEN = ['login', 'onboarding', 'review', 'quiz', 'case'];
+const FULLSCREEN = ['login', 'lock', 'onboarding', 'review', 'quiz', 'case'];
 
 function render() {
-  const views = { login: viewLogin, onboarding: viewOnboarding, home: viewHome, study: viewStudy, review: viewReview, create: viewCreate, ia: viewIA, questions: viewQuestions, quiz: viewQuiz, errors: viewErrors, cases: viewCases, case: viewCase, plan: viewPlan, stats: viewStats, settings: viewSettings };
+  const views = { lock: viewLock, login: viewLogin, onboarding: viewOnboarding, home: viewHome, study: viewStudy, review: viewReview, create: viewCreate, ia: viewIA, questions: viewQuestions, quiz: viewQuiz, errors: viewErrors, cases: viewCases, case: viewCase, plan: viewPlan, stats: viewStats, settings: viewSettings };
   if (ui.stopFx) { ui.stopFx(); ui.stopFx = null; }
   const showNav = !FULLSCREEN.includes(ui.view) || (ui.view === 'quiz' && ui.quiz && ui.quiz.finished);
-  const showBar = ui.view !== 'login';
+  const showBar = ui.view !== 'login' && ui.view !== 'lock';
   root.innerHTML = (showBar ? appbar() : '') + views[ui.view]() + (showNav ? nav() : '');
   document.body.classList.toggle('has-bar', showBar);
   document.body.classList.toggle('has-nav', showNav);
@@ -1511,6 +1568,8 @@ const actions = {
     finishLogin({ name: '', email: '', picture: '', provider: 'demo' });
   },
   guest: () => finishLogin({ name: '', email: '', picture: '', provider: 'guest' }),
+  unlock: () => doUnlock(),
+  'lock-other': () => { disableBiometric(); actions.logout(); },
   logout: async () => {
     try { if (window.google && window.google.accounts) window.google.accounts.id.disableAutoSelect(); } catch (e) { /* sem Google */ }
     if (cloudUser()) {
@@ -1537,7 +1596,24 @@ root.addEventListener('click', (e) => {
   if (fn) fn(el.dataset.v);
 });
 
-root.addEventListener('change', (e) => {
+root.addEventListener('change', async (e) => {
+  const bio = e.target.closest('[data-bio]');
+  if (bio) {
+    if (bio.checked) {
+      const u = store.data.user || {};
+      try {
+        await enableBiometric(u.email || store.data.profile?.nome || 'sinapse', u.name || store.data.profile?.nome || 'Sinapse');
+        toast('Biometria ativada. Ela será pedida ao abrir o app.');
+      } catch (err) {
+        bio.checked = false;
+        toast('A biometria não foi ativada. Confirme a digital ou o rosto quando o aparelho pedir.');
+      }
+    } else {
+      disableBiometric();
+      toast('Entrar com biometria desligado.');
+    }
+    return;
+  }
   const el = e.target.closest('[data-set]');
   if (!el) return;
   const key = el.dataset.set;

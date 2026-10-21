@@ -641,3 +641,18 @@ body.has-bar .screen { padding-top: 16px; }
 .sync-line.saving::before { background: var(--amber); animation: beat 1s ease-in-out infinite; }
 .sync-line.error { color: var(--bad-ink); }
 .sync-line.error::before { background: var(--bad); }
+
+/* ---------- v0.8: tela de desbloqueio por biometria ---------- */
+.lock { min-height: 100svh; display: flex; align-items: center; justify-content: center; padding-block: 40px; }
+.lock-card { width: 100%; max-width: 360px; align-items: center; }
+.lock-card h1 { font-size: 28px; }
+.lock-btn {
+  width: 112px; height: 112px; border-radius: 34px; border: 1px solid color-mix(in srgb, var(--violet) 45%, var(--line));
+  background: var(--violet-soft); color: var(--violet-ink); display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; margin-bottom: 8px; animation: lock-pulse 2.4s ease-in-out infinite;
+}
+.lock-card .btn.big { width: 100%; }
+@keyframes lock-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--violet) 35%, transparent); }
+  50% { box-shadow: 0 0 0 16px color-mix(in srgb, var(--violet) 0%, transparent); }
+}
