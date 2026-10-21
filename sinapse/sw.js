@@ -1,5 +1,5 @@
 // Service worker: guarda os arquivos do app para funcionar offline.
-const CACHE = 'sinapse-v6';
+const CACHE = 'sinapse-v7';
 const SHELL = [
   './',
   './index.html',
@@ -32,8 +32,11 @@ self.addEventListener('activate', (event) => {
 // Rede primeiro (para pegar atualizações); sem internet, usa o cache.
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+  const sameOrigin = new URL(event.request.url).origin === self.location.origin;
   event.respondWith(
-    fetch(event.request)
+    // 'no-cache' faz o navegador confirmar com o servidor se o arquivo mudou,
+    // em vez de usar a cópia guardada por até 10 minutos.
+    fetch(event.request, sameOrigin ? { cache: 'no-cache' } : undefined)
       .then((res) => {
         const copy = res.clone();
         caches.open(CACHE).then((c) => c.put(event.request, copy)).catch(() => {});

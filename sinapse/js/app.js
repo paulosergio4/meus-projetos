@@ -58,6 +58,7 @@ function animateCard(cls, ms, then) {
   setTimeout(() => { ui.animating = false; then(); }, ms);
 }
 
+const APP_VERSION = '0.5';
 const root = document.getElementById('app');
 
 // ---------- utilitários ----------
@@ -1116,7 +1117,11 @@ function viewSettings() {
         ? '<p class="small">Apagar todo o progresso, cards criados, questões e perfil?</p><div class="grid-2"><button class="btn ghost" data-act="reset-cancel">Cancelar</button><button class="btn bad-solid" data-act="reset-do">Apagar tudo</button></div>'
         : '<button class="btn ghost bad-ink" data-act="reset-ask">Apagar progresso</button>'}
     </section>
-    <p class="muted small center-text">Sinapse · protótipo 0.4 · algoritmo FSRS-4.5</p>
+    <section class="panel stack-sm">
+      <h2>Versão</h2>
+      <p class="muted small">Sinapse · protótipo ${APP_VERSION} · algoritmo FSRS-4.5. O app se atualiza sozinho ao abrir; se algo parecer antigo, busque a atualização.</p>
+      <button class="btn ghost" data-act="force-update">Buscar atualização</button>
+    </section>
   </div>`;
 }
 
@@ -1390,6 +1395,7 @@ const actions = {
     window.scrollTo(0, 0);
   },
 
+  'force-update': () => forceUpdate(),
   advance: () => { store.advanceDay(); toast('Relógio adiantado em 1 dia.'); render(); },
   'reset-ask': () => { ui.confirmReset = true; render(); },
   'reset-cancel': () => { ui.confirmReset = false; render(); },
@@ -1503,6 +1509,29 @@ document.addEventListener('keydown', (e) => {
 applyPalette();
 render();
 
+// Atualização automática: quando sai uma versão nova, o service worker novo assume
+// e a página recarrega uma vez, sem precisar limpar nada no celular.
 if ('serviceWorker' in navigator && /^(https:|http:\/\/localhost|http:\/\/127\.0\.0\.1)/.test(location.href)) {
-  navigator.serviceWorker.register('./sw.js').catch(() => {});
+  const hadController = !!navigator.serviceWorker.controller;
+  let reloading = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController || reloading) return;
+    reloading = true;
+    location.reload();
+  });
+  navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).then((reg) => {
+    const check = () => reg.update().catch(() => {});
+    check();
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') check(); });
+  }).catch(() => {});
+}
+
+// Ajustes → "Buscar atualização": apaga a cópia guardada e recarrega.
+async function forceUpdate() {
+  toast('Buscando a versão mais recente...');
+  try {
+    if ('caches' in window) for (const k of await caches.keys()) await caches.delete(k);
+    if ('serviceWorker' in navigator) for (const r of await navigator.serviceWorker.getRegistrations()) await r.unregister();
+  } catch (e) { /* segue para o recarregamento */ }
+  location.reload();
 }
