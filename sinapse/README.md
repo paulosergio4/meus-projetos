@@ -2,7 +2,7 @@
 
 App de revisões e flashcards de medicina com repetição espaçada. Acompanha o estudante do 1º período até a prova de residência.
 
-Esta pasta tem o **protótipo 0.3**: um app web instalável (PWA) que funciona offline, sem dependências e sem servidor.
+Esta pasta tem o **protótipo 0.6**: um app web instalável (PWA) que funciona offline, sem dependências e sem servidor.
 
 - App no ar: https://paulosergio4.github.io/meus-projetos/sinapse/
 - Especificação completa: [documento do projeto](https://claude.ai/artifact/JBiZiVvTYQRgeir8dUdS1s)
@@ -51,21 +51,13 @@ npm run build    # gera dist/sinapse.html, o app inteiro em um único arquivo
 npm start        # servidor local na porta 8080
 ```
 
-## Ativar o login com Google
+## Conta e nuvem (Supabase)
 
-Sem configuração, o botão do Google entra em **modo demonstração**. Para o login real:
+Com o Supabase configurado, **Entrar com Google** salva o progresso na conta e sincroniza entre aparelhos. Sem configuração, o app funciona só no aparelho.
 
-1. Abra https://console.cloud.google.com/apis/credentials e crie um projeto (ex.: `sinapse`).
-2. Configure a **Tela de consentimento OAuth** (tipo Externo, nome Sinapse, seu e-mail de suporte).
-3. Em **Criar credenciais → ID do cliente OAuth**, escolha **Aplicativo da Web**.
-4. Em **Origens JavaScript autorizadas**, adicione `https://paulosergio4.github.io` e `http://localhost:8080`.
-5. Copie o ID (termina em `.apps.googleusercontent.com`) e cole em `js/config.js`:
+Passo a passo: [`supabase/COMO-CONFIGURAR.md`](supabase/COMO-CONFIGURAR.md). Tabela e regras de segurança: [`supabase/schema.sql`](supabase/schema.sql).
 
-```js
-export const GOOGLE_CLIENT_ID = '1234567890-abc.apps.googleusercontent.com';
-```
-
-O Client ID não é segredo e pode ficar no repositório. No protótipo, os dados da conta (nome, e-mail, foto) são lidos no próprio aparelho; no MVP o login passa a ser validado pelo backend (Supabase Auth).
+Termos de Uso e Política de Privacidade (rascunho para revisão jurídica): [`termos.html`](termos.html).
 
 ## Publicação
 
@@ -87,7 +79,10 @@ js/match.js             correção tolerante das respostas digitadas
 js/plan.js              cronograma reverso até a prova
 js/questions.js         questões e casos clínicos
 js/fx.js                animação da tela de login
-js/config.js            Client ID do login com Google
+js/config.js            URL e chave publicável do Supabase
+js/cloud.js             login com Google e sincronização pelo Supabase
+supabase/               tabela, regras de segurança e guia de configuração
+termos.html             Termos de Uso e Política de Privacidade
 js/data.js              grandes áreas, subtemas e cards de exemplo
 js/store.js             estado e persistência local
 js/app.js               telas e interações

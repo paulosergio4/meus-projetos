@@ -632,3 +632,12 @@ body.has-bar .screen { padding-top: 16px; }
 .login-points { margin: 0; gap: 8px 10px; max-width: 360px; }
 .login-points li { font-size: clamp(12.5px, 1.6vh, 14px); padding: 7px 14px; }
 .login-sheet { flex: none; }
+
+/* ---------- v0.6: nuvem e termos ---------- */
+.login-legal a { color: var(--violet-ink); text-decoration: underline; text-underline-offset: 2px; }
+.sync-line { font-size: 13px; display: flex; align-items: center; gap: 8px; color: var(--muted); }
+.sync-line::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex: none; }
+.sync-line.ok::before { background: var(--good); }
+.sync-line.saving::before { background: var(--amber); animation: beat 1s ease-in-out infinite; }
+.sync-line.error { color: var(--bad-ink); }
+.sync-line.error::before { background: var(--bad); }

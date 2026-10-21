@@ -46,7 +46,24 @@ function load() {
 export const store = {
   data: load(),
 
+  onSave: null, // chamado depois de salvar (o app usa para sincronizar com a nuvem)
+
   save() {
+    this.data.savedAt = Date.now();
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data)); } catch (e) { /* sem armazenamento */ }
+    if (this.onSave) this.onSave();
+  },
+
+  // Dados para a nuvem: tudo menos a sessão de login e o relógio de teste.
+  exportData() {
+    const { user, offsetDays, ...rest } = this.data;
+    return rest;
+  },
+
+  // Troca o progresso local pelo da nuvem, mantendo quem está logado.
+  importData(remote) {
+    const base = emptyState();
+    this.data = { ...base, ...remote, settings: { ...base.settings, ...(remote.settings || {}) }, user: this.data.user, offsetDays: this.data.offsetDays };
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data)); } catch (e) { /* sem armazenamento */ }
   },
 

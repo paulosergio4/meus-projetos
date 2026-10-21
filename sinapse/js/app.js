@@ -7,6 +7,7 @@ import { checkAnswer, parseCloze } from './match.js';
 import { daysBetween } from './plan.js';
 import { GOOGLE_CLIENT_ID } from './config.js';
 import { startSynapseFx } from './fx.js';
+import { cloudEnabled, loadCloud, signInWithGoogle, currentCloudUser, userFromSession, signOutCloud, pullProgress, pushProgress, deleteCloudProgress, isOAuthReturn } from './cloud.js';
 
 function homeView() {
   if (!store.data.user) return 'login';
@@ -58,7 +59,7 @@ function animateCard(cls, ms, then) {
   setTimeout(() => { ui.animating = false; then(); }, ms);
 }
 
-const APP_VERSION = '0.5';
+const APP_VERSION = '0.6';
 const root = document.getElementById('app');
 
 // ---------- utilitários ----------
@@ -218,6 +219,91 @@ function cardBody(c, reveal) {
     ${reveal ? `<hr><p class="label">Resposta</p><p class="answer">${esc(c.back)}</p>${c.extra ? `<p class="extra">${esc(c.extra)}</p>` : ''}` : ''}`;
 }
 
+// ---------- nuvem (Supabase) ----------
+const cloud = { status: 'idle', last: 0 };
+let pushTimer = 0;
+let syncing = false;
+
+function cloudUser() {
+  const u = store.data.user;
+  return u && u.cloud ? u : null;
+}
+
+function refreshCloudStatus() {
+  if (ui.view === 'settings' && !ui.animating) render();
+}
+
+function schedulePush() {
+  if (!cloudUser() || syncing) return;
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(pushNow, 2500);
+}
+
+async function pushNow() {
+  const u = cloudUser();
+  if (!u) return;
+  clearTimeout(pushTimer);
+  try {
+    cloud.status = 'saving';
+    await pushProgress(u.id, store.exportData());
+    cloud.status = 'ok';
+    cloud.last = Date.now();
+  } catch (e) {
+    cloud.status = 'error';
+  }
+  refreshCloudStatus();
+}
+
+// Ao entrar: se o aparelho não tem estudo ou a nuvem é mais recente, carrega da nuvem;
+// senão, envia o que está no aparelho. prevSaved = quando o aparelho salvou pela última vez antes do login.
+async function syncOnLogin(prevSaved) {
+  const u = cloudUser();
+  if (!u) return;
+  syncing = true;
+  cloud.status = 'saving';
+  try {
+    const remote = await pullProgress(u.id);
+    const localHasStudy = Boolean(store.data.profile) && (store.data.log.length + store.data.qlog.length + store.data.custom.length > 0 || !remote);
+    if (remote && remote.data && (!localHasStudy || (remote.data.savedAt || 0) > (prevSaved || 0))) {
+      store.importData(remote.data);
+      toast('Seu progresso foi carregado da conta.');
+    } else {
+      await pushProgress(u.id, store.exportData());
+    }
+    cloud.status = 'ok';
+    cloud.last = Date.now();
+  } catch (e) {
+    cloud.status = 'error';
+    toast('Não foi possível sincronizar agora. Seu progresso continua salvo no aparelho.');
+  }
+  syncing = false;
+}
+
+// Na abertura do app: confere se há sessão do Supabase (inclusive na volta do Google).
+async function bootCloud() {
+  if (!cloudEnabled()) return;
+  if (isOAuthReturn()) toast('Entrando com Google...');
+  let u = null;
+  try { u = await currentCloudUser(); } catch (e) { u = null; }
+  const local = store.data.user;
+  if (!u) {
+    if (local && local.cloud) { store.signOut(); go('login'); }
+    return;
+  }
+  const prevSaved = store.data.savedAt || 0;
+  const already = local && local.cloud && local.id === u.id;
+  store.data.user = userFromSession(u);
+  if (!already && u && store.data.profile && !store.data.profile.nome && store.data.user.name) {
+    store.data.profile.nome = store.data.user.name.split(' ')[0];
+  }
+  await syncOnLogin(prevSaved);
+  if (ui.view === 'login' || ui.view === 'onboarding') go(store.data.profile ? 'home' : 'onboarding');
+  else render();
+  if (!already) toast(store.data.user.name ? `Olá, ${store.data.user.name.split(' ')[0]}!` : 'Bem-vindo ao Sinapse!');
+}
+
+store.onSave = schedulePush;
+
 // ---------- login ----------
 const GOOGLE_G = `<svg aria-hidden="true" width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>`;
 
@@ -285,7 +371,7 @@ function viewLogin() {
       <div id="gsi-slot" class="gsi-slot" hidden></div>
       <button class="btn google big" id="google-btn" data-act="google">${GOOGLE_G} Entrar com Google</button>
       <button class="btn ghost big" data-act="guest">Continuar sem conta</button>
-      <p class="login-legal">Ao entrar, você concorda com os Termos de Uso e a Política de Privacidade. Seu progresso fica salvo neste aparelho.</p>
+      <p class="login-legal">Ao entrar, você concorda com os <a href="termos.html" target="_blank" rel="noopener">Termos de Uso e a Política de Privacidade</a>. ${cloudEnabled() ? 'Com o Google, seu progresso fica salvo na sua conta; sem conta, só neste aparelho.' : 'Seu progresso fica salvo neste aparelho.'}</p>
     </section>
   </div>`;
 }
@@ -1067,8 +1153,13 @@ function accountPanel() {
   const avatar = u.picture
     ? `<img class="avatar" src="${esc(u.picture)}" alt="" referrerpolicy="no-referrer">`
     : `<span class="avatar">${initial ? esc(initial) : icon('user', 24)}</span>`;
+  const syncLine = u.cloud
+    ? `<p class="sync-line ${cloud.status}">${{ ok: `Salvo na sua conta${cloud.last ? ` às ${new Date(cloud.last).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}` : ''}`, saving: 'Sincronizando...', error: 'Sem conexão com a nuvem. O progresso fica no aparelho até voltar.', idle: 'Conectado à sua conta' }[cloud.status]}</p>
+       <button class="btn ghost" data-act="sync-now">Sincronizar agora</button>`
+    : cloudEnabled() ? '<p class="muted small">Entre com Google para salvar o progresso na sua conta e usar em outros aparelhos.</p><button class="btn google" data-act="google">Entrar com Google</button>' : '';
   return `<section class="panel stack-sm">
     <div class="row gap-md">${avatar}<div class="stack-xs grow"><strong>${esc(u.name || store.data.profile?.nome || 'Visitante')}</strong><span class="muted small">${esc(u.email || label)}</span></div></div>
+    ${syncLine}
     <button class="btn ghost" data-act="logout">Sair</button>
   </section>`;
 }
@@ -1114,13 +1205,14 @@ function viewSettings() {
       <h2>Dados</h2>
       <p class="muted small">Seu progresso fica salvo só neste aparelho e neste navegador.</p>
       ${ui.confirmReset
-        ? '<p class="small">Apagar todo o progresso, cards criados, questões e perfil?</p><div class="grid-2"><button class="btn ghost" data-act="reset-cancel">Cancelar</button><button class="btn bad-solid" data-act="reset-do">Apagar tudo</button></div>'
+        ? `<p class="small">Apagar todo o progresso, cards criados, questões e perfil${cloudUser() ? ', inclusive o que está salvo na sua conta' : ''}?</p><div class="grid-2"><button class="btn ghost" data-act="reset-cancel">Cancelar</button><button class="btn bad-solid" data-act="reset-do">Apagar tudo</button></div>`
         : '<button class="btn ghost bad-ink" data-act="reset-ask">Apagar progresso</button>'}
     </section>
     <section class="panel stack-sm">
       <h2>Versão</h2>
       <p class="muted small">Sinapse · protótipo ${APP_VERSION} · algoritmo FSRS-4.5. O app se atualiza sozinho ao abrir; se algo parecer antigo, busque a atualização.</p>
       <button class="btn ghost" data-act="force-update">Buscar atualização</button>
+      <a class="link-btn" href="termos.html" target="_blank" rel="noopener">Termos de Uso e Política de Privacidade ${icon('next', 16)}</a>
     </section>
   </div>`;
 }
@@ -1399,8 +1491,18 @@ const actions = {
   advance: () => { store.advanceDay(); toast('Relógio adiantado em 1 dia.'); render(); },
   'reset-ask': () => { ui.confirmReset = true; render(); },
   'reset-cancel': () => { ui.confirmReset = false; render(); },
-  'reset-do': () => { store.reset(); ui.session = null; ui.quiz = null; ui.confirmReset = false; go('login'); },
-  google: () => {
+  'reset-do': async () => {
+    const u = cloudUser();
+    if (u) { try { await deleteCloudProgress(u.id); await signOutCloud(); } catch (e) { /* segue apagando o local */ } }
+    store.reset(); ui.session = null; ui.quiz = null; ui.confirmReset = false; go('login');
+  },
+  'sync-now': async () => { cloud.status = 'saving'; render(); await pushNow(); toast(cloud.status === 'ok' ? 'Progresso salvo na sua conta.' : 'Não foi possível sincronizar agora.'); },
+  google: async () => {
+    if (cloudEnabled()) {
+      toast('Abrindo o Google...');
+      try { await signInWithGoogle(); } catch (e) { toast('Não foi possível abrir o login do Google. Tente de novo.'); }
+      return;
+    }
     if (GOOGLE_CLIENT_ID && window.google && window.google.accounts) {
       window.google.accounts.id.prompt();
       return;
@@ -1409,8 +1511,18 @@ const actions = {
     finishLogin({ name: '', email: '', picture: '', provider: 'demo' });
   },
   guest: () => finishLogin({ name: '', email: '', picture: '', provider: 'guest' }),
-  logout: () => {
+  logout: async () => {
     try { if (window.google && window.google.accounts) window.google.accounts.id.disableAutoSelect(); } catch (e) { /* sem Google */ }
+    if (cloudUser()) {
+      // O progresso já está na conta: salva o que faltar e limpa o aparelho.
+      await pushNow();
+      try { await signOutCloud(); } catch (e) { /* segue */ }
+      store.reset();
+      ui.session = null;
+      ui.quiz = null;
+      go('login');
+      return;
+    }
     store.signOut();
     ui.session = null;
     ui.quiz = null;
@@ -1508,6 +1620,7 @@ document.addEventListener('keydown', (e) => {
 
 applyPalette();
 render();
+bootCloud();
 
 // Atualização automática: quando sai uma versão nova, o service worker novo assume
 // e a página recarrega uma vez, sem precisar limpar nada no celular.
