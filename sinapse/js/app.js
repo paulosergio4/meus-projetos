@@ -1,5 +1,5 @@
 // Sinapse — protótipo. Interface em JavaScript puro, sem dependências.
-import { AREAS, PROVAS, FASES, ECG_REGIONS, IA_DEMO } from './data.js';
+import { AREAS, PROVAS, FASES, ECG_REGIONS } from './data.js';
 import { QUESTIONS, CASES } from './questions.js';
 import { store } from './store.js';
 import { scheduleAll, formatInterval, DAY_MS } from './fsrs.js';
@@ -8,7 +8,7 @@ import { daysBetween } from './plan.js';
 import { GOOGLE_CLIENT_ID, EXIGIR_LOGIN } from './config.js';
 import { startSynapseFx } from './fx.js';
 import { biometricAvailable, biometricEnabled, enableBiometric, disableBiometric, unlockWithBiometric } from './biometric.js';
-import { cloudEnabled, loadCloud, signInWithGoogle, currentCloudUser, userFromSession, signOutCloud, pullProgress, pushProgress, deleteCloudProgress, isOAuthReturn } from './cloud.js';
+import { callGerarCards, cloudEnabled, loadCloud, signInWithGoogle, currentCloudUser, userFromSession, signOutCloud, pullProgress, pushProgress, deleteCloudProgress, isOAuthReturn } from './cloud.js';
 
 function homeView() {
   if (!store.data.user) return 'login';
@@ -63,7 +63,7 @@ function animateCard(cls, ms, then) {
   setTimeout(() => { ui.animating = false; then(); }, ms);
 }
 
-const APP_VERSION = '0.9.5';
+const APP_VERSION = '0.10.0';
 const root = document.getElementById('app');
 
 // ---------- utilitários ----------
@@ -659,31 +659,102 @@ function viewCreate() {
   </form>`;
 }
 
+// ---------- IA: gerar cards a partir de PDF ou texto ----------
+const IA_MAX_BYTES = 10 * 1024 * 1024;
+const PLAN_NAMES = { gratis: 'Grátis', pro: 'Pro', residencia: 'Residência' };
+
+function iaState() {
+  if (!ui.ia) ui.ia = { mode: 'pdf', file: null, text: '', target: 'clinica|Cardiologia', count: 10, types: 'misto', loading: false, usage: null, usageLoading: false, result: null };
+  return ui.ia;
+}
+
+function loadIaUsage() {
+  const ia = iaState();
+  if (ia.usage || ia.usageLoading || !cloudUser()) return;
+  ia.usageLoading = true;
+  callGerarCards({ action: 'uso' })
+    .then((u) => { ia.usage = u; })
+    .catch(() => { ia.usage = null; })
+    .finally(() => { ia.usageLoading = false; if (ui.view === 'ia') render(); });
+}
+
+function iaUsageBar(u) {
+  if (!u) return '';
+  const left = Math.max(0, u.limit - u.used);
+  const pct = Math.min(100, Math.round((u.used / u.limit) * 100));
+  return `<div class="panel stack-xs ia-usage">
+    <div class="row"><strong>${left} de ${u.limit} cards de IA disponíveis</strong><span class="muted small">Plano ${PLAN_NAMES[u.plan] || u.plan}</span></div>
+    <span class="bar"><span class="fill ${left ? 'violet' : 'bad'}" style="width:${pct}%"></span></span>
+    <span class="muted small">${left ? 'O limite renova no dia 1º de cada mês.' : 'Você usou todos os cards de IA deste mês. Eles voltam no dia 1º.'}</span>
+  </div>`;
+}
+
+function fmtSize(bytes) {
+  return bytes > 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1).replace('.', ',')} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`;
+}
+
 function viewIA() {
-  if (!ui.iaCards) {
-    return `<div class="screen stack">
-      <header class="stack-xs"><h1>Gerar com IA</h1><p class="muted">Envie um PDF, slide ou resumo e a IA sugere cards para você aprovar.</p></header>
-      <div class="panel note"><strong>Modo demonstração.</strong> Neste protótipo a geração usa um material de exemplo. A leitura de arquivos com IA entra no MVP.</div>
-      <button class="panel upload" data-act="ia-demo">
-        <span class="file-badge">PDF</span>
-        <span class="stack-xs grow"><strong>${esc(IA_DEMO.source)}</strong><span class="muted small">${IA_DEMO.pages} páginas · material de exemplo</span></span>
-        <span class="btn primary">Gerar</span>
-      </button>
+  const ia = iaState();
+  if (ia.result) return viewIAResult(ia);
+  if (ia.loading) {
+    return `<div class="screen stack ia-loading">
+      <div class="ia-orb" aria-hidden="true">${icon('spark', 40)}</div>
+      <h1 class="center-text h-sm">Lendo o material…</h1>
+      <p class="muted center-text">A IA está separando os pontos que mais caem e montando os cards. Costuma levar de 20 a 60 segundos.</p>
+      <ol class="ia-steps muted small"><li>Lendo ${ia.mode === 'pdf' && ia.file ? esc(ia.file.name) : 'o texto'}</li><li>Escolhendo os fatos de maior rendimento</li><li>Escrevendo os cards</li></ol>
     </div>`;
   }
-  const pending = ui.iaCards.filter((c) => c.status === 'pending').length;
-  const approved = ui.iaCards.filter((c) => c.status === 'approved').length;
+  loadIaUsage();
+  const out = ia.usage && ia.usage.used >= ia.usage.limit;
+  const ready = ia.mode === 'pdf' ? Boolean(ia.file) : ia.text.trim().length >= 80;
+  return `<div class="screen stack">
+    <header class="stack-xs"><h1>Gerar com IA</h1><p class="muted">Envie a aula em PDF ou cole um resumo. A IA sugere os cards e você aprova antes de salvar.</p></header>
+    ${ia.usageLoading && !ia.usage ? '<div class="panel muted small">Consultando seu limite do mês…</div>' : iaUsageBar(ia.usage)}
+    <div class="segmented" role="group" aria-label="Material">
+      <button type="button" class="${ia.mode === 'pdf' ? 'on' : ''}" data-act="ia-mode" data-v="pdf" aria-pressed="${ia.mode === 'pdf'}">PDF</button>
+      <button type="button" class="${ia.mode === 'texto' ? 'on' : ''}" data-act="ia-mode" data-v="texto" aria-pressed="${ia.mode === 'texto'}">Colar texto</button>
+    </div>
+    ${ia.mode === 'pdf' ? `<label class="panel upload" for="ia-file">
+        <span class="file-badge">PDF</span>
+        <span class="stack-xs grow">${ia.file
+          ? `<strong>${esc(ia.file.name)}</strong><span class="muted small">${fmtSize(ia.file.size)} · toque para trocar</span>`
+          : '<strong>Escolher arquivo</strong><span class="muted small">Aula, slide exportado ou apostila · até 10 MB</span>'}</span>
+        <span class="btn ghost">${ia.file ? 'Trocar' : 'Escolher'}</span>
+        <input id="ia-file" type="file" accept="application/pdf,.pdf" class="visually-hidden" data-ia-file="1">
+      </label>`
+      : `<label class="field" for="ia-text">Texto do material
+        <textarea id="ia-text" rows="8" data-ia-text="1" placeholder="Cole aqui o resumo, a transcrição da aula ou o trecho da apostila.">${esc(ia.text)}</textarea>
+        <small class="muted">Quanto mais completo o trecho, melhores os cards.</small>
+      </label>`}
+    <label class="field" for="ia-target">Salvar em<select id="ia-target" data-ia-target="1">${areaOptions(ia.target)}</select></label>
+    <div class="stack-xs"><span class="field">Quantos cards</span>${chipGroup('ia-count', ia.count, [[5, '5'], [10, '10'], [20, '20']])}</div>
+    <div class="stack-xs"><span class="field">Tipo</span>${chipGroup('ia-types', ia.types, [['misto', 'Misto'], ['cloze', 'Lacuna'], ['basic', 'Frente e verso']])}</div>
+    <button class="btn primary big" data-act="ia-generate" ${ready && !out ? '' : 'disabled'}>${icon('spark', 20)} Gerar cards</button>
+    <p class="muted small center-text">A IA pode errar. Confira cada card antes de aprovar.</p>
+  </div>`;
+}
+
+function viewIAResult(ia) {
+  const r = ia.result;
+  const [areaId, sub] = ia.target.split('|');
+  const pending = r.cards.filter((c) => c.status === 'pending').length;
+  const approved = r.cards.filter((c) => c.status === 'approved').length;
   return `<div class="screen stack">
     <div class="row top"><button class="icon-btn" data-act="ia-back" aria-label="Voltar">${icon('back')}</button><h1 class="grow center-text h-sm">Gerar com IA</h1><span class="icon-spacer"></span></div>
-    <div class="panel upload static"><span class="file-badge">PDF</span><span class="stack-xs grow"><strong>${esc(IA_DEMO.source)}</strong><span class="muted small">${IA_DEMO.pages} páginas · lido agora</span></span><span class="ok">${icon('check', 22)}</span></div>
-    <div class="row"><h2>${ui.iaCards.length} cards sugeridos</h2><span class="muted small">${approved} aprovados · ${pending} pendentes</span></div>
-    ${ui.iaCards.map((c, i) => `<article class="panel sug ${c.status}">
+    <div class="panel upload static"><span class="file-badge">${r.source.type}</span><span class="stack-xs grow"><strong>${esc(r.titulo || r.source.name)}</strong><span class="muted small">${esc(r.source.name)} · lido agora</span></span><span class="ok">${icon('check', 22)}</span></div>
+    ${r.aviso ? `<div class="panel note">${esc(r.aviso)}</div>` : ''}
+    ${r.cards.length ? `<div class="row"><h2>${plural(r.cards.length, 'card sugerido', 'cards sugeridos')}</h2><span class="muted small">${approved} aprovados · ${pending} pendentes</span></div>` : '<div class="panel note">A IA não encontrou fatos suficientes neste material. Tente outro arquivo ou um texto mais completo.</div>'}
+    ${r.cards.map((c, i) => `<article class="panel sug ${c.status}">
       <div class="row"><span class="eyebrow">${typeLabel(c)}</span><span class="small status">${c.status === 'approved' ? 'Aprovado' : c.status === 'discarded' ? 'Descartado' : ''}</span></div>
       ${c.type === 'cloze' ? `<p class="q-sm">${clozeHtml(c.text, true)}</p>` : `<p class="q-sm">${esc(c.front)}</p><p class="muted">${esc(c.back)}</p>`}
-      ${c.status === 'pending' ? `<div class="grid-2"><button class="btn ghost bad-ink" data-act="ia-discard" data-v="${i}">Descartar</button><button class="btn good-solid" data-act="ia-approve" data-v="${i}">Aprovar</button></div>` : ''}
+      ${c.extra ? `<p class="muted small">${esc(c.extra)}</p>` : ''}
+      ${c.status === 'pending' ? `<div class="grid-2"><button class="btn ghost bad-ink" data-act="ia-discard" data-v="${i}">Descartar</button><button class="btn good-solid" data-act="ia-approve" data-v="${i}">Aprovar</button></div>`
+        : `<button class="link-btn small" data-act="ia-undo" data-v="${i}">Desfazer</button>`}
     </article>`).join('')}
-    <button class="btn primary big" data-act="ia-save" ${approved + pending ? '' : 'disabled'}>Aprovar pendentes e salvar em Cardiologia</button>
+    ${r.cards.length ? `<button class="btn primary big" data-act="ia-save" ${approved + pending ? '' : 'disabled'}>Aprovar pendentes e salvar em ${esc(sub)}</button>` : ''}
+    ${iaUsageBar(ia.usage)}
   </div>`;
+  void areaId;
 }
 
 
@@ -1488,15 +1559,43 @@ const actions = {
   'end-session': () => { ui.session = null; go('home'); },
   report: () => toast('Obrigado. O erro foi anotado para revisão.'),
   'create-type': (v) => { ui.createType = v; render(); },
-  'ia-demo': () => { ui.iaCards = IA_DEMO.cards.map((c) => ({ ...c, status: 'pending' })); render(); },
-  'ia-back': () => { ui.iaCards = null; render(); },
-  'ia-approve': (v) => { ui.iaCards[v].status = 'approved'; render(); },
-  'ia-discard': (v) => { ui.iaCards[v].status = 'discarded'; render(); },
+  'ia-mode': (v) => { iaState().mode = v; render(); },
+  'ia-count': (v) => { iaState().count = Number(v); render(); },
+  'ia-types': (v) => { iaState().types = v; render(); },
+  'ia-generate': async () => {
+    const ia = iaState();
+    if (ia.loading) return;
+    const [areaId, sub] = ia.target.split('|');
+    const body = { area: areaById(areaId).name, sub, count: ia.count, types: ia.types, fase: (FASES.find((f) => f.id === store.data.profile?.fase) || {}).name || '' };
+    if (ia.mode === 'pdf') body.pdf = ia.file?.b64; else body.text = ia.text;
+    const source = ia.mode === 'pdf' ? { type: 'PDF', name: ia.file?.name || 'Arquivo' } : { type: 'TXT', name: 'Texto colado' };
+    ia.loading = true;
+    render();
+    try {
+      const r = await callGerarCards(body);
+      ia.usage = { plan: r.plan, used: r.used, limit: r.limit };
+      ia.result = { ...r, source, cards: (r.cards || []).map((c) => ({ ...c, status: 'pending' })) };
+    } catch (e) {
+      if (e.info && e.info.limit) ia.usage = { plan: e.info.plan, used: e.info.used, limit: e.info.limit };
+      toast(e.message);
+    }
+    ia.loading = false;
+    if (ui.view === 'ia') render();
+  },
+  'ia-back': () => { iaState().result = null; render(); },
+  'ia-approve': (v) => { iaState().result.cards[v].status = 'approved'; render(); },
+  'ia-discard': (v) => { iaState().result.cards[v].status = 'discarded'; render(); },
+  'ia-undo': (v) => { iaState().result.cards[v].status = 'pending'; render(); },
   'ia-save': () => {
-    const keep = ui.iaCards.filter((c) => c.status !== 'discarded');
-    keep.forEach(({ status, ...c }) => store.addCustom({ ...c, area: IA_DEMO.area, sub: IA_DEMO.sub }));
-    ui.iaCards = null;
-    toast(`${plural(keep.length, 'card salvo', 'cards salvos')} em Cardiologia.`);
+    const ia = iaState();
+    const [area, sub] = ia.target.split('|');
+    const keep = ia.result.cards.filter((c) => c.status !== 'discarded');
+    keep.forEach(({ status, ...c }) => store.addCustom({ ...c, area, sub, extra: c.extra || 'Gerado por IA.', ai: true }, false));
+    store.save();
+    ia.result = null;
+    ia.file = null;
+    ia.text = '';
+    toast(`${plural(keep.length, 'card salvo', 'cards salvos')} em ${sub}. Eles entram na revisão de hoje.`);
     go('home');
   },
   cell: (v) => { ui.selectedCell = v; render(); },
@@ -1682,7 +1781,38 @@ root.addEventListener('click', (e) => {
   if (fn) fn(el.dataset.v);
 });
 
+root.addEventListener('input', (e) => {
+  if (e.target.matches('[data-ia-text]')) {
+    const ia = iaState();
+    const before = ia.text.trim().length >= 80;
+    ia.text = e.target.value;
+    // Só redesenha quando o botão Gerar muda de estado, para não perder o foco do texto.
+    if (before !== ia.text.trim().length >= 80) {
+      const btn = root.querySelector('[data-act="ia-generate"]');
+      const out = ia.usage && ia.usage.used >= ia.usage.limit;
+      if (btn) btn.disabled = !(ia.text.trim().length >= 80) || out;
+    }
+  }
+});
+
 root.addEventListener('change', async (e) => {
+  if (e.target.matches('[data-ia-target]')) { iaState().target = e.target.value; return; }
+  if (e.target.matches('[data-ia-file]')) {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    if (!/pdf$/i.test(f.type) && !/\.pdf$/i.test(f.name)) { toast('Escolha um arquivo PDF.'); return; }
+    if (f.size > IA_MAX_BYTES) { toast('O PDF passa de 10 MB. Envie só as páginas da aula ou cole o texto.'); return; }
+    const b64 = await new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(String(r.result).split(',')[1] || '');
+      r.onerror = reject;
+      r.readAsDataURL(f);
+    }).catch(() => '');
+    if (!b64) { toast('Não foi possível ler o arquivo.'); return; }
+    iaState().file = { name: f.name, size: f.size, b64 };
+    render();
+    return;
+  }
   const bio = e.target.closest('[data-bio]');
   if (bio) {
     if (bio.checked) {

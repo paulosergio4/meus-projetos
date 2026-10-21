@@ -90,3 +90,18 @@ export async function deleteCloudProgress(userId) {
 export function isOAuthReturn() {
   return /[?&]code=/.test(location.search) || /access_token=/.test(location.hash);
 }
+
+// IA: chama a função gerar-cards no servidor (a chave da IA fica só lá).
+// body: { action: 'uso' } para consultar o limite, ou { pdf | text, area, sub, count, types, fase }.
+export async function callGerarCards(body) {
+  const c = await loadCloud();
+  if (!c) throw Object.assign(new Error('Sem conexão com o servidor. Confira a internet.'), { code: 'rede' });
+  const { data, error } = await c.functions.invoke('gerar-cards', { body });
+  if (error) {
+    let info = {};
+    try { info = await error.context.json(); } catch (e) { /* resposta sem corpo */ }
+    const msg = info.message || (error.name === 'FunctionsFetchError' ? 'Sem conexão com o servidor. Confira a internet.' : 'Não foi possível gerar agora. Tente de novo.');
+    throw Object.assign(new Error(msg), { code: info.error || 'falha', info });
+  }
+  return data;
+}
