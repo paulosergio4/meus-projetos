@@ -1,19 +1,32 @@
 // Estado do app, salvo no próprio aparelho (localStorage).
 // Se o armazenamento não estiver disponível, o app funciona só na memória.
 import { SEED_CARDS } from './data.js';
+import { QUESTIONS } from './questions.js';
 import { DAY_MS, newCardState, scheduleAll } from './fsrs.js';
+import { buildPlan } from './plan.js';
 
 const STORAGE_KEY = 'sinapse:v1';
-export const NEW_PER_DAY = 15;
+
+export const DEFAULT_SETTINGS = {
+  typeAnswers: true,    // digitar a resposta nas lacunas
+  newPerDayAuto: true,  // cards novos por dia calculados pelo cronograma
+  newPerDay: 15,
+  questionsPerDay: 10,
+};
 
 function emptyState() {
   return {
-    user: null,    // { name, email, picture, provider: 'google' | 'demo' | 'guest' }
-    profile: null, // { nome, fase, prova, dataProva }
-    sched: {},     // id do card -> estado FSRS
-    custom: [],    // cards criados pelo usuário
-    log: [],       // { id, g, t }
-    offsetDays: 0, // avanço de dias para testar o agendamento
+    user: null,       // { name, email, picture, provider: 'google' | 'demo' | 'guest' }
+    profile: null,    // { nome, fase, prova, dataProva }
+    settings: { ...DEFAULT_SETTINGS },
+    sched: {},        // id do card -> estado FSRS
+    custom: [],       // cards criados pelo usuário (inclui os do caderno de erros)
+    log: [],          // revisões de cards: { id, g, t, p? } (p = prática, não altera agenda)
+    qlog: [],         // questões respondidas: { id, ok, t, mode }
+    errors: {},       // caderno de erros: id da questão -> { count, solved, t, cardId }
+    cases: {},        // casos clínicos: id -> { best, total, t }
+    simulados: [],    // { t, total, correct, seconds, byArea }
+    offsetDays: 0,    // avanço de dias para testar o agendamento
   };
 }
 
@@ -21,7 +34,9 @@ function load() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return emptyState();
-    return { ...emptyState(), ...JSON.parse(raw) };
+    const saved = JSON.parse(raw);
+    const base = emptyState();
+    return { ...base, ...saved, settings: { ...base.settings, ...(saved.settings || {}) } };
   } catch (e) {
     return emptyState();
   }
@@ -36,6 +51,11 @@ export const store = {
 
   reset() {
     this.data = emptyState();
+    this.save();
+  },
+
+  setSetting(key, value) {
+    this.data.settings[key] = value;
     this.save();
   },
 
@@ -79,18 +99,44 @@ export const store = {
     return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
   },
 
+  isToday(t) {
+    return this.dayKey(t) === this.dayKey(this.now());
+  },
+
   reviewsToday() {
-    const today = this.dayKey(this.now());
-    return this.data.log.filter((l) => this.dayKey(l.t) === today);
+    return this.data.log.filter((l) => !l.p && this.isToday(l.t));
+  },
+
+  questionsToday() {
+    return this.data.qlog.filter((l) => this.isToday(l.t));
   },
 
   newStudiedToday() {
-    const today = this.dayKey(this.now());
     const firstSeen = new Map();
-    for (const l of this.data.log) if (!firstSeen.has(l.id)) firstSeen.set(l.id, l.t);
+    for (const l of this.data.log) if (!l.p && !firstSeen.has(l.id)) firstSeen.set(l.id, l.t);
     let n = 0;
-    for (const t of firstSeen.values()) if (this.dayKey(t) === today) n += 1;
+    for (const t of firstSeen.values()) if (this.isToday(t)) n += 1;
     return n;
+  },
+
+  newCardsLeft() {
+    return this.allCards().filter((c) => this.stateOf(c.id).state === 'new').length;
+  },
+
+  plan() {
+    const p = this.data.profile;
+    if (!p || !p.dataProva) return null;
+    // Conta os cards novos de hoje como ainda pendentes, para a meta não mudar ao longo do dia.
+    return buildPlan({ now: this.now(), examDate: p.dataProva, newLeft: this.newCardsLeft() + this.newStudiedToday() });
+  },
+
+  newPerDay() {
+    const s = this.data.settings;
+    if (s.newPerDayAuto) {
+      const plan = this.plan();
+      if (plan && plan.phase !== 'past') return plan.phase === 'final' ? 0 : plan.newPerDay;
+    }
+    return s.newPerDay;
   },
 
   // Fila do dia: cards vencidos primeiro, depois cards novos até o limite diário.
@@ -105,8 +151,15 @@ export const store = {
       else if (s.due <= now) due.push(c);
     }
     due.sort((a, b) => this.stateOf(a.id).due - this.stateOf(b.id).due);
-    const newLeft = Math.max(0, NEW_PER_DAY - this.newStudiedToday());
+    const newLeft = Math.max(0, this.newPerDay() - this.newStudiedToday());
     return due.concat(fresh.slice(0, newLeft)).slice(0, limit);
+  },
+
+  // Cards que a pessoa já errou alguma vez (para o modo Reforço).
+  weakCards() {
+    const lastGrade = new Map();
+    for (const l of this.data.log) lastGrade.set(l.id, l.g);
+    return this.allCards().filter((c) => this.stateOf(c.id).lapses > 0 || lastGrade.get(c.id) === 1);
   },
 
   answer(id, grade) {
@@ -118,8 +171,14 @@ export const store = {
     return next;
   },
 
+  // Revisão de prática: registra acerto ou erro sem mexer na agenda.
+  practice(id, ok) {
+    this.data.log.push({ id, g: ok ? 3 : 1, t: this.now(), p: true });
+    this.save();
+  },
+
   streak() {
-    const days = new Set(this.data.log.map((l) => this.dayKey(l.t)));
+    const days = new Set(this.data.log.map((l) => this.dayKey(l.t)).concat(this.data.qlog.map((l) => this.dayKey(l.t))));
     let n = 0;
     let t = this.now();
     if (!days.has(this.dayKey(t))) t -= DAY_MS; // hoje ainda não estudou: conta a partir de ontem
@@ -127,7 +186,7 @@ export const store = {
     return n;
   },
 
-  // Acerto por área e subtema, considerando a última resposta de cada revisão.
+  // Acerto nos cards, por filtro (área, subtema).
   accuracy(filter) {
     const cards = new Map(this.allCards().map((c) => [c.id, c]));
     let total = 0;
@@ -141,10 +200,65 @@ export const store = {
     return { total, pct: total ? Math.round((ok / total) * 100) : null };
   },
 
-  addCustom(card) {
+  questionById(id) {
+    return QUESTIONS.find((q) => q.id === id);
+  },
+
+  // Acerto nas questões, por filtro.
+  questionAccuracy(filter = () => true) {
+    let total = 0;
+    let ok = 0;
+    for (const l of this.data.qlog) {
+      const q = this.questionById(l.id);
+      if (!q || !filter(q)) continue;
+      total += 1;
+      if (l.ok) ok += 1;
+    }
+    return { total, pct: total ? Math.round((ok / total) * 100) : null };
+  },
+
+  // Registra a resposta; errar manda a questão para o caderno e cria um card com o conceito.
+  answerQuestion(id, ok, mode) {
+    this.data.qlog.push({ id, ok, t: this.now(), mode });
+    const q = this.questionById(id);
+    const entry = this.data.errors[id];
+    let createdCard = false;
+    if (!ok) {
+      if (entry) {
+        entry.count += 1;
+        entry.solved = false;
+        entry.t = this.now();
+      } else {
+        const cardId = this.addCustom({ type: 'basic', front: q.fact.front, back: q.fact.back, area: q.area, sub: q.sub, extra: 'Criado pelo caderno de erros.', origin: id }, false);
+        this.data.errors[id] = { count: 1, solved: false, t: this.now(), cardId };
+        createdCard = true;
+      }
+    } else if (entry && !entry.solved) {
+      entry.solved = true;
+    }
+    this.save();
+    return { createdCard };
+  },
+
+  openErrors() {
+    return Object.entries(this.data.errors).filter(([, e]) => !e.solved).sort((a, b) => b[1].t - a[1].t);
+  },
+
+  saveSimulado(result) {
+    this.data.simulados.push(result);
+    this.save();
+  },
+
+  saveCase(id, score, total) {
+    const prev = this.data.cases[id];
+    this.data.cases[id] = { best: Math.max(prev ? prev.best : 0, score), total, t: this.now() };
+    this.save();
+  },
+
+  addCustom(card, persist = true) {
     const id = `u${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
     this.data.custom.push({ ...card, id, custom: true });
-    this.save();
+    if (persist) this.save();
     return id;
   },
 };

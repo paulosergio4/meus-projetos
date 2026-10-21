@@ -2,7 +2,7 @@
 
 App de revisões e flashcards de medicina com repetição espaçada. Acompanha o estudante do 1º período até a prova de residência.
 
-Esta pasta tem o **protótipo 0.1**: um app web instalável (PWA) que funciona offline, sem dependências e sem servidor.
+Esta pasta tem o **protótipo 0.2**: um app web instalável (PWA) que funciona offline, sem dependências e sem servidor.
 
 - App no ar: https://paulosergio4.github.io/meus-projetos/sinapse/
 - Especificação completa: [documento do projeto](https://claude.ai/artifact/JBiZiVvTYQRgeir8dUdS1s)
@@ -14,17 +14,20 @@ Esta pasta tem o **protótipo 0.1**: um app web instalável (PWA) que funciona o
 | --- | --- |
 | Login | Animação de rede neural, entrar com Google ou continuar sem conta |
 | Onboarding | Nome, fase do curso, prova e data da prova |
-| Início | Cards do dia, anel de progresso, sequência de dias, contagem até a prova, modo 5 minutos, decks por grande área |
-| Revisão | Frente e verso, lacuna e oclusão de imagem (ECG); botões De novo, Difícil, Bom e Fácil com o próximo intervalo; atalhos de teclado |
-| Criar card | Lacuna (`{{resposta}}`) ou frente e verso, por subtema |
-| Gerar com IA | Modo demonstração com sugestões de exemplo para aprovar ou descartar |
-| Desempenho | Acerto, revisões, mapa por grande área e subtema, sugestão do que revisar |
-| Ajustes | Editar perfil, avançar o relógio 1 dia para testar o agendamento, apagar progresso |
+| Início | Revisões do dia, plano de hoje (revisões e questões), sequência, contagem até a prova, decks por grande área |
+| Estudar | Revisão do dia, modo 5 minutos, reforço dos erros (sem alterar a agenda), revisão por área, criar card, gerar com IA |
+| Revisão | Frente e verso, lacuna e oclusão de imagem (ECG). Nas lacunas, a pessoa **digita a resposta**: o app aceita sinônimos, ignora acentos, tolera pequenos erros de digitação e sugere a nota |
+| Questões | Treino por área com comentário imediato; **simulado** cronometrado (3 min por questão) com gabarito comentado; alternativas embaralhadas a cada tentativa |
+| Caderno de erros | Toda questão errada entra no caderno e vira um card de revisão do conceito; sai do caderno quando a pessoa acerta |
+| Casos clínicos | Casos em etapas (dor torácica, gestante com cefaleia): a cada etapa chega uma informação nova e a pessoa decide a conduta |
+| Cronograma | Contagem até a prova, cards novos por dia calculados para terminar o conteúdo uma semana antes, reta final só de revisão, foco nas áreas mais fracas |
+| Desempenho | Acerto dos cards, mapa por grande área e subtema, acerto em questões por área, histórico de simulados |
+| Ajustes | Conta, digitar resposta (liga/desliga), cards novos por dia, meta de questões, avançar o relógio para testar, apagar progresso |
 
 O agendamento usa o algoritmo **FSRS-4.5** com os pesos padrão (`js/fsrs.js`), com testes em `tests/`.
 O progresso fica salvo no `localStorage` do navegador.
 
-> Os 29 cards de exemplo em `js/data.js` servem para testar o app. Todo conteúdo médico precisa ser revisado por um profissional antes de uso real.
+> Os 29 cards de exemplo (`js/data.js`), as 24 questões autorais e os 2 casos clínicos (`js/questions.js`) servem para testar o app. Não são questões oficiais de nenhuma banca. Todo conteúdo médico precisa ser revisado por um profissional antes de uso real.
 
 ## Rodar no computador
 
@@ -43,7 +46,7 @@ Para testar no celular na mesma rede Wi-Fi, descubra o IP do computador (`ipconf
 ## Comandos
 
 ```bash
-npm test         # testes do algoritmo FSRS
+npm test         # testes do FSRS, da correção das lacunas, do cronograma e do conteúdo
 npm run build    # gera dist/sinapse.html, o app inteiro em um único arquivo
 npm start        # servidor local na porta 8080
 ```
@@ -80,13 +83,18 @@ https://paulosergio4.github.io/meus-projetos/sinapse/
 index.html              página do app
 css/styles.css          tema (escuro e claro), componentes
 js/fsrs.js              algoritmo de repetição espaçada
+js/match.js             correção tolerante das respostas digitadas
+js/plan.js              cronograma reverso até a prova
+js/questions.js         questões e casos clínicos
+js/fx.js                animação da tela de login
+js/config.js            Client ID do login com Google
 js/data.js              grandes áreas, subtemas e cards de exemplo
 js/store.js             estado e persistência local
 js/app.js               telas e interações
 sw.js                   cache para uso offline
 manifest.webmanifest    instalação como app
 scripts/build.mjs       gera a versão em arquivo único
-tests/fsrs.test.mjs     testes do agendamento
+tests/                  testes (node --test)
 ```
 
 ## Próximos passos (MVP)
