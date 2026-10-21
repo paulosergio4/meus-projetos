@@ -8,6 +8,7 @@ export const NEW_PER_DAY = 15;
 
 function emptyState() {
   return {
+    user: null,    // { name, email, picture, provider: 'google' | 'demo' | 'guest' }
     profile: null, // { nome, fase, prova, dataProva }
     sched: {},     // id do card -> estado FSRS
     custom: [],    // cards criados pelo usuário
@@ -35,6 +36,20 @@ export const store = {
 
   reset() {
     this.data = emptyState();
+    this.save();
+  },
+
+  signIn(user) {
+    this.data.user = user;
+    if (user.name && this.data.profile && !this.data.profile.nome) {
+      this.data.profile.nome = user.name.split(' ')[0];
+    }
+    this.save();
+  },
+
+  // Sair mantém o progresso salvo neste aparelho.
+  signOut() {
+    this.data.user = null;
     this.save();
   },
 

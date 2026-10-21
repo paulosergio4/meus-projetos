@@ -12,6 +12,7 @@ Esta pasta tem o **protótipo 0.1**: um app web instalável (PWA) que funciona o
 
 | Tela | O que faz |
 | --- | --- |
+| Login | Animação de rede neural, entrar com Google ou continuar sem conta |
 | Onboarding | Nome, fase do curso, prova e data da prova |
 | Início | Cards do dia, anel de progresso, sequência de dias, contagem até a prova, modo 5 minutos, decks por grande área |
 | Revisão | Frente e verso, lacuna e oclusão de imagem (ECG); botões De novo, Difícil, Bom e Fácil com o próximo intervalo; atalhos de teclado |
@@ -46,6 +47,22 @@ npm test         # testes do algoritmo FSRS
 npm run build    # gera dist/sinapse.html, o app inteiro em um único arquivo
 npm start        # servidor local na porta 8080
 ```
+
+## Ativar o login com Google
+
+Sem configuração, o botão do Google entra em **modo demonstração**. Para o login real:
+
+1. Abra https://console.cloud.google.com/apis/credentials e crie um projeto (ex.: `sinapse`).
+2. Configure a **Tela de consentimento OAuth** (tipo Externo, nome Sinapse, seu e-mail de suporte).
+3. Em **Criar credenciais → ID do cliente OAuth**, escolha **Aplicativo da Web**.
+4. Em **Origens JavaScript autorizadas**, adicione `https://paulosergio4.github.io` e `http://localhost:8080`.
+5. Copie o ID (termina em `.apps.googleusercontent.com`) e cole em `js/config.js`:
+
+```js
+export const GOOGLE_CLIENT_ID = '1234567890-abc.apps.googleusercontent.com';
+```
+
+O Client ID não é segredo e pode ficar no repositório. No protótipo, os dados da conta (nome, e-mail, foto) são lidos no próprio aparelho; no MVP o login passa a ser validado pelo backend (Supabase Auth).
 
 ## Publicação
 

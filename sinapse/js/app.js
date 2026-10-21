@@ -2,9 +2,17 @@
 import { AREAS, PROVAS, FASES, ECG_REGIONS, IA_DEMO } from './data.js';
 import { store } from './store.js';
 import { scheduleAll, formatInterval, DAY_MS } from './fsrs.js';
+import { GOOGLE_CLIENT_ID } from './config.js';
+import { startSynapseFx } from './fx.js';
+
+function homeView() {
+  if (!store.data.user) return 'login';
+  return store.data.profile ? 'home' : 'onboarding';
+}
 
 const ui = {
-  view: store.data.profile ? 'home' : 'onboarding',
+  view: homeView(),
+  stopFx: null,       // encerra a animação do login
   session: null,      // { title, queue: [ids], done, total }
   revealed: false,
   iaCards: null,      // sugestões da demonstração
@@ -45,6 +53,7 @@ const icons = {
   bolt: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',
   check: '<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9.5"/>',
   flag: '<path d="M5 21V4h11l-2 4 2 4H5"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
 };
 
 function icon(name, size = 20) {
@@ -93,6 +102,94 @@ function cardBody(c, reveal) {
     ${reveal ? `<hr><p class="label">Resposta</p><p class="answer">${esc(c.back)}</p>${c.extra ? `<p class="extra">${esc(c.extra)}</p>` : ''}` : ''}`;
 }
 
+// ---------- login ----------
+const GOOGLE_G = `<svg aria-hidden="true" width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>`;
+
+let googleReady = null;
+
+// Carrega o Google Identity Services só quando há Client ID configurado.
+function loadGoogle() {
+  if (!GOOGLE_CLIENT_ID) return Promise.resolve(false);
+  if (googleReady) return googleReady;
+  googleReady = new Promise((resolve) => {
+    const s = document.createElement('script');
+    s.src = 'https://accounts.google.com/gsi/client';
+    s.async = true;
+    s.onload = () => {
+      try {
+        window.google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: onGoogleCredential, ux_mode: 'popup' });
+        resolve(true);
+      } catch (e) { resolve(false); }
+    };
+    s.onerror = () => resolve(false);
+    document.head.appendChild(s);
+  });
+  return googleReady;
+}
+
+function decodeJwt(token) {
+  const part = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+  const bytes = Uint8Array.from(atob(part.padEnd(part.length + ((4 - (part.length % 4)) % 4), '=')), (c) => c.charCodeAt(0));
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
+
+// Protótipo: os dados do token são lidos no aparelho. No MVP o token será validado no backend (Supabase Auth).
+function onGoogleCredential(resp) {
+  try {
+    const p = decodeJwt(resp.credential);
+    finishLogin({ name: p.name || '', email: p.email || '', picture: p.picture || '', provider: 'google' });
+  } catch (e) {
+    toast('Não foi possível entrar com o Google. Tente de novo.');
+  }
+}
+
+function finishLogin(user) {
+  store.signIn(user);
+  toast(user.name ? `Olá, ${user.name.split(' ')[0]}!` : 'Bem-vindo ao Sinapse!');
+  go(store.data.profile ? 'home' : 'onboarding');
+}
+
+function viewLogin() {
+  return `<div class="login">
+    <canvas class="login-fx" id="login-fx" aria-hidden="true"></canvas>
+    <div class="login-glow" aria-hidden="true"></div>
+    <section class="login-hero">
+      <svg class="login-logo" viewBox="0 0 512 512" role="img" aria-label="Logotipo do Sinapse">
+        <rect width="512" height="512" rx="120" class="logo-bg"/>
+        <path class="logo-line" d="M96 296 H176 L208 232 L256 360 L304 152 L336 296 H416" pathLength="100"/>
+        <circle class="logo-dot" cx="416" cy="296" r="30"/>
+      </svg>
+      <h1 class="login-title">Sinapse</h1>
+      <p class="login-tagline">Revise no momento certo e chegue à prova lembrando de tudo.</p>
+      <ul class="login-points">
+        <li>Repetição espaçada</li><li>Cards gerados por IA</li><li>Do 1º período à residência</li>
+      </ul>
+    </section>
+    <section class="login-sheet" aria-label="Entrar">
+      <div id="gsi-slot" class="gsi-slot" hidden></div>
+      <button class="btn google big" id="google-btn" data-act="google">${GOOGLE_G} Entrar com Google</button>
+      <button class="btn ghost big" data-act="guest">Continuar sem conta</button>
+      <p class="login-legal">Ao entrar, você concorda com os Termos de Uso e a Política de Privacidade. Seu progresso fica salvo neste aparelho.</p>
+    </section>
+  </div>`;
+}
+
+function mountLogin() {
+  ui.stopFx = startSynapseFx(document.getElementById('login-fx'));
+  loadGoogle().then((ok) => {
+    if (!ok || ui.view !== 'login') return;
+    // Com Client ID, usa o botão oficial do Google.
+    const slot = document.getElementById('gsi-slot');
+    const own = document.getElementById('google-btn');
+    if (!slot || !own) return;
+    slot.hidden = false;
+    own.hidden = true;
+    window.google.accounts.id.renderButton(slot, {
+      type: 'standard', theme: 'filled_black', size: 'large', shape: 'pill', text: 'continue_with', locale: 'pt-BR', width: Math.min(400, slot.clientWidth || 320),
+    });
+  });
+}
+
 // ---------- telas ----------
 function viewOnboarding() {
   const p = store.data.profile || {};
@@ -104,7 +201,7 @@ function viewOnboarding() {
       <p class="muted">O app organiza os cards e o cronograma de acordo com a sua fase e a sua prova.</p>
     </header>
     <label class="field" for="onb-nome">Como quer ser chamado?
-      <input id="onb-nome" name="nome" type="text" autocomplete="given-name" value="${esc(p.nome || '')}" placeholder="Seu nome">
+      <input id="onb-nome" name="nome" type="text" autocomplete="given-name" value="${esc(p.nome || (store.data.user?.name || '').split(' ')[0])}" placeholder="Seu nome">
     </label>
     <fieldset class="stack-sm">
       <legend>Em que fase você está?</legend>
@@ -358,11 +455,25 @@ function viewStats() {
   </div>`;
 }
 
+function accountPanel() {
+  const u = store.data.user || {};
+  const label = { google: 'Conta Google', demo: 'Google (modo demonstração)', guest: 'Sem conta' }[u.provider] || 'Sem conta';
+  const initial = (u.name || store.data.profile?.nome || '').trim().charAt(0).toUpperCase();
+  const avatar = u.picture
+    ? `<img class="avatar" src="${esc(u.picture)}" alt="" referrerpolicy="no-referrer">`
+    : `<span class="avatar">${initial ? esc(initial) : icon('user', 24)}</span>`;
+  return `<section class="panel stack-sm">
+    <div class="row gap-md">${avatar}<div class="stack-xs grow"><strong>${esc(u.name || store.data.profile?.nome || 'Visitante')}</strong><span class="muted small">${esc(u.email || label)}</span></div></div>
+    <button class="btn ghost" data-act="logout">Sair</button>
+  </section>`;
+}
+
 function viewSettings() {
   const p = store.data.profile;
   const fase = FASES.find((f) => f.id === p.fase);
   return `<div class="screen stack">
     <header><h1>Ajustes</h1></header>
+    ${accountPanel()}
     <section class="panel stack-sm">
       <h2>Seu perfil</h2>
       <dl class="kv"><dt>Nome</dt><dd>${esc(p.nome || '—')}</dd><dt>Fase</dt><dd>${esc(fase ? fase.name : '—')}</dd><dt>Prova</dt><dd>${esc(p.prova)}</dd><dt>Data da prova</dt><dd>${p.dataProva ? esc(p.dataProva.split('-').reverse().join('/')) : '—'}</dd></dl>
@@ -392,10 +503,13 @@ function nav() {
 
 // ---------- render e eventos ----------
 function render() {
-  const views = { onboarding: viewOnboarding, home: viewHome, review: viewReview, create: viewCreate, ia: viewIA, stats: viewStats, settings: viewSettings };
-  const showNav = !['onboarding', 'review'].includes(ui.view);
+  const views = { login: viewLogin, onboarding: viewOnboarding, home: viewHome, review: viewReview, create: viewCreate, ia: viewIA, stats: viewStats, settings: viewSettings };
+  if (ui.stopFx) { ui.stopFx(); ui.stopFx = null; }
+  const showNav = !['login', 'onboarding', 'review'].includes(ui.view);
   root.innerHTML = views[ui.view]() + (showNav ? nav() : '');
   document.body.classList.toggle('has-nav', showNav);
+  document.body.classList.toggle('on-login', ui.view === 'login');
+  if (ui.view === 'login') mountLogin();
 }
 
 function go(view) {
@@ -454,7 +568,22 @@ const actions = {
   advance: () => { store.advanceDay(); toast('Relógio adiantado em 1 dia.'); render(); },
   'reset-ask': () => { ui.confirmReset = true; render(); },
   'reset-cancel': () => { ui.confirmReset = false; render(); },
-  'reset-do': () => { store.reset(); ui.session = null; ui.confirmReset = false; go('onboarding'); },
+  'reset-do': () => { store.reset(); ui.session = null; ui.confirmReset = false; go('login'); },
+  google: () => {
+    if (GOOGLE_CLIENT_ID && window.google && window.google.accounts) {
+      window.google.accounts.id.prompt();
+      return;
+    }
+    toast('Modo demonstração: o login do Google ainda não foi configurado.');
+    finishLogin({ name: '', email: '', picture: '', provider: 'demo' });
+  },
+  guest: () => finishLogin({ name: '', email: '', picture: '', provider: 'guest' }),
+  logout: () => {
+    try { if (window.google && window.google.accounts) window.google.accounts.id.disableAutoSelect(); } catch (e) { /* sem Google */ }
+    store.signOut();
+    ui.session = null;
+    go('login');
+  },
 };
 
 root.addEventListener('click', (e) => {

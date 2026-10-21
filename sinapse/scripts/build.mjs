@@ -8,7 +8,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (p) => readFileSync(join(root, p), 'utf8');
 
 // Ordem respeita as dependências entre os módulos.
-const modules = ['js/fsrs.js', 'js/data.js', 'js/store.js', 'js/app.js'];
+const modules = ['js/config.js', 'js/fsrs.js', 'js/fx.js', 'js/data.js', 'js/store.js', 'js/app.js'];
 const js = modules
   .map((p) => `// ---- ${p} ----\n` + read(p)
     .replace(/^import .*?;\s*$/gm, '')

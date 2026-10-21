@@ -56,6 +56,7 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html, body { min-height: 100%; }
 body {
   margin: 0;
@@ -280,3 +281,63 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 0.8; }
 }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+/* Login: rede de sinapses ao fundo, logotipo que se desenha, folha de entrada que sobe. */
+body.on-login { overflow-x: hidden; }
+.login {
+  position: relative; min-height: 100svh; display: flex; flex-direction: column;
+  justify-content: space-between; gap: 32px; padding-block: 56px max(24px, env(safe-area-inset-bottom, 0px));
+}
+.login-fx { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+.login-glow {
+  position: fixed; z-index: 0; pointer-events: none; width: 520px; height: 520px; max-width: 140vw;
+  left: 50%; top: 4%; transform: translateX(-50%); border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--violet) 26%, transparent), transparent);
+  animation: glow-breathe 6s ease-in-out infinite;
+}
+.login-hero, .login-sheet { position: relative; z-index: 1; }
+.login-hero { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; padding-top: 6vh; }
+.login-logo { width: 96px; height: 96px; filter: drop-shadow(0 18px 40px color-mix(in srgb, var(--violet) 40%, transparent)); animation: rise 0.7s cubic-bezier(.2,.8,.2,1) both; }
+.logo-bg { fill: var(--surface); stroke: var(--line); stroke-width: 4; }
+.logo-line {
+  fill: none; stroke: var(--violet); stroke-width: 36; stroke-linecap: round; stroke-linejoin: round;
+  stroke-dasharray: 100; stroke-dashoffset: 0; animation: draw-line 1.4s cubic-bezier(.65,0,.35,1) 0.25s both;
+}
+.logo-dot { fill: var(--amber); transform-origin: 416px 296px; animation: pop 0.5s cubic-bezier(.34,1.56,.64,1) 1.5s both, beat 2.4s ease-in-out 2.2s infinite; }
+.login-title {
+  font-size: clamp(40px, 12vw, 56px); font-weight: 800; letter-spacing: -1.5px; line-height: 1;
+  animation: rise 0.7s cubic-bezier(.2,.8,.2,1) 0.9s both;
+}
+.login-tagline { max-width: 30ch; color: var(--muted); font-size: 16px; text-wrap: balance; animation: rise 0.7s cubic-bezier(.2,.8,.2,1) 1.05s both; }
+.login-points {
+  list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+  animation: rise 0.7s cubic-bezier(.2,.8,.2,1) 1.2s both;
+}
+.login-points li {
+  font-size: 12.5px; font-weight: 600; padding: 6px 12px; border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 75%, transparent); border: 1px solid var(--line); color: var(--fg);
+}
+.login-points li:nth-child(2) { color: var(--amber-ink); border-color: color-mix(in srgb, var(--amber) 45%, transparent); }
+.login-sheet {
+  width: 100%; max-width: 440px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px;
+  padding: 20px; border-radius: 28px; border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  animation: sheet-up 0.8s cubic-bezier(.2,.8,.2,1) 1.35s both;
+}
+.btn.google { background: #FFFFFF; color: #1F1F1F; border-color: #DADCE0; gap: 12px; }
+.btn.google:hover { background: #F6F7F9; }
+.gsi-slot { display: flex; justify-content: center; min-height: 44px; }
+.login-legal { font-size: 12px; color: var(--muted); text-align: center; line-height: 1.5; text-wrap: balance; }
+.avatar {
+  width: 48px; height: 48px; border-radius: 50%; flex: none; object-fit: cover;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--violet-soft); color: var(--violet-ink); font: 800 20px var(--font-display);
+}
+
+@keyframes draw-line { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
+@keyframes pop { from { transform: scale(0); } to { transform: scale(1); } }
+@keyframes beat { 0%, 100% { transform: scale(1); } 12% { transform: scale(1.22); } 24% { transform: scale(1); } 36% { transform: scale(1.12); } }
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes sheet-up { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: none; } }
+@keyframes glow-breathe { 0%, 100% { opacity: 0.75; } 50% { opacity: 1; } }
