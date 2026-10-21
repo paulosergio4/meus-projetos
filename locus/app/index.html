@@ -189,7 +189,7 @@ p.s{margin:0 0 16px;color:var(--muted);font-size:13px}
 .splash .sub{font-size:10.5px;letter-spacing:.36em;text-transform:uppercase;color:#B9C38E;font-weight:600;opacity:0;animation:sub .6s ease 2.1s forwards;margin-top:-14px}
 @keyframes sub{from{opacity:0;letter-spacing:.6em}to{opacity:1;letter-spacing:.36em}}
 .splash .load{position:absolute;bottom:60px;left:50%;width:90px;height:3px;margin-left:-45px;border-radius:3px;background:rgba(243,238,226,.14);overflow:hidden}
-.splash .load i{display:block;height:100%;width:0;background:linear-gradient(90deg,#B9C38E,#C0743F);animation:load 2.3s cubic-bezier(.5,0,.3,1) .3s forwards}
+.splash .load i{display:block;height:100%;width:0;background:linear-gradient(90deg,#B9C38E,#C0743F);animation:load 3.8s cubic-bezier(.5,0,.3,1) .3s forwards}
 @keyframes load{to{width:100%}}
 @media (prefers-reduced-motion:reduce){.splash *{animation-duration:.01s!important;animation-delay:0s!important}.anim > *{animation:none}}
 </style>
@@ -443,8 +443,8 @@ $("as-cli").onclick=()=>setRole("cli");$("as-eq").onclick=()=>setRole("eq");$("m
 function abrir(){
   const s=$("splash"); s.classList.remove("out","gone"); const c=s.cloneNode(true); s.replaceWith(c);
   const reduce=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
-  setTimeout(()=>c.classList.add("out"),reduce?300:2900);
-  setTimeout(()=>c.classList.add("gone"),reduce?900:3650);
+  setTimeout(()=>c.classList.add("out"),reduce?300:4400);
+  setTimeout(()=>c.classList.add("gone"),reduce?900:5150);
 }
 $("replay").onclick=()=>{logged=false;$("login").hidden=false;abrir();};
 $("m-replay").onclick=$("replay").onclick;
