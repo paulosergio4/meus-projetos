@@ -63,7 +63,7 @@ function animateCard(cls, ms, then) {
   setTimeout(() => { ui.animating = false; then(); }, ms);
 }
 
-const APP_VERSION = '0.9';
+const APP_VERSION = '0.9.1';
 const root = document.getElementById('app');
 
 // ---------- utilitários ----------
@@ -376,7 +376,7 @@ function viewLogin() {
       <div id="gsi-slot" class="gsi-slot" hidden></div>
       <button class="btn google big" id="google-btn" data-act="google">${GOOGLE_G} Entrar com Google</button>
       ${EXIGIR_LOGIN ? '' : '<button class="btn ghost big" data-act="guest">Continuar sem conta</button>'}
-      <p class="login-legal">Ao entrar, você concorda com os <a href="termos.html" target="_blank" rel="noopener">Termos de Uso e a Política de Privacidade</a>. ${cloudEnabled() ? 'Com o Google, seu progresso fica salvo na sua conta; sem conta, só neste aparelho.' : 'Seu progresso fica salvo neste aparelho.'}</p>
+      <p class="login-legal">Ao entrar, você concorda com os <a href="termos.html" target="_blank" rel="noopener">Termos de Uso e a Política de Privacidade</a>. ${cloudEnabled() ? 'Seu progresso fica salvo na sua conta Google.' : 'Seu progresso fica salvo neste aparelho.'}</p>
     </section>
   </div>`;
 }
