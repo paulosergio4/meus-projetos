@@ -255,10 +255,12 @@ export const store = {
         entry.count += 1;
         entry.solved = false;
         entry.t = this.now();
-      } else {
+      } else if (q.fact && q.fact.front && q.fact.back) {
         const cardId = this.addCustom({ type: 'basic', front: q.fact.front, back: q.fact.back, area: q.area, sub: q.sub, extra: 'Criado pelo caderno de erros.', origin: id }, false);
         this.data.errors[id] = { count: 1, solved: false, t: this.now(), cardId };
         createdCard = true;
+      } else {
+        this.data.errors[id] = { count: 1, solved: false, t: this.now(), cardId: null };
       }
     } else if (entry && !entry.solved) {
       entry.solved = true;
@@ -268,7 +270,8 @@ export const store = {
   },
 
   openErrors() {
-    return Object.entries(this.data.errors).filter(([, e]) => !e.solved).sort((a, b) => b[1].t - a[1].t);
+    // Só questões que ainda existem no banco (as de exemplo saem quando entram as oficiais).
+    return Object.entries(this.data.errors).filter(([id, e]) => !e.solved && this.questionById(id)).sort((a, b) => b[1].t - a[1].t);
   },
 
   saveSimulado(result) {

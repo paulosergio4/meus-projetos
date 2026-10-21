@@ -1,7 +1,7 @@
 // Sinapse — protótipo. Interface em JavaScript puro, sem dependências.
 import { AREAS, PROVAS, FASES, ECG_REGIONS } from './data.js';
 import { PLANS, FEATURE_INFO, cobrancaAtiva, effectivePlan, limitsFor, planById, fmtPrice, TRIAL_DAYS } from './plans.js';
-import { QUESTIONS, CASES } from './questions.js';
+import { QUESTIONS, CASES, setBankQuestions, usingDemoQuestions } from './questions.js';
 import { store } from './store.js';
 import { scheduleAll, formatInterval, DAY_MS } from './fsrs.js';
 import { checkAnswer, parseCloze } from './match.js';
@@ -9,7 +9,7 @@ import { daysBetween } from './plan.js';
 import { GOOGLE_CLIENT_ID, EXIGIR_LOGIN } from './config.js';
 import { startSynapseFx } from './fx.js';
 import { biometricAvailable, biometricEnabled, enableBiometric, disableBiometric, unlockWithBiometric } from './biometric.js';
-import { callGerarCards, fetchSubscription, cloudEnabled, loadCloud, signInWithGoogle, currentCloudUser, userFromSession, signOutCloud, pullProgress, pushProgress, deleteCloudProgress, isOAuthReturn } from './cloud.js';
+import { callGerarCards, callImportarProva, fetchPublishedQuestions, checkIsAdmin, adminQuestions, adminProvas, adminUpdateQuestion, adminDeleteQuestion, fetchSubscription, cloudEnabled, loadCloud, signInWithGoogle, currentCloudUser, userFromSession, signOutCloud, pullProgress, pushProgress, deleteCloudProgress, isOAuthReturn } from './cloud.js';
 
 function homeView() {
   if (!store.data.user) return 'login';
@@ -64,7 +64,7 @@ function animateCard(cls, ms, then) {
   setTimeout(() => { ui.animating = false; then(); }, ms);
 }
 
-const APP_VERSION = '0.11.1';
+const APP_VERSION = '0.12.0';
 const root = document.getElementById('app');
 
 // ---------- utilitários ----------
@@ -308,6 +308,8 @@ async function bootCloud() {
   if (!already) store.save();
   await syncOnLogin(prevSaved);
   refreshPlan();
+  refreshBank();
+  refreshAdmin();
   // Primeiro login neste aparelho: oferece entrar com biometria nas próximas vezes.
   if (!biometricEnabled() && !bioAsked() && await biometricAvailable()) ui.bioOffer = true;
   if (ui.view === 'login' || ui.view === 'onboarding') go(store.data.profile ? 'home' : 'onboarding');
@@ -316,6 +318,217 @@ async function bootCloud() {
 }
 
 store.onSave = schedulePush;
+
+// ---------- banco de questões ----------
+const QBANK_KEY = 'sinapse:qbank';
+
+function rowToQuestion(r) {
+  return {
+    id: `b_${r.id}`, area: r.area, sub: r.sub, stem: r.stem, options: r.options, answer: r.answer,
+    explanation: r.explanation || '', aiComment: r.explanation_ai !== false, fact: r.fact || null,
+    image: r.image_url || null, keepOrder: true,
+    source: `${r.prova}${r.prova.includes(String(r.ano)) ? '' : ` ${r.ano}`} · Q${r.numero}`,
+  };
+}
+
+function applyBank(rows) {
+  const usable = (rows || []).filter((r) => Array.isArray(r.options) && r.answer != null && r.answer < r.options.length);
+  setBankQuestions(usable.map(rowToQuestion));
+}
+
+(() => { try { const c = JSON.parse(localStorage.getItem(QBANK_KEY) || 'null'); if (c && c.rows) applyBank(c.rows); } catch (e) { /* sem cache */ } })();
+
+async function refreshBank() {
+  if (!cloudUser()) return;
+  const rows = await fetchPublishedQuestions().catch(() => null);
+  if (!rows) return;
+  applyBank(rows);
+  try { localStorage.setItem(QBANK_KEY, JSON.stringify({ t: Date.now(), rows })); } catch (e) { /* muito grande para guardar: fica só na memória */ }
+  if (['questions', 'stats', 'home'].includes(ui.view)) render();
+}
+
+async function refreshAdmin() {
+  ui.isAdmin = await checkIsAdmin().catch(() => false);
+  if (ui.view === 'settings') render();
+}
+
+// ---------- administração: importar provas ----------
+const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+const PDFJS_WORKER = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+let pdfjsLoading = null;
+
+function loadPdfJs() {
+  if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+  if (!pdfjsLoading) {
+    pdfjsLoading = new Promise((resolve, reject) => {
+      const sc = document.createElement('script');
+      sc.src = PDFJS;
+      sc.onload = () => { window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER; resolve(window.pdfjsLib); };
+      sc.onerror = () => { pdfjsLoading = null; reject(new Error('Não foi possível carregar o leitor de PDF.')); };
+      document.head.appendChild(sc);
+    });
+  }
+  return pdfjsLoading;
+}
+
+// Texto da prova, página por página (provas das bancas costumam ser PDF de texto).
+async function extractPdfText(buffer) {
+  const lib = await loadPdfJs();
+  const doc = await lib.getDocument({ data: new Uint8Array(buffer) }).promise;
+  const parts = [];
+  for (let n = 1; n <= doc.numPages; n += 1) {
+    const page = await doc.getPage(n);
+    const tc = await page.getTextContent();
+    let line = '';
+    const lines = [];
+    for (const it of tc.items) {
+      line += it.str;
+      if (it.hasEOL) { lines.push(line); line = ''; } else if (it.str && !/\s$/.test(it.str)) line += ' ';
+    }
+    if (line) lines.push(line);
+    parts.push(`[página ${n}]\n${lines.join('\n')}`);
+  }
+  return { text: parts.join('\n\n'), pages: doc.numPages };
+}
+
+function admState() {
+  if (!ui.adm) ui.adm = { tab: 'importar', step: 'form', banca: '', prova: '', ano: String(new Date().getFullYear() - 1), tipo: '', provaFile: null, gabFile: null, definitivo: false, gab: null, progress: null, summary: null, rascunhos: null, provas: null, busy: false };
+  return ui.adm;
+}
+
+function admTabs(a) {
+  const tabs = [['importar', 'Importar prova'], ['rascunhos', 'Rascunhos'], ['provas', 'Provas']];
+  return `<div class="segmented three" role="group" aria-label="Administração">${tabs.map(([v, l]) => `<button type="button" class="${a.tab === v ? 'on' : ''}" data-act="adm-tab" data-v="${v}" aria-pressed="${a.tab === v}">${l}</button>`).join('')}</div>`;
+}
+
+function viewAdmin() {
+  const a = admState();
+  const head = `<div class="row top"><button class="icon-btn" data-act="go" data-v="settings" aria-label="Voltar">${icon('back')}</button><h1 class="grow center-text h-sm">Banco de questões</h1><span class="icon-spacer"></span></div>`;
+  if (!ui.isAdmin) return `<div class="screen stack">${head}<div class="panel note">Esta área é só para administradores.</div></div>`;
+  if (a.tab === 'rascunhos') return `<div class="screen stack">${head}${admTabs(a)}${admRascunhos(a)}</div>`;
+  if (a.tab === 'provas') return `<div class="screen stack">${head}${admTabs(a)}${admProvasView(a)}</div>`;
+  return `<div class="screen stack">${head}${admTabs(a)}${admImport(a)}</div>`;
+}
+
+function admImport(a) {
+  if (a.step === 'importing' || a.step === 'reading') {
+    const p = a.progress || { done: 0, total: 1 };
+    const pct = Math.round((p.done / Math.max(1, p.total)) * 100);
+    return `<div class="panel stack-sm center-text ia-loading-sm">
+      <div class="ia-orb" aria-hidden="true">${icon('quiz', 36)}</div>
+      <h2>${a.step === 'reading' ? 'Lendo os arquivos…' : `Importando questões ${p.done} de ${p.total}`}</h2>
+      <span class="bar"><span class="fill violet" style="width:${pct}%"></span></span>
+      <p class="muted small">${a.step === 'reading' ? 'O gabarito oficial está sendo transcrito.' : 'A IA separa 10 questões por vez. Deixe esta tela aberta.'}</p>
+    </div>`;
+  }
+  if (a.step === 'gabarito' && a.gab) {
+    const nums = admNumbers(a.gab);
+    const anul = new Set(a.gab.anuladas);
+    return `<section class="panel stack-sm">
+      <h2>Confira o gabarito oficial</h2>
+      <p class="muted small">${nums.length} questões · ${anul.size} anuladas${a.gab.observacao ? ` · ${esc(a.gab.observacao)}` : ''}</p>
+      <p class="muted small">Compare com o PDF. Toque numa questão para trocar a letra (A → B → … → anulada).</p>
+      <div class="gab-grid">${nums.map((n) => `<button class="gab-cell ${anul.has(n) ? 'anul' : ''}" data-act="adm-gab-cycle" data-v="${n}"><span>${n}</span><strong>${anul.has(n) ? '✕' : esc(a.gab.respostas[n] || '?')}</strong></button>`).join('')}</div>
+      <div class="grid-2"><button class="btn ghost" data-act="adm-gab-back">Voltar</button><button class="btn primary" data-act="adm-import-run" ${nums.length ? '' : 'disabled'}>Está certo, importar</button></div>
+    </section>`;
+  }
+  if (a.step === 'done' && a.summary) {
+    const s = a.summary;
+    return `<section class="panel stack-sm">
+      <h2>${esc(a.prova)} importada</h2>
+      <p><strong>${s.publicadas}</strong> ${s.publicadas === 1 ? 'questão publicada' : 'questões publicadas'} no app.</p>
+      ${s.rascunhos.length ? `<p class="muted small">${s.rascunhos.length === 1 ? '1 ficou' : `${s.rascunhos.length} ficaram`} em rascunho (depende${s.rascunhos.length === 1 ? '' : 'm'} de imagem ou sem gabarito): ${s.rascunhos.join(', ')}.</p>` : ''}
+      ${s.anuladas.length ? `<p class="muted small">Anuladas, fora do app: ${s.anuladas.join(', ')}.</p>` : ''}
+      ${s.faltando.length ? `<p class="muted small bad-ink">Não encontradas no texto do PDF: ${s.faltando.join(', ')}. Se forem muitas, o PDF pode ser escaneado (imagem), e aí precisa de um PDF com texto.</p>` : ''}
+      ${s.erro ? `<p class="bad-ink small">${esc(s.erro)}</p><button class="btn ghost" data-act="adm-import-resume">Continuar de onde parou</button>` : ''}
+      <button class="btn primary" data-act="adm-new">Importar outra prova</button>
+    </section>`;
+  }
+  return `<form class="stack" id="adm-form" novalidate>
+    <div class="panel note"><strong>Só gabarito oficial definitivo.</strong> A resposta de cada questão vem do gabarito que você enviar; a IA só separa o texto, classifica e comenta.</div>
+    <label class="field" for="adm-banca">Banca ou instituição<input id="adm-banca" type="text" list="adm-bancas" value="${esc(a.banca)}" placeholder="ENARE, AREMG, USP, SUS-SP…" data-adm="banca"></label>
+    <datalist id="adm-bancas">${['ENARE', 'AREMG', 'USP', 'SUS-SP', 'UNIFESP', 'UNICAMP', 'SES-DF', 'PSU-GO', 'UFRJ', 'HCPA'].map((b) => `<option value="${b}">`).join('')}</datalist>
+    <label class="field" for="adm-prova">Nome da prova<input id="adm-prova" type="text" value="${esc(a.prova)}" placeholder="Ex.: ENARE 2025 · Acesso direto" data-adm="prova"></label>
+    <div class="grid-2">
+      <label class="field" for="adm-ano">Ano<input id="adm-ano" type="number" inputmode="numeric" min="2000" max="2100" value="${esc(a.ano)}" data-adm="ano"></label>
+      <label class="field" for="adm-tipo">Tipo de caderno<input id="adm-tipo" type="text" value="${esc(a.tipo)}" placeholder="Opcional" data-adm="tipo"></label>
+    </div>
+    <label class="panel upload" for="adm-prova-file"><span class="file-badge">PDF</span><span class="stack-xs grow"><strong>${a.provaFile ? esc(a.provaFile.name) : 'PDF da prova'}</strong><span class="muted small">${a.provaFile ? `${a.provaFile.pages} páginas lidas` : 'Caderno de questões'}</span></span><span class="btn ghost">${a.provaFile ? 'Trocar' : 'Escolher'}</span>
+      <input id="adm-prova-file" type="file" accept="application/pdf,.pdf" class="visually-hidden" data-adm-file="prova"></label>
+    <label class="panel upload" for="adm-gab-file"><span class="file-badge good">GAB</span><span class="stack-xs grow"><strong>${a.gabFile ? esc(a.gabFile.name) : 'PDF do gabarito definitivo'}</strong><span class="muted small">${a.gabFile ? fmtSize(a.gabFile.size) : 'Depois dos recursos'}</span></span><span class="btn ghost">${a.gabFile ? 'Trocar' : 'Escolher'}</span>
+      <input id="adm-gab-file" type="file" accept="application/pdf,.pdf" class="visually-hidden" data-adm-file="gab"></label>
+    <label class="switch-row" for="adm-def"><span class="grow">É o gabarito <strong>definitivo</strong>, já com os recursos julgados</span><input id="adm-def" type="checkbox" class="switch" data-adm="definitivo" ${a.definitivo ? 'checked' : ''}></label>
+    <button type="button" class="btn primary big" data-act="adm-read-gab">Ler gabarito</button>
+  </form>`;
+}
+
+function admNumbers(gab) {
+  const set = new Set([...Object.keys(gab.respostas).map(Number), ...gab.anuladas]);
+  return [...set].sort((x, y) => x - y);
+}
+
+function admRascunhos(a) {
+  if (!a.rascunhos) { admLoad('rascunhos'); return '<div class="panel muted small">Carregando…</div>'; }
+  if (!a.rascunhos.length) return '<div class="panel note">Nenhuma questão em rascunho.</div>';
+  return a.rascunhos.map((q) => `<article class="panel stack-sm">
+    <div class="row wrap gap-sm"><span class="tag">${esc(q.prova)} · Q${q.numero}</span><span class="tag ${q.needs_image ? 'amber' : 'bad'}">${q.needs_image ? 'Precisa da imagem' : q.answer == null ? 'Sem gabarito' : 'Rascunho'}</span></div>
+    <p class="clamp-3">${esc(q.stem)}</p>
+    <ol class="adm-opts">${q.options.map((o, i) => `<li class="${i === q.answer ? 'right' : ''}">${esc(o)}</li>`).join('')}</ol>
+    <div class="grid-2">
+      <button class="btn ghost bad-ink" data-act="adm-del" data-v="${q.id}">${ui.admConfirmDel === q.id ? 'Toque de novo para apagar' : 'Apagar'}</button>
+      <button class="btn good-solid" data-act="adm-publish" data-v="${q.id}" ${q.answer == null ? 'disabled' : ''}>Publicar</button>
+    </div>
+    ${q.needs_image ? '<p class="muted small">Publique só se a questão der para responder sem a imagem. O envio de imagens entra junto com as fotos nos cards.</p>' : ''}
+  </article>`).join('');
+}
+
+function admProvasView(a) {
+  if (!a.provas) { admLoad('provas'); return '<div class="panel muted small">Carregando…</div>'; }
+  if (!a.provas.length) return '<div class="panel note">Nenhuma prova importada ainda.</div>';
+  return `<div class="panel stack-sm">${a.provas.map((p) => `<div class="row"><span class="stack-xs grow"><strong>${esc(p.prova)}</strong><span class="muted small">${esc(p.banca)} · ${p.ano}</span></span><span class="small"><strong>${p.publicada}</strong> publicadas${p.rascunho ? ` · ${p.rascunho} rascunhos` : ''}${p.anulada ? ` · ${p.anulada} anuladas` : ''}</span></div>`).join('')}</div>`;
+}
+
+function admLoad(what) {
+  const a = admState();
+  if (a.busy) return;
+  a.busy = true;
+  const job = what === 'rascunhos' ? adminQuestions('rascunho').then((r) => { a.rascunhos = r; }) : adminProvas().then((r) => { a.provas = r; });
+  job.catch(() => { toast('Não foi possível carregar. Confira se o SQL do banco de questões foi rodado.'); if (what === 'rascunhos') a.rascunhos = []; else a.provas = []; })
+    .finally(() => { a.busy = false; if (ui.view === 'admin') render(); });
+}
+
+async function admRunImport(startAt) {
+  const a = admState();
+  const nums = admNumbers(a.gab);
+  const total = nums.length;
+  const first = startAt || nums[0];
+  const last = nums[nums.length - 1];
+  if (!startAt) a.summary = { publicadas: 0, rascunhos: [], anuladas: [], faltando: [], erro: '', next: null };
+  a.summary.erro = '';
+  a.step = 'importing';
+  a.progress = { done: nums.filter((n) => n < first).length, total };
+  render();
+  for (let de = first; de <= last; de += 10) {
+    const ate = Math.min(last, de + 9);
+    const body = { action: 'questoes', banca: a.banca.trim(), prova: a.prova.trim(), ano: Number(a.ano), de, ate, texto: a.provaFile.text, respostas: a.gab.respostas, anuladas: a.gab.anuladas };
+    let r = null;
+    for (let tent = 0; tent < 2 && !r; tent += 1) {
+      try { r = await callImportarProva(body); } catch (e) { if (tent === 1) { a.summary.erro = `Parou nas questões ${de} a ${ate}: ${e.message}`; a.summary.next = de; } }
+    }
+    if (!r) break;
+    a.summary.publicadas += r.publicadas;
+    a.summary.rascunhos.push(...r.rascunhos);
+    a.summary.anuladas.push(...r.anuladas);
+    a.summary.faltando.push(...r.nao_encontradas.filter((n) => nums.includes(n)));
+    a.progress.done = nums.filter((n) => n <= ate).length;
+    if (ui.view === 'admin') render();
+  }
+  a.step = 'done';
+  a.rascunhos = null;
+  a.provas = null;
+  refreshBank();
+  if (ui.view === 'admin') render();
+}
 
 // ---------- planos ----------
 const SUB_KEY = 'sinapse:sub';
@@ -963,7 +1176,13 @@ function optionList(q, pick, showResult, act, order) {
 
 function questionHeader(q) {
   const a = areaById(q.area);
-  return `<div class="row gap-sm wrap"><span class="tag violet">${esc(a.short)} · ${esc(q.sub)}</span><span class="tag">Questão autoral</span></div>`;
+  return `<div class="row gap-sm wrap"><span class="tag violet">${esc(a ? a.short : 'Geral')} · ${esc(q.sub)}</span><span class="tag">${q.source ? esc(q.source) : 'Questão de exemplo'}</span></div>
+    ${q.image ? `<img class="q-img" src="${esc(q.image)}" alt="Imagem da questão" loading="lazy">` : ''}`;
+}
+
+function commentHtml(q) {
+  if (!q.explanation) return '<p class="muted small">Esta questão ainda não tem comentário.</p>';
+  return `<p>${esc(q.explanation)}</p>${q.aiComment ? '<p class="muted small ai-note">Comentário gerado por IA a partir do gabarito oficial, ainda não revisado.</p>' : ''}`;
 }
 
 function viewQuiz() {
@@ -993,7 +1212,7 @@ function viewQuiz() {
     const ok = pick === q.answer;
     footer = `<div class="panel stack-sm feedback ${ok ? 'good' : 'bad'}">
         <p class="verdict ${ok ? 'good' : 'bad'}">${icon(ok ? 'check' : 'x', 18)} ${ok ? 'Resposta correta' : `Resposta correta: ${letterOf(z.orders[id], q.answer)}`}</p>
-        <p>${esc(q.explanation)}</p>
+        ${commentHtml(q)}
         ${!ok && z.created[id] ? `<p class="muted small">${icon('book', 16)} A questão foi para o caderno de erros e virou um card de revisão.</p>` : ''}
       </div>
       <button class="btn primary big" data-act="q-next">${z.idx < z.ids.length - 1 ? 'Próxima questão' : 'Ver resultado'}</button>`;
@@ -1088,7 +1307,7 @@ function viewQuizReview() {
     ${optionList(q, pick, true, 'noop', z.orders[id])}
     <div class="panel stack-sm feedback ${ok ? 'good' : 'bad'}">
       <p class="verdict ${ok ? 'good' : 'bad'}">${icon(ok ? 'check' : 'x', 18)} ${ok ? 'Você acertou' : pick == null ? `Sem resposta. Correta: ${letterOf(z.orders[id], q.answer)}` : `Você marcou ${letterOf(z.orders[id], pick)}. Correta: ${letterOf(z.orders[id], q.answer)}`}</p>
-      <p>${esc(q.explanation)}</p>
+      ${commentHtml(q)}
     </div>
     <div class="grid-2">
       <button class="btn ghost big" data-act="q-review" data-v="${z.reviewIdx - 1}" ${z.reviewIdx === 0 ? 'disabled' : ''}>${icon('back', 18)} Anterior</button>
@@ -1456,6 +1675,7 @@ function viewSettings() {
     <header><h1>Ajustes</h1></header>
     ${accountPanel()}
     ${planPanel()}
+    ${ui.isAdmin ? `<section class="panel stack-sm"><h2>Administração</h2><p class="muted small">Importar provas com gabarito oficial e cuidar do banco de questões.</p><button class="btn ghost" data-act="go" data-v="admin">Banco de questões</button></section>` : ''}
     ${securityPanel()}
     <section class="panel stack-sm">
       <h2>Cores do app</h2>
@@ -1531,7 +1751,7 @@ function nav() {
 const FULLSCREEN = ['login', 'lock', 'onboarding', 'review', 'quiz', 'case'];
 
 function render() {
-  const views = { lock: viewLock, login: viewLogin, onboarding: viewOnboarding, home: viewHome, study: viewStudy, review: viewReview, create: viewCreate, ia: viewIA, questions: viewQuestions, quiz: viewQuiz, errors: viewErrors, cases: viewCases, case: viewCase, plan: viewPlan, planos: viewPlanos, stats: viewStats, settings: viewSettings };
+  const views = { lock: viewLock, login: viewLogin, onboarding: viewOnboarding, home: viewHome, study: viewStudy, review: viewReview, create: viewCreate, ia: viewIA, questions: viewQuestions, quiz: viewQuiz, errors: viewErrors, cases: viewCases, case: viewCase, plan: viewPlan, planos: viewPlanos, admin: viewAdmin, stats: viewStats, settings: viewSettings };
   if (ui.stopFx) { ui.stopFx(); ui.stopFx = null; }
   const showNav = !FULLSCREEN.includes(ui.view) || (ui.view === 'quiz' && ui.quiz && ui.quiz.finished);
   const showBar = ui.view !== 'login' && ui.view !== 'lock';
@@ -1835,6 +2055,50 @@ const actions = {
   },
   guest: () => finishLogin({ name: '', email: '', picture: '', provider: 'guest' }),
   unlock: () => doUnlock(),
+  'adm-tab': (v) => { const a = admState(); a.tab = v; if (v === 'rascunhos') a.rascunhos = null; if (v === 'provas') a.provas = null; render(); },
+  'adm-new': () => { const a = admState(); Object.assign(a, { step: 'form', prova: '', tipo: '', provaFile: null, gabFile: null, definitivo: false, gab: null, summary: null, progress: null }); render(); },
+  'adm-gab-back': () => { admState().step = 'form'; render(); },
+  'adm-gab-cycle': (v) => {
+    const g = admState().gab;
+    const n = Number(v);
+    const order = ['A', 'B', 'C', 'D', 'E', 'X'];
+    const cur = g.anuladas.includes(n) ? 'X' : (g.respostas[n] || 'X');
+    const next = order[(order.indexOf(cur) + 1) % order.length];
+    g.anuladas = g.anuladas.filter((x) => x !== n);
+    delete g.respostas[n];
+    if (next === 'X') g.anuladas.push(n); else g.respostas[n] = next;
+    render();
+  },
+  'adm-read-gab': async () => {
+    const a = admState();
+    if (!a.banca.trim() || !a.prova.trim() || !/^\d{4}$/.test(String(a.ano))) { toast('Preencha banca, nome da prova e ano.'); return; }
+    if (!a.provaFile) { toast('Escolha o PDF da prova.'); return; }
+    if (!a.gabFile) { toast('Escolha o PDF do gabarito.'); return; }
+    if (!a.definitivo) { toast('Confirme que é o gabarito definitivo. Questões sem gabarito oficial não entram.'); return; }
+    a.step = 'reading';
+    a.progress = { done: 0, total: 1 };
+    render();
+    try {
+      a.gab = await callImportarProva({ action: 'gabarito', pdf: a.gabFile.b64, tipo: a.tipo });
+      a.step = 'gabarito';
+    } catch (e) {
+      a.step = 'form';
+      toast(e.message);
+    }
+    render();
+  },
+  'adm-import-run': () => admRunImport(),
+  'adm-import-resume': () => admRunImport(admState().summary.next),
+  'adm-publish': async (id) => {
+    try { await adminUpdateQuestion(id, { status: 'publicada' }); toast('Questão publicada.'); } catch (e) { toast('Não foi possível publicar.'); return; }
+    const a = admState(); a.rascunhos = a.rascunhos.filter((q) => q.id !== id); render(); refreshBank();
+  },
+  'adm-del': async (id) => {
+    if (ui.admConfirmDel !== id) { ui.admConfirmDel = id; render(); return; }
+    ui.admConfirmDel = null;
+    try { await adminDeleteQuestion(id); toast('Questão apagada.'); } catch (e) { toast('Não foi possível apagar.'); return; }
+    const a = admState(); a.rascunhos = a.rascunhos.filter((q) => q.id !== id); render();
+  },
   'paywall-plans': () => { ui.paywall = null; go('planos'); },
   'paywall-close': () => { ui.paywall = null; render(); },
   'plan-period': (v) => { ui.planYearly = v === 'a'; render(); },
@@ -1915,6 +2179,8 @@ root.addEventListener('click', (e) => {
 });
 
 root.addEventListener('input', (e) => {
+  const admField = e.target.closest('[data-adm]');
+  if (admField && admField.type !== 'checkbox') { admState()[admField.dataset.adm] = admField.value; return; }
   if (e.target.matches('[data-ia-text]')) {
     const ia = iaState();
     const before = ia.text.trim().length >= 80;
@@ -1929,6 +2195,28 @@ root.addEventListener('input', (e) => {
 });
 
 root.addEventListener('change', async (e) => {
+  if (e.target.matches('[data-adm="definitivo"]')) { admState().definitivo = e.target.checked; return; }
+  if (e.target.matches('[data-adm-file]')) {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    const a = admState();
+    if (!/\.pdf$/i.test(f.name) && !/pdf$/i.test(f.type)) { toast('Escolha um arquivo PDF.'); return; }
+    if (e.target.dataset.admFile === 'gab') {
+      if (f.size > IA_MAX_BYTES) { toast('O gabarito passa de 10 MB.'); return; }
+      const b64 = await new Promise((resolve) => { const r = new FileReader(); r.onload = () => resolve(String(r.result).split(',')[1] || ''); r.onerror = () => resolve(''); r.readAsDataURL(f); });
+      if (!b64) { toast('Não foi possível ler o arquivo.'); return; }
+      a.gabFile = { name: f.name, size: f.size, b64 };
+    } else {
+      toast('Lendo o texto da prova…');
+      try {
+        const { text, pages } = await extractPdfText(await f.arrayBuffer());
+        if (text.replace(/\[página \d+\]/g, '').trim().length < 500) { toast('Este PDF parece escaneado (sem texto). Use o PDF original da banca.'); return; }
+        a.provaFile = { name: f.name, size: f.size, text, pages };
+      } catch (err) { toast(err.message || 'Não foi possível ler o PDF.'); return; }
+    }
+    render();
+    return;
+  }
   if (e.target.matches('[data-ia-target]')) { iaState().target = e.target.value; return; }
   if (e.target.matches('[data-ia-file]')) {
     const f = e.target.files && e.target.files[0];

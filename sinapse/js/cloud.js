@@ -114,3 +114,75 @@ export async function fetchSubscription(userId) {
   if (error) return undefined;
   return data || null;
 }
+
+// ---------- banco de questões ----------
+const Q_FIELDS = 'id, banca, prova, ano, numero, area, sub, stem, options, answer, explanation, explanation_ai, fact, image_url, needs_image, status, updated_at';
+
+// Questões publicadas (todas as páginas de 1.000).
+export async function fetchPublishedQuestions() {
+  const c = await loadCloud();
+  if (!c) return null;
+  const all = [];
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await c.from('questions').select(Q_FIELDS).eq('status', 'publicada')
+      .order('ano', { ascending: false }).order('prova').order('numero').range(from, from + 999);
+    if (error) return null;
+    all.push(...data);
+    if (data.length < 1000) break;
+  }
+  return all;
+}
+
+export async function checkIsAdmin() {
+  const c = await loadCloud();
+  if (!c) return false;
+  const { data, error } = await c.rpc('is_admin');
+  return !error && data === true;
+}
+
+export async function adminQuestions(status) {
+  const c = await loadCloud();
+  if (!c) return [];
+  const { data, error } = await c.from('questions').select(Q_FIELDS).eq('status', status).order('ano', { ascending: false }).order('prova').order('numero').limit(500);
+  if (error) throw error;
+  return data;
+}
+
+export async function adminProvas() {
+  const c = await loadCloud();
+  if (!c) return [];
+  const { data, error } = await c.from('questions').select('prova, ano, banca, status').limit(10000);
+  if (error) throw error;
+  const map = new Map();
+  for (const r of data) {
+    const k = `${r.prova}|${r.ano}`;
+    const e = map.get(k) || { prova: r.prova, ano: r.ano, banca: r.banca, publicada: 0, rascunho: 0, anulada: 0 };
+    e[r.status] += 1;
+    map.set(k, e);
+  }
+  return [...map.values()].sort((a, b) => b.ano - a.ano || a.prova.localeCompare(b.prova));
+}
+
+export async function adminUpdateQuestion(id, patch) {
+  const c = await loadCloud();
+  const { error } = await c.from('questions').update({ ...patch, updated_at: new Date().toISOString() }).eq('id', id);
+  if (error) throw error;
+}
+
+export async function adminDeleteQuestion(id) {
+  const c = await loadCloud();
+  const { error } = await c.from('questions').delete().eq('id', id);
+  if (error) throw error;
+}
+
+export async function callImportarProva(body) {
+  const c = await loadCloud();
+  if (!c) throw Object.assign(new Error('Sem conexão com o servidor. Confira a internet.'), { code: 'rede' });
+  const { data, error } = await c.functions.invoke('importar-prova', { body });
+  if (error) {
+    let info = {};
+    try { info = await error.context.json(); } catch (e) { /* sem corpo */ }
+    throw Object.assign(new Error(info.message || 'Não foi possível importar agora. Tente de novo.'), { code: info.error || 'falha', info });
+  }
+  return data;
+}

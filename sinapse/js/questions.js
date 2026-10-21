@@ -2,7 +2,7 @@
 // Não são questões oficiais de nenhuma banca. Revisar com um profissional antes de uso real.
 // answer = índice da alternativa correta (0 = A). fact = card criado no caderno de erros quando a pessoa erra.
 
-export const QUESTIONS = [
+const DEMO_QUESTIONS = [
   // Clínica médica
   { id: 'q01', area: 'clinica', sub: 'Cardiologia',
     stem: 'Homem de 68 anos chega ao pronto-socorro com palpitações há 2 horas. Está sonolento, com PA de 78 x 46 mmHg e FC de 160 bpm, irregular. O ECG mostra ritmo irregular, sem ondas P. Qual é a conduta imediata?',
@@ -158,6 +158,19 @@ export const QUESTIONS = [
     explanation: 'Estudos de coorte partem da exposição e acompanham os grupos no tempo para medir incidência.',
     fact: { front: 'Estudo que parte da exposição e acompanha a incidência no tempo?', back: 'Coorte.' } },
 ];
+
+// Lista usada pelo app. Começa com as questões de exemplo; quando o banco do Supabase tem
+// questões oficiais publicadas, elas substituem as de exemplo.
+export const QUESTIONS = DEMO_QUESTIONS.slice();
+
+export function setBankQuestions(list) {
+  QUESTIONS.length = 0;
+  for (const q of (list && list.length ? list : DEMO_QUESTIONS)) QUESTIONS.push(q);
+}
+
+export function usingDemoQuestions() {
+  return QUESTIONS.length > 0 && QUESTIONS[0] === DEMO_QUESTIONS[0];
+}
 
 export const CASES = [
   {
