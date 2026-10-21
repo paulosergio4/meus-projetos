@@ -665,3 +665,22 @@ body.has-bar .screen { padding-top: 16px; }
 /* Destaques no meio do espaço livre entre a frase e o painel de entrada. */
 .login-tagline { margin-bottom: 0; }
 .login-points { margin-block: auto; padding-block: clamp(16px, 3vh, 32px); }
+
+/* v0.9.3 — convite para entrar com biometria depois do primeiro login */
+.sheet-backdrop {
+  position: fixed; inset: 0; z-index: 60; display: flex; align-items: flex-end; justify-content: center;
+  padding: 16px; background: rgb(4 8 18 / .62); backdrop-filter: blur(6px);
+  animation: sheet-fade .25s ease-out;
+}
+.sheet {
+  width: min(420px, 100%); align-items: center; padding: 28px 22px calc(22px + env(safe-area-inset-bottom));
+  border-radius: 24px; background: var(--surface, #111a2e); border: 1px solid var(--line, rgb(255 255 255 / .08));
+  box-shadow: 0 24px 60px rgb(0 0 0 / .45); animation: sheet-up .35s cubic-bezier(.2, .9, .3, 1.1);
+}
+.sheet h2 { font-size: 22px; }
+.sheet .btn.big { width: 100%; }
+.lock-btn.sm { width: 72px; height: 72px; pointer-events: none; }
+@media (min-width: 640px) { .sheet-backdrop { align-items: center; } }
+@keyframes sheet-fade { from { opacity: 0; } }
+@keyframes sheet-up { from { transform: translateY(40px); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .sheet-backdrop, .sheet { animation: none; } }

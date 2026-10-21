@@ -63,7 +63,7 @@ function animateCard(cls, ms, then) {
   setTimeout(() => { ui.animating = false; then(); }, ms);
 }
 
-const APP_VERSION = '0.9.2';
+const APP_VERSION = '0.9.3';
 const root = document.getElementById('app');
 
 // ---------- utilitários ----------
@@ -288,6 +288,8 @@ async function syncOnLogin(prevSaved) {
 async function bootCloud() {
   if (!cloudEnabled()) return;
   if (isOAuthReturn()) toast('Entrando com Google...');
+  // Sem internet (servidor não carregou): mantém a pessoa conectada e o estudo no aparelho.
+  if (!(await loadCloud())) return;
   let u = null;
   try { u = await currentCloudUser(); } catch (e) { u = null; }
   const local = store.data.user;
@@ -301,7 +303,11 @@ async function bootCloud() {
   if (!already && u && store.data.profile && !store.data.profile.nome && store.data.user.name) {
     store.data.profile.nome = store.data.user.name.split(' ')[0];
   }
+  // Guarda a conta no aparelho: nas próximas aberturas o app já começa pela biometria.
+  if (!already) store.save();
   await syncOnLogin(prevSaved);
+  // Primeiro login neste aparelho: oferece entrar com biometria nas próximas vezes.
+  if (!biometricEnabled() && !bioAsked() && await biometricAvailable()) ui.bioOffer = true;
   if (ui.view === 'login' || ui.view === 'onboarding') go(store.data.profile ? 'home' : 'onboarding');
   else render();
   if (!already) toast(store.data.user.name ? `Olá, ${store.data.user.name.split(' ')[0]}!` : 'Bem-vindo ao Sinapse!');
@@ -1173,12 +1179,30 @@ function accountPanel() {
 let bioAvailable = false;
 biometricAvailable().then((ok) => { bioAvailable = ok; if (ui.view === 'settings') render(); });
 
+const BIO_ASKED = 'sinapse:bioAsked';
+function bioAsked() { try { return localStorage.getItem(BIO_ASKED) === '1'; } catch (e) { return true; } }
+function setBioAsked(v) { try { if (v) localStorage.setItem(BIO_ASKED, '1'); else localStorage.removeItem(BIO_ASKED); } catch (e) { /* sem armazenamento */ } }
+
+// Convite que aparece logo depois do primeiro login com Google.
+function bioOfferSheet() {
+  return `<div class="sheet-backdrop" role="dialog" aria-modal="true" aria-labelledby="bio-title">
+    <div class="sheet stack center-text">
+      <div class="lock-btn sm" aria-hidden="true">${icon('finger', 34)}</div>
+      <h2 id="bio-title">Entrar com biometria?</h2>
+      <p class="muted">Nas próximas vezes, o Sinapse abre com a sua digital, o rosto ou o PIN do aparelho, sem precisar entrar no Google de novo.</p>
+      <button class="btn primary big" data-act="bio-yes">${icon('finger', 20)} Ativar biometria</button>
+      <button class="link-btn center-self" data-act="bio-no">Agora não</button>
+    </div>
+  </div>`;
+}
+
 let hiddenAt = 0;
 const RELOCK_MS = 5 * 60 * 1000; // volta a pedir a biometria depois de 5 min fora do app
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') { hiddenAt = Date.now(); return; }
   if (biometricEnabled() && store.data.user && ui.view !== 'lock' && ui.view !== 'login' && hiddenAt && Date.now() - hiddenAt > RELOCK_MS) {
-    ui.afterUnlock = ui.view === 'review' || ui.view === 'quiz' || ui.view === 'case' ? ui.view : ui.view;
+    ui.afterUnlock = ui.view;
+    ui.autoUnlockTried = false;
     go('lock');
   }
 });
@@ -1197,14 +1221,18 @@ function viewLock() {
   </div>`;
 }
 
-async function doUnlock() {
+async function doUnlock(silent) {
+  if (ui.unlocking) return;
+  ui.unlocking = true;
   try {
     await unlockWithBiometric();
     const next = ui.afterUnlock && ui.afterUnlock !== 'lock' ? ui.afterUnlock : (store.data.profile ? 'home' : 'onboarding');
     ui.afterUnlock = null;
+    ui.unlocking = false;
     go(next);
   } catch (e) {
-    toast('Não foi possível confirmar. Tente de novo.');
+    ui.unlocking = false;
+    if (!silent) toast('Não foi possível confirmar. Tente de novo.');
   }
 }
 
@@ -1309,11 +1337,17 @@ function render() {
   if (ui.stopFx) { ui.stopFx(); ui.stopFx = null; }
   const showNav = !FULLSCREEN.includes(ui.view) || (ui.view === 'quiz' && ui.quiz && ui.quiz.finished);
   const showBar = ui.view !== 'login' && ui.view !== 'lock';
-  root.innerHTML = (showBar ? appbar() : '') + views[ui.view]() + (showNav ? nav() : '');
+  const offer = ui.bioOffer && store.data.user && !['login', 'lock'].includes(ui.view);
+  root.innerHTML = (showBar ? appbar() : '') + views[ui.view]() + (showNav ? nav() : '') + (offer ? bioOfferSheet() : '');
   document.body.classList.toggle('has-bar', showBar);
   document.body.classList.toggle('has-nav', showNav);
   document.body.classList.toggle('on-login', ui.view === 'login');
   if (ui.view === 'login') mountLogin();
+  // Ao abrir o app bloqueado, já chama a biometria (se o aparelho exigir um toque, o botão continua lá).
+  if (ui.view === 'lock' && !ui.autoUnlockTried) {
+    ui.autoUnlockTried = true;
+    setTimeout(() => { if (ui.view === 'lock') doUnlock(true); }, 350);
+  }
   if (ui.view === 'quiz' && ui.quiz && ui.quiz.mode === 'simulado' && !ui.quiz.finished) startQuizTimer();
   else stopQuizTimer();
   const first = root.querySelector('.gap-input');
@@ -1571,6 +1605,24 @@ const actions = {
   },
   guest: () => finishLogin({ name: '', email: '', picture: '', provider: 'guest' }),
   unlock: () => doUnlock(),
+  'bio-yes': async () => {
+    const u = store.data.user || {};
+    try {
+      await enableBiometric(u.email || store.data.profile?.nome || 'sinapse', u.name || store.data.profile?.nome || 'Sinapse');
+      setBioAsked(true);
+      ui.bioOffer = false;
+      render();
+      toast('Biometria ativada. Da próxima vez é só usar a digital ou o rosto.');
+    } catch (e) {
+      toast('A biometria não foi ativada. Tente de novo ou toque em "Agora não".');
+    }
+  },
+  'bio-no': () => {
+    setBioAsked(true);
+    ui.bioOffer = false;
+    render();
+    toast('Tudo bem. Você pode ativar depois em Ajustes → Segurança.');
+  },
   'lock-other': () => { disableBiometric(); actions.logout(); },
   logout: async () => {
     try { if (window.google && window.google.accounts) window.google.accounts.id.disableAutoSelect(); } catch (e) { /* sem Google */ }
@@ -1578,6 +1630,10 @@ const actions = {
       // O progresso já está na conta: salva o que faltar e limpa o aparelho.
       await pushNow();
       try { await signOutCloud(); } catch (e) { /* segue */ }
+      // A biometria é da conta que saiu: no próximo login o convite aparece de novo.
+      disableBiometric();
+      setBioAsked(false);
+      ui.bioOffer = false;
       store.reset();
       ui.session = null;
       ui.quiz = null;
@@ -1605,7 +1661,7 @@ root.addEventListener('change', async (e) => {
       const u = store.data.user || {};
       try {
         await enableBiometric(u.email || store.data.profile?.nome || 'sinapse', u.name || store.data.profile?.nome || 'Sinapse');
-        toast('Biometria ativada. Ela será pedida ao abrir o app.');
+        setBioAsked(true); toast('Biometria ativada. Ela será pedida ao abrir o app.');
       } catch (err) {
         bio.checked = false;
         toast('A biometria não foi ativada. Confirme a digital ou o rosto quando o aparelho pedir.');
