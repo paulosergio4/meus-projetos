@@ -1142,14 +1142,8 @@ p.s {
   }
 }
 .splash .ring {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 24px;
-  height: 24px;
-  margin: -12px 0 0 -12px;
-  border-radius: 50%;
-  border: 2px solid #c0743f;
+  transform-box: fill-box;
+  transform-origin: center;
   opacity: 0;
   animation: ring 0.8s ease-out 1.65s;
 }
@@ -1160,7 +1154,7 @@ p.s {
   }
   100% {
     opacity: 0;
-    transform: scale(5);
+    transform: scale(3.2);
   }
 }
 .splash .name {
@@ -1364,8 +1358,4 @@ body {
 /* ---------- utilitários (antes eram estilos inline) ---------- */
 .u-rel {
   position: relative;
-}
-.ring-pos {
-  left: 65%;
-  top: 41%;
 }
