@@ -311,7 +311,6 @@ function viewOnboarding() {
   const prova = ui.onbProva ?? p.prova ?? 'ENARE';
   return `<form class="screen stack" id="onb" novalidate>
     <header class="stack-sm">
-      <p class="eyebrow">Sinapse</p>
       <h1>Vamos montar seu estudo</h1>
       <p class="muted">O app organiza os cards e o cronograma de acordo com a sua fase e a sua prova.</p>
     </header>
@@ -1117,12 +1116,28 @@ function viewSettings() {
         ? '<p class="small">Apagar todo o progresso, cards criados, questões e perfil?</p><div class="grid-2"><button class="btn ghost" data-act="reset-cancel">Cancelar</button><button class="btn bad-solid" data-act="reset-do">Apagar tudo</button></div>'
         : '<button class="btn ghost bad-ink" data-act="reset-ask">Apagar progresso</button>'}
     </section>
-    <p class="muted small center-text">Sinapse · protótipo 0.3 · algoritmo FSRS-4.5</p>
+    <p class="muted small center-text">Sinapse · protótipo 0.4 · algoritmo FSRS-4.5</p>
   </div>`;
 }
 
 // ---------- navegação ----------
 const TAB_OF = { home: 'home', plan: 'home', study: 'study', create: 'study', ia: 'study', review: 'study', questions: 'questions', quiz: 'questions', errors: 'questions', cases: 'questions', case: 'questions', stats: 'stats', settings: 'settings' };
+
+// Cabeçalho fixo com a logo; o traçado do batimento se desenha em looping.
+function appbar() {
+  return `<header class="appbar">
+    <button class="brand" data-act="go" data-v="${store.data.profile ? 'home' : ui.view}" aria-label="Sinapse, ir para o início">
+      <svg class="brand-logo" viewBox="0 0 512 512" aria-hidden="true">
+        <rect width="512" height="512" rx="120" class="logo-bg"/>
+        <path class="brand-line-track" d="M96 296 H176 L208 232 L256 360 L304 152 L336 296 H416"/>
+        <path class="brand-line" d="M96 296 H176 L208 232 L256 360 L304 152 L336 296 H416" pathLength="100"/>
+        <circle class="brand-ring" cx="416" cy="296" r="30"/>
+        <circle class="brand-dot" cx="416" cy="296" r="30"/>
+      </svg>
+      <span class="brand-name">Sinapse</span>
+    </button>
+  </header>`;
+}
 
 function nav() {
   const current = TAB_OF[ui.view];
@@ -1137,7 +1152,9 @@ function render() {
   const views = { login: viewLogin, onboarding: viewOnboarding, home: viewHome, study: viewStudy, review: viewReview, create: viewCreate, ia: viewIA, questions: viewQuestions, quiz: viewQuiz, errors: viewErrors, cases: viewCases, case: viewCase, plan: viewPlan, stats: viewStats, settings: viewSettings };
   if (ui.stopFx) { ui.stopFx(); ui.stopFx = null; }
   const showNav = !FULLSCREEN.includes(ui.view) || (ui.view === 'quiz' && ui.quiz && ui.quiz.finished);
-  root.innerHTML = views[ui.view]() + (showNav ? nav() : '');
+  const showBar = ui.view !== 'login';
+  root.innerHTML = (showBar ? appbar() : '') + views[ui.view]() + (showNav ? nav() : '');
+  document.body.classList.toggle('has-bar', showBar);
   document.body.classList.toggle('has-nav', showNav);
   document.body.classList.toggle('on-login', ui.view === 'login');
   if (ui.view === 'login') mountLogin();
