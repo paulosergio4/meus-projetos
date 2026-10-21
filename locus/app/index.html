@@ -6,6 +6,7 @@
 /* Layout: no computador, um celular no centro com notas laterais; no celular, o app ocupa a tela inteira. Telas trocadas por estado; barra inferior de abas */
 :root{
   --deep:#2E3620; --olive:#56623A; --sage:#B9C38E; --copper:#C0743F; --gold:#C9962E;
+  --hero-bg:linear-gradient(150deg,#E5EAD0 0%,#F2EFE1 100%); --hero-ink:#1F2416; --hero-lbl:#56623A; --hero-sub:#5E6450; --hero-line:#56623A; --hero-glow:rgba(192,116,63,.16); --hero-bd:#DCE0C6;
   --bg:#F6F2E9; --card:#FFFDF8; --soft:#EFE9DC; --line:#E2DAC6; --ink:#1F2416; --muted:#5E6450; --dim:#8A8E7A; --cream:#F3EEE2;
   --good:#3F6E22; --warn:#9A6618; --bad:#B03A2E;
   --desk:#E6DFCF;
@@ -14,10 +15,10 @@
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#14180F; --card:#1C2216; --soft:#232A1B; --line:#2F3826; --ink:#EDE7D8; --muted:#A9AE96; --dim:#7D8270; --olive:#9BA872; --desk:#0E110A;
-  --good:#A8CF72; --warn:#E6B95C; --bad:#E57B6B; color-scheme:dark}}
+  --good:#A8CF72; --warn:#E6B95C; --bad:#E57B6B; --hero-bg:#2E3620; --hero-ink:#F3EEE2; --hero-lbl:#B9C38E; --hero-sub:#C9CCB6; --hero-line:#B9C38E; --hero-glow:rgba(185,195,142,.25); --hero-bd:transparent; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#14180F; --card:#1C2216; --soft:#232A1B; --line:#2F3826; --ink:#EDE7D8; --muted:#A9AE96; --dim:#7D8270; --olive:#9BA872; --desk:#0E110A;
-  --good:#A8CF72; --warn:#E6B95C; --bad:#E57B6B; color-scheme:dark}
+  --good:#A8CF72; --warn:#E6B95C; --bad:#E57B6B; --hero-bg:#2E3620; --hero-ink:#F3EEE2; --hero-lbl:#B9C38E; --hero-sub:#C9CCB6; --hero-line:#B9C38E; --hero-glow:rgba(185,195,142,.25); --hero-bd:transparent; color-scheme:dark}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
 body{background:var(--desk);color:var(--ink);font-family:var(--font);font-size:14px;line-height:1.45}
@@ -85,13 +86,14 @@ p.s{margin:0 0 16px;color:var(--muted);font-size:13px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px}
 .stack{display:grid;gap:10px}
 .stack > *,.grid2 > *{min-width:0}
-.hero{background:var(--deep);color:var(--cream);border-radius:22px;padding:18px;position:relative;overflow:hidden}
-.hero::after{content:"";position:absolute;right:-30px;bottom:-40px;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(185,195,142,.25),transparent 70%)}
-.hero small{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--sage);font-weight:700}
+.hero{background:var(--hero-bg);color:var(--hero-ink);border:1px solid var(--hero-bd);border-radius:22px;padding:18px;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;right:-30px;bottom:-40px;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,var(--hero-glow),transparent 70%)}
+.hero .spark polyline{stroke:var(--hero-line)}.hero .spark stop{stop-color:var(--hero-line)}
+.hero small{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--hero-lbl);font-weight:700}
 .hero .big{font-family:var(--mono);font-size:30px;margin-top:4px}
 .hero .row{display:flex;justify-content:space-between;margin-top:14px;gap:10px;position:relative;z-index:1}
-.hero .row div{font-size:12px;color:#C9CCB6}
-.hero .row b{display:block;color:var(--cream);font-family:var(--mono);font-size:15px;font-weight:500}
+.hero .row div{font-size:12px;color:var(--hero-sub)}
+.hero .row b{display:block;color:var(--hero-ink);font-family:var(--mono);font-size:15px;font-weight:500}
 .spark{width:100%;height:54px;display:block;margin-top:8px;position:relative;z-index:1}
 .item{display:flex;align-items:center;gap:12px;padding:14px;background:var(--card);border:1px solid var(--line);border-radius:16px;text-align:left;width:100%}
 .item .ic{width:40px;height:40px;border-radius:12px;background:var(--soft);display:grid;place-items:center;flex:none;color:var(--olive)}
@@ -184,9 +186,14 @@ p.s{margin:0 0 16px;color:var(--muted);font-size:13px}
 .splash .name span:nth-child(1){animation-delay:1.45s}.splash .name span:nth-child(2){animation-delay:1.52s}.splash .name span:nth-child(3){animation-delay:1.59s}.splash .name span:nth-child(4){animation-delay:1.66s}.splash .name span:nth-child(5){animation-delay:1.73s}
 @keyframes letra{to{opacity:1;transform:none}}
 .splash .name .o{position:relative}
-.splash .name .o::before{content:"";position:absolute;left:50%;top:-.3em;width:.2em;height:.2em;border-radius:50%;background:#C0743F;transform:translate(-50%,-30px);opacity:0;animation:acento .5s cubic-bezier(.3,1.7,.5,1) 2s forwards}
-@keyframes acento{to{opacity:1;transform:translate(-50%,0)}}
-.splash .sub{font-size:10.5px;letter-spacing:.36em;text-transform:uppercase;color:#B9C38E;font-weight:600;opacity:0;animation:sub .6s ease 2.1s forwards;margin-top:-14px}
+.splash .name .o::before{content:"";position:absolute;left:50%;top:50%;width:.2em;height:.2em;margin:-.1em 0 0 -.1em;border-radius:50%;background:#C0743F;opacity:0;transform:rotate(0deg) translateY(-2.4em);animation:acento 1.5s cubic-bezier(.45,0,.25,1) 1.85s forwards}
+@keyframes acento{
+  0%{opacity:0;transform:rotate(0deg) translateY(-2.4em)}
+  18%{opacity:1;transform:rotate(0deg) translateY(-.66em)}
+  78%{transform:rotate(360deg) translateY(-.66em)}
+  88%{transform:rotate(360deg) translateY(-.5em)}
+  100%{opacity:1;transform:rotate(360deg) translateY(-.56em)}}
+.splash .sub{font-size:10.5px;letter-spacing:.36em;text-transform:uppercase;color:#B9C38E;font-weight:600;opacity:0;animation:sub .6s ease 2.9s forwards;margin-top:-14px}
 @keyframes sub{from{opacity:0;letter-spacing:.6em}to{opacity:1;letter-spacing:.36em}}
 .splash .load{position:absolute;bottom:60px;left:50%;width:90px;height:3px;margin-left:-45px;border-radius:3px;background:rgba(243,238,226,.14);overflow:hidden}
 .splash .load i{display:block;height:100%;width:0;background:linear-gradient(90deg,#B9C38E,#C0743F);animation:load 3.8s cubic-bezier(.5,0,.3,1) .3s forwards}
@@ -351,7 +358,7 @@ const pill=st=>({ok:'<span class="pill p-ok">Pago</span>',due:'<span class="pill
 const S={
  inicio:()=>`<div class="hdr"><div class="who"><small>Bom dia, ${D.resp}</small><b>${D.empresa}</b></div><span class="acts"><button type="button" class="tbtn" data-act="tema" aria-label="Mudar entre fundo claro e escuro"><svg class="lua" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/></svg><svg class="sol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button><button type="button" class="av" data-go="perfil" aria-label="Perfil">MB</button></span></div>
   <div class="hero"><small>Faturamento de setembro</small><div class="big">R$ 66,1 mil</div>${spark()}
-   <div class="row"><div>Margem<b>8,6%</b></div><div>Impostos<b>6,1%</b></div><div>vs agosto<b style="color:#B9C38E">+1,4%</b></div></div></div>
+   <div class="row"><div>Margem<b>8,6%</b></div><div>Impostos<b>6,1%</b></div><div>vs agosto<b style="color:var(--hero-line)">+1,4%</b></div></div></div>
   <div class="sec">Próximo vencimento</div>
   <button type="button" class="item" data-guia="das"><span class="ic">${ic("guia")}</span><span class="tx"><b>DAS · Simples Nacional</b><span>vence 20/11 · faltam 30 dias</span></span><span class="vl">${brl(4050.12)}</span></button>
   <div class="sec">Avisos da Lócus</div>
