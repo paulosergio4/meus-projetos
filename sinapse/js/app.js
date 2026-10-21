@@ -5,13 +5,15 @@ import { store } from './store.js';
 import { scheduleAll, formatInterval, DAY_MS } from './fsrs.js';
 import { checkAnswer, parseCloze } from './match.js';
 import { daysBetween } from './plan.js';
-import { GOOGLE_CLIENT_ID } from './config.js';
+import { GOOGLE_CLIENT_ID, EXIGIR_LOGIN } from './config.js';
 import { startSynapseFx } from './fx.js';
 import { biometricAvailable, biometricEnabled, enableBiometric, disableBiometric, unlockWithBiometric } from './biometric.js';
 import { cloudEnabled, loadCloud, signInWithGoogle, currentCloudUser, userFromSession, signOutCloud, pullProgress, pushProgress, deleteCloudProgress, isOAuthReturn } from './cloud.js';
 
 function homeView() {
   if (!store.data.user) return 'login';
+  // Com login obrigatório, quem entrou sem conta (ou em modo demonstração) volta para o login.
+  if (EXIGIR_LOGIN && !store.data.user.cloud) return 'login';
   if (biometricEnabled()) return 'lock';
   return store.data.profile ? 'home' : 'onboarding';
 }
@@ -61,7 +63,7 @@ function animateCard(cls, ms, then) {
   setTimeout(() => { ui.animating = false; then(); }, ms);
 }
 
-const APP_VERSION = '0.8';
+const APP_VERSION = '0.8.1';
 const root = document.getElementById('app');
 
 // ---------- utilitários ----------
@@ -373,7 +375,7 @@ function viewLogin() {
     <section class="login-sheet" aria-label="Entrar">
       <div id="gsi-slot" class="gsi-slot" hidden></div>
       <button class="btn google big" id="google-btn" data-act="google">${GOOGLE_G} Entrar com Google</button>
-      <button class="btn ghost big" data-act="guest">Continuar sem conta</button>
+      ${EXIGIR_LOGIN ? '' : '<button class="btn ghost big" data-act="guest">Continuar sem conta</button>'}
       <p class="login-legal">Ao entrar, você concorda com os <a href="termos.html" target="_blank" rel="noopener">Termos de Uso e a Política de Privacidade</a>. ${cloudEnabled() ? 'Com o Google, seu progresso fica salvo na sua conta; sem conta, só neste aparelho.' : 'Seu progresso fica salvo neste aparelho.'}</p>
     </section>
   </div>`;

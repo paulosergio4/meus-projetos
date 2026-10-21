@@ -14,6 +14,10 @@ export const SUPABASE_KEY = 'sb_publishable_Lnunh3Bpn7gbhoffmowW6w_vRnrCBHh';
 // botão do Google entra em modo demonstração, para não levar a uma página de erro.
 export const CLOUD_LOGIN_READY = true;
 
+// Login obrigatório: quando true, some o "Continuar sem conta" e só entra quem fizer
+// login com o Google. Fica false durante a fase de testes.
+export const EXIGIR_LOGIN = false;
+
 // Login com Google sem Supabase (opcional, só identifica a pessoa, não salva na nuvem).
 // Com o Supabase configurado, este campo não é usado: o Client ID vai no painel do Supabase.
 export const GOOGLE_CLIENT_ID = '';
