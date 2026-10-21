@@ -247,6 +247,22 @@ header.scrolled .brand svg{transform:scale(.86)}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .ic-sol{display:block}:root:not([data-theme="light"]) .ic-lua{display:none}}
 body{transition:background-color .35s ease,color .35s ease}
 @media (max-width:480px){.tema-btn{width:36px;height:36px}.nav-acoes{gap:8px}.brand-name small{letter-spacing:.06em!important;font-size:.5rem!important;white-space:nowrap}.brand{gap:8px}}
+
+/* ===== Serviços: cartões giram para frente, ícone se desenha, itens deslizam ===== */
+.services{perspective:1200px;transition:background-color .6s ease .5s,border-color .6s ease .5s}
+.services:has(.service.pre){background-color:transparent;border-color:transparent}
+.service.svc{transform-origin:50% 0;transition:opacity .5s ease,transform .7s cubic-bezier(.2,.8,.2,1),background .25s;transition-delay:var(--d,0s),var(--d,0s),0s}
+.service.svc.pre{opacity:0;transform:rotateX(-28deg) translateY(18px)}
+.service svg *{stroke-dasharray:1;stroke-dashoffset:0;transition:stroke-dashoffset .9s cubic-bezier(.4,.1,.2,1);transition-delay:calc(var(--d,0s) + .25s)}
+.service.svc.pre svg *{stroke-dashoffset:1}
+.service h3,.service > p{transition:opacity .45s ease,transform .45s ease;transition-delay:calc(var(--d,0s) + .2s)}
+.service.svc.pre h3,.service.svc.pre > p{opacity:0;transform:translateY(8px)}
+.service ul li{transition:opacity .4s ease,transform .4s ease;transition-delay:calc(var(--d,0s) + .38s)}
+.service ul li+li{transition-delay:calc(var(--d,0s) + .46s)}
+.service.svc.pre ul li{opacity:0;transform:translateX(-12px)}
+.service svg{transition:transform .3s ease,stroke .3s ease}
+.service:hover svg{transform:translateY(-2px) scale(1.08);stroke:var(--copper,#C0743F)}
+@media (prefers-reduced-motion:reduce){.service.svc.pre,.service.svc.pre *{opacity:1!important;transform:none!important;stroke-dashoffset:0!important}}
 </style>
 <style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 </head>
@@ -338,37 +354,37 @@ body{transition:background-color .35s ease,color .35s ease}
       </div>
       <div class="services">
         <div class="service">
-          <svg viewBox="0 0 24 24"><path d="M4 4h12l4 4v12H4z"/><path d="M8 12h8M8 16h5"/></svg>
+          <svg viewBox="0 0 24 24"><path pathLength="1" d="M4 4h12l4 4v12H4z"/><path pathLength="1" d="M8 12h8M8 16h5"/></svg>
           <h3>Contabilidade</h3>
           <p>Escrituração, balancetes e demonstrações em dia, prontos para banco, sócio ou licitação.</p>
           <ul><li>Balanço e DRE</li><li>ECD e ECF</li></ul>
         </div>
         <div class="service">
-          <svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+          <svg viewBox="0 0 24 24"><path pathLength="1" d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
           <h3>Fiscal e tributário</h3>
           <p>Apuração de impostos, obrigações acessórias e revisão do regime para pagar só o necessário.</p>
           <ul><li>Simples, Presumido e Real</li><li>SPED Fiscal e EFD</li></ul>
         </div>
         <div class="service">
-          <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18.5 14.8c1.6.8 2.6 2.5 3 5.2"/></svg>
+          <svg viewBox="0 0 24 24"><circle pathLength="1" cx="9" cy="8" r="3.5"/><path pathLength="1" d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><path pathLength="1" d="M16 4.5a3.5 3.5 0 0 1 0 7M18.5 14.8c1.6.8 2.6 2.5 3 5.2"/></svg>
           <h3>Departamento pessoal</h3>
           <p>Folha, admissões, férias e rescisões com eSocial transmitido no prazo.</p>
           <ul><li>Folha e pró-labore</li><li>eSocial e FGTS Digital</li></ul>
         </div>
         <div class="service">
-          <svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="9"/></svg>
+          <svg viewBox="0 0 24 24"><path pathLength="1" d="M12 3v18M3 12h18"/><circle pathLength="1" cx="12" cy="12" r="9"/></svg>
           <h3>Abertura de empresas</h3>
           <p>CNPJ, alvará, inscrições e escolha do regime certo desde o primeiro dia.</p>
           <ul><li>MEI para ME</li><li>Alterações contratuais</li></ul>
         </div>
         <div class="service">
-          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 15l3-3 3 2 4-5"/></svg>
+          <svg viewBox="0 0 24 24"><rect pathLength="1" x="3" y="3" width="18" height="18" rx="2"/><path pathLength="1" d="M7 15l3-3 3 2 4-5"/></svg>
           <h3>Painéis de gestão</h3>
           <p>Relatório mensal em painel visual com faturamento, margem, despesas e impostos.</p>
           <ul><li>Indicadores por mês</li><li>Comparativo anual</li></ul>
         </div>
         <div class="service">
-          <svg viewBox="0 0 24 24"><path d="M12 2l3 6 6 .9-4.5 4.3 1 6.3L12 16.6 6.5 19.5l1-6.3L3 8.9 9 8z"/></svg>
+          <svg viewBox="0 0 24 24"><path pathLength="1" d="M12 2l3 6 6 .9-4.5 4.3 1 6.3L12 16.6 6.5 19.5l1-6.3L3 8.9 9 8z"/></svg>
           <h3>Planejamento tributário</h3>
           <p>Simulação de cenários para reduzir a carga de impostos de forma legal.</p>
           <ul><li>Comparativo de regimes</li><li>Fator R e anexos</li></ul>
@@ -564,7 +580,7 @@ document.getElementById('form-contato').addEventListener('submit', function(e){
   if(reduce||!('IntersectionObserver' in window)) return;
   var groups=[
     ['.sec-head > div','from-left'],['.sec-head > .lede','from-right'],
-    ['.service',''],['.step',''],['.feature','from-left'],['.phone','zoom'],
+    ['.service','svc'],['.step',''],['.feature','from-left'],['.phone','zoom'],
     ['.cta','zoom'],['.doc','doc'],['.mvv article',''],['.value',''],['.person',''],
     ['.contact > div','from-left'],['.contact form','from-right'],['.hero-meta > div','']
   ];
@@ -573,7 +589,8 @@ document.getElementById('form-contato').addEventListener('submit', function(e){
     var list=[].slice.call(document.querySelectorAll(g[0]));
     list.forEach(function(el,i){
       el.classList.add('sr'); if(g[1]&&g[1]!=='doc') el.classList.add(g[1]);
-      el.style.setProperty('--d',(g[1]==='doc'?0.18+i*0.07:0.04+Math.min(i,5)*0.05)+'s');
+      var cols=g[1]==='svc'?(window.innerWidth>900?3:window.innerWidth>580?2:1):1;
+      el.style.setProperty('--d',(g[1]==='doc'?0.18+i*0.07:g[1]==='svc'?0.05+((i%cols)+Math.floor(i/cols))*0.09:0.04+Math.min(i,5)*0.05)+'s');
       // só esconde o que ainda está abaixo da tela: a página fica completa ao carregar
       if(el.getBoundingClientRect().top>vh*0.92){ el.classList.add('pre'); els.push(el); }
     });
