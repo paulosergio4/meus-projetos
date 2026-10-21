@@ -1,7 +1,7 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#2E3620"><meta name="robots" content="noindex"><link rel="icon" href="../marca/locus-icone-app.png"><link rel="apple-touch-icon" href="../marca/locus-icone-app.png"></head><body><title>App Lócus</title>
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#F6F2E9" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#14180F" media="(prefers-color-scheme: dark)"><meta name="robots" content="noindex"><link rel="icon" href="../marca/locus-icone-app.png"><link rel="apple-touch-icon" href="../marca/locus-icone-app.png"></head><body><title>App Lócus</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap">
 <style>
 /* Layout: no computador, um celular no centro com notas laterais; no celular, o app ocupa a tela inteira. Telas trocadas por estado; barra inferior de abas */
 :root{
@@ -9,7 +9,7 @@
   --bg:#F6F2E9; --card:#FFFDF8; --soft:#EFE9DC; --line:#E2DAC6; --ink:#1F2416; --muted:#5E6450; --dim:#8A8E7A; --cream:#F3EEE2;
   --good:#3F6E22; --warn:#9A6618; --bad:#B03A2E;
   --desk:#E6DFCF;
-  --font:"Montserrat",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  --font:"Montserrat",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"Montserrat",system-ui,-apple-system,"Segoe UI",sans-serif;
   color-scheme:light;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
@@ -97,7 +97,7 @@ p.s{margin:0 0 16px;color:var(--muted);font-size:13px}
 .item .ic{width:40px;height:40px;border-radius:12px;background:var(--soft);display:grid;place-items:center;flex:none;color:var(--olive)}
 .item .ic svg{width:20px;height:20px}
 .item .tx{flex:1;min-width:0}
-.item .tx b{display:block;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .tx b{display:block;font-size:14px;font-weight:600;line-height:1.3}
 .item .tx span{display:block;font-size:12px;color:var(--muted)}
 .item .vl{font-family:var(--mono);font-size:13px;text-align:right;white-space:nowrap}
 .pill{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.04em;padding:4px 9px;border-radius:999px;white-space:nowrap}
@@ -203,6 +203,9 @@ p.s{margin:0 0 16px;color:var(--muted);font-size:13px}
 .hdr .who{min-width:0}
 .hdr .who b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 body,.screen,.card,.item,.tabs,.kpi{transition:background-color .3s ease,border-color .3s ease,color .3s ease}
+
+[style*="--mono"],.kpi b,.big,.val{font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+body{font-variant-numeric:tabular-nums}
 </style>
 
 <div class="stage">
@@ -466,9 +469,13 @@ $("replay").onclick=()=>{logged=false;$("login").hidden=false;abrir();};
 $("m-replay").onclick=$("replay").onclick;
 function escuroAgora(){const r=document.documentElement;return r.dataset.theme?r.dataset.theme==="dark":!!(window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches);}
 function aplicarTema(k){const r=document.documentElement;if(k==="auto")delete r.dataset.theme;else r.dataset.theme=k;try{localStorage.setItem("locus-app-tema",k)}catch(_){}
-  const m=document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute("content",escuroAgora()?"#14180F":"#F6F2E9");}
+  corBarra();setTimeout(corBarra,350);}
+function corBarra(){const bg=(getComputedStyle(document.documentElement).getPropertyValue("--bg")||"").trim()||(escuroAgora()?"#14180F":"#F6F2E9");
+  document.querySelectorAll('meta[name="theme-color"]').forEach(m=>m.remove());
+  const m=document.createElement("meta");m.name="theme-color";m.content=bg;document.head.appendChild(m);}
 $("themeBtn").onclick=()=>aplicarTema(escuroAgora()?"light":"dark");
 try{const t=localStorage.getItem("locus-app-tema"); if(t) aplicarTema(t);}catch(_){}
+corBarra(); try{matchMedia("(prefers-color-scheme: dark)").addEventListener("change",corBarra);}catch(_){}
 
 /* relógio */
 function hora(){const d=new Date();$("clock").textContent=d.getHours()+":"+String(d.getMinutes()).padStart(2,"0");}
