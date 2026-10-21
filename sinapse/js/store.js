@@ -176,6 +176,8 @@ export const store = {
       else if (s.due <= now) due.push(c);
     }
     due.sort((a, b) => this.stateOf(a.id).due - this.stateOf(b.id).due);
+    // Cards que a pessoa criou ou gerou com IA vêm antes dos decks prontos entre os novos.
+    fresh.sort((a, b) => (b.custom ? 1 : 0) - (a.custom ? 1 : 0));
     const newLeft = Math.max(0, this.newPerDay() - this.newStudiedToday());
     return due.concat(fresh.slice(0, newLeft)).slice(0, limit);
   },
