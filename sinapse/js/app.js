@@ -30,7 +30,33 @@ const ui = {
   quiz: null,         // treino, simulado ou caderno de erros em andamento
   quizTimer: 0,
   caseRun: null,      // caso clínico em andamento
+  cardAnim: null,     // animação do card na próxima renderização: enter | flip-in
+  animating: false,
 };
+
+const PALETTES = [
+  { id: 'azul', name: 'Azul e laranja', main: '#3D8BFF', acc: '#FF9F43' },
+  { id: 'violeta', name: 'Violeta e âmbar', main: '#7C5CFF', acc: '#FFB23F' },
+  { id: 'verde', name: 'Verde-água e coral', main: '#14B8A6', acc: '#FF8A5B' },
+  { id: 'magenta', name: 'Magenta e amarelo', main: '#EC4899', acc: '#FFC94A' },
+];
+
+function applyPalette() {
+  document.documentElement.dataset.palette = store.data.settings.palette || 'azul';
+}
+
+const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// Roda a animação de saída do card e só depois troca o conteúdo.
+function animateCard(cls, ms, then) {
+  const el = root.querySelector('.flash');
+  if (!el || reduceMotion()) { then(); return; }
+  ui.animating = true;
+  el.classList.remove('enter', 'flip-in');
+  void el.offsetWidth;
+  el.classList.add(cls);
+  setTimeout(() => { ui.animating = false; then(); }, ms);
+}
 
 const root = document.getElementById('app');
 
@@ -458,6 +484,8 @@ function viewReview() {
   const area = areaById(card.area);
   const progress = Math.round((s.done / (s.done + s.queue.length)) * 100);
   const typing = !ui.revealed && typingOn(card);
+  const anim = ui.cardAnim || '';
+  ui.cardAnim = null;
   let actions;
   if (!ui.revealed) {
     actions = typing
@@ -481,13 +509,14 @@ function viewReview() {
       <span class="tag">${typeLabel(card)}</span>
       ${s.practice ? '<span class="tag amber">Reforço</span>' : ''}
       ${card.origin ? '<span class="tag">Caderno de erros</span>' : ''}
+      <button class="skip-btn" data-act="skip" aria-label="Pular este card">Pular ${icon('next', 16)}</button>
     </div>
-    <article class="panel flash ${ui.revealed ? 'revealed' : ''}" aria-live="polite">
+    <article class="panel flash ${ui.revealed ? 'revealed' : ''} ${anim}" aria-live="polite">
       ${cardBody(card, ui.revealed)}
       ${ui.revealed ? `<div class="row card-tools"><button class="btn ghost small" data-act="report">${icon('flag', 16)} Reportar erro</button></div>` : ''}
     </article>
     <div class="actions">${actions}</div>
-    ${ui.revealed && !s.practice ? '<p class="hint">Atalhos: 1 De novo · 2 Difícil · 3 Bom · 4 Fácil</p>' : ''}
+    <p class="hint">${ui.revealed && !s.practice ? 'Atalhos: 1 De novo · 2 Difícil · 3 Bom · 4 Fácil · P pular' : 'Atalhos: espaço mostra a resposta · P pula o card'}</p>
   </div>`;
 }
 
@@ -497,7 +526,7 @@ function viewSessionDone() {
   return `<div class="screen stack center">
     <div class="badge good xl">${icon('check', 36)}</div>
     <h1>Sessão concluída</h1>
-    <p class="muted">${s ? `${plural(s.done, 'revisão', 'revisões')} nesta sessão, ${pct}% de acerto.` : ''}</p>
+    <p class="muted">${s ? `${plural(s.done, 'revisão', 'revisões')} nesta sessão, ${pct}% de acerto.` : ''}${s && s.leftOut ? ` ${plural(s.leftOut, 'card ficou', 'cards ficaram')} para depois.` : ''}</p>
     <button class="btn primary big" data-act="go" data-v="home">Voltar ao início</button>
     <button class="btn ghost" data-act="go" data-v="questions">Resolver questões</button>
   </div>`;
@@ -1054,6 +1083,11 @@ function viewSettings() {
     <header><h1>Ajustes</h1></header>
     ${accountPanel()}
     <section class="panel stack-sm">
+      <h2>Cores do app</h2>
+      <div class="palettes" role="group" aria-label="Paleta de cores">${PALETTES.map((pl) => `<button class="palette ${(s.palette || 'azul') === pl.id ? 'on' : ''}" data-act="palette" data-v="${pl.id}" aria-pressed="${(s.palette || 'azul') === pl.id}">
+        <span class="swatch" aria-hidden="true"><i style="background:${pl.main}"></i><i style="background:${pl.acc}"></i></span>${pl.name}</button>`).join('')}</div>
+    </section>
+    <section class="panel stack-sm">
       <h2>Estudo</h2>
       <label class="switch-row" for="set-type">
         <span class="stack-xs grow"><strong>Digitar a resposta nas lacunas</strong><span class="muted small">O app confere o que você escreveu, aceita sinônimos e pequenos erros de digitação, e sugere a nota.</span></span>
@@ -1083,7 +1117,7 @@ function viewSettings() {
         ? '<p class="small">Apagar todo o progresso, cards criados, questões e perfil?</p><div class="grid-2"><button class="btn ghost" data-act="reset-cancel">Cancelar</button><button class="btn bad-solid" data-act="reset-do">Apagar tudo</button></div>'
         : '<button class="btn ghost bad-ink" data-act="reset-ask">Apagar progresso</button>'}
     </section>
-    <p class="muted small center-text">Sinapse · protótipo 0.2 · algoritmo FSRS-4.5</p>
+    <p class="muted small center-text">Sinapse · protótipo 0.3 · algoritmo FSRS-4.5</p>
   </div>`;
 }
 
@@ -1125,35 +1159,71 @@ function startSession(title, ids, opts = {}) {
   ui.session = { title, queue: ids, done: 0, correct: 0, retried: {}, practice: !!opts.practice, quick: !!opts.quick };
   ui.revealed = false;
   ui.typed = null;
+  ui.cardAnim = 'enter';
   go('review');
 }
 
 function nextCard() {
   ui.revealed = false;
   ui.typed = null;
+  ui.cardAnim = 'enter';
   render();
   window.scrollTo(0, 0);
 }
 
+// Vira o card: metade da volta, troca para o verso e completa a volta.
+function flipToAnswer(prepare) {
+  animateCard('flip-out', 160, () => {
+    prepare();
+    ui.revealed = true;
+    ui.cardAnim = 'flip-in';
+    render();
+  });
+}
+
 function grade(g) {
-  const s = ui.session;
-  const id = s.queue.shift();
-  const next = store.answer(id, g);
-  s.done += 1;
-  if (g > 1) s.correct += 1;
-  // Card errado volta ainda nesta sessão.
-  if (next.state === 'learning') s.queue.push(id);
-  nextCard();
+  animateCard(g === 1 ? 'leave-left' : 'leave-right', 230, () => {
+    const s = ui.session;
+    const id = s.queue.shift();
+    const next = store.answer(id, g);
+    s.done += 1;
+    if (g > 1) s.correct += 1;
+    // Card errado volta ainda nesta sessão.
+    if (next.state === 'learning') s.queue.push(id);
+    nextCard();
+  });
 }
 
 function practiceAnswer(ok) {
+  animateCard(ok ? 'leave-right' : 'leave-left', 230, () => {
+    const s = ui.session;
+    const id = s.queue.shift();
+    store.practice(id, ok);
+    s.done += 1;
+    if (ok) s.correct += 1;
+    else if (!s.retried[id]) { s.retried[id] = true; s.queue.push(id); }
+    nextCard();
+  });
+}
+
+// Pular não mexe na agenda: na primeira vez o card vai para o fim da sessão;
+// se pular de novo (ou for o último), ele fica para depois.
+function skipCard() {
   const s = ui.session;
-  const id = s.queue.shift();
-  store.practice(id, ok);
-  s.done += 1;
-  if (ok) s.correct += 1;
-  else if (!s.retried[id]) { s.retried[id] = true; s.queue.push(id); }
-  nextCard();
+  const id = s.queue[0];
+  s.skipped = s.skipped || {};
+  animateCard('leave-up', 230, () => {
+    s.queue.shift();
+    if (!s.skipped[id] && s.queue.length) {
+      s.skipped[id] = true;
+      s.queue.push(id);
+      toast('Card pulado. Ele volta no fim da sessão.');
+    } else {
+      s.leftOut = (s.leftOut || 0) + 1;
+      toast('Card deixado para depois. Ele continua na sua revisão.');
+    }
+    nextCard();
+  });
 }
 
 function checkTyped() {
@@ -1165,9 +1235,8 @@ function checkTyped() {
     return el ? el.value.trim() : '';
   });
   const results = gaps.map((g, i) => checkAnswer(values[i], g.answers));
-  ui.typed = { values, results, allOk: results.every((r) => r.ok) };
-  ui.revealed = true;
-  render();
+  const typed = { values, results, allOk: results.every((r) => r.ok) };
+  flipToAnswer(() => { ui.typed = typed; });
 }
 
 const actions = {
@@ -1189,14 +1258,14 @@ const actions = {
     const [a, sub] = v.split('|');
     startSession(sub, shuffle(store.allCards().filter((c) => c.area === a && c.sub === sub).map((c) => c.id)), { practice: true });
   },
-  reveal: () => { ui.revealed = true; render(); },
+  reveal: () => flipToAnswer(() => {}),
+  skip: () => skipCard(),
+  palette: (v) => { store.setSetting('palette', v); applyPalette(); render(); toast('Cores atualizadas.'); },
   'check-typed': () => checkTyped(),
   'dont-know': () => {
     const card = store.cardById(ui.session.queue[0]);
     const { gaps } = parseCloze(card.text);
-    ui.typed = { values: gaps.map(() => ''), results: gaps.map(() => ({ ok: false })), allOk: false };
-    ui.revealed = true;
-    render();
+    flipToAnswer(() => { ui.typed = { values: gaps.map(() => ''), results: gaps.map(() => ({ ok: false })), allOk: false }; });
   },
   grade: (v) => grade(Number(v)),
   practice: (v) => practiceAnswer(v === '1'),
@@ -1328,7 +1397,7 @@ const actions = {
 
 root.addEventListener('click', (e) => {
   const el = e.target.closest('[data-act]');
-  if (!el || el.disabled) return;
+  if (!el || el.disabled || ui.animating) return;
   const fn = actions[el.dataset.act];
   if (fn) fn(el.dataset.v);
 });
@@ -1348,7 +1417,7 @@ root.addEventListener('change', (e) => {
 
 root.addEventListener('submit', (e) => {
   e.preventDefault();
-  if (e.target.id === 'type-form') { checkTyped(); return; }
+  if (e.target.id === 'type-form') { if (!ui.animating) checkTyped(); return; }
   const f = new FormData(e.target);
   if (e.target.id === 'onb') {
     const wasNew = !store.data.profile;
@@ -1393,8 +1462,10 @@ root.addEventListener('submit', (e) => {
 
 document.addEventListener('keydown', (e) => {
   const inField = e.target.closest && e.target.closest('input, textarea, select');
+  if (ui.animating) return;
   if (ui.view === 'review' && ui.session && ui.session.queue.length) {
     if (inField) return; // Enter dentro da lacuna envia o formulário
+    if (e.key === 'p' || e.key === 'P') { skipCard(); return; }
     if (!ui.revealed && (e.code === 'Space' || e.key === 'Enter')) {
       e.preventDefault();
       if (typingOn(store.cardById(ui.session.queue[0]))) checkTyped(); else actions.reveal();
@@ -1412,6 +1483,7 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
+applyPalette();
 render();
 
 if ('serviceWorker' in navigator && /^(https:|http:\/\/localhost|http:\/\/127\.0\.0\.1)/.test(location.href)) {

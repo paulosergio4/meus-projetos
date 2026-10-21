@@ -6,8 +6,8 @@ export function startSynapseFx(canvas) {
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const css = getComputedStyle(document.documentElement);
   const color = (name, fallback) => (css.getPropertyValue(name).trim() || fallback);
-  const VIOLET = color('--violet', '#7C5CFF');
-  const AMBER = color('--amber', '#FFB23F');
+  const VIOLET = color('--violet', '#3D8BFF');
+  const AMBER = color('--amber', '#FF9F43');
 
   let w = 0;
   let h = 0;

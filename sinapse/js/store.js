@@ -12,6 +12,7 @@ export const DEFAULT_SETTINGS = {
   newPerDayAuto: true,  // cards novos por dia calculados pelo cronograma
   newPerDay: 15,
   questionsPerDay: 10,
+  palette: 'azul',      // azul | violeta | verde | magenta
 };
 
 function emptyState() {

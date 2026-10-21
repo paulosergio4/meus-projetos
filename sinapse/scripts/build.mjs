@@ -20,7 +20,7 @@ const icon = 'data:image/svg+xml,' + encodeURIComponent(read('icons/icon.svg').t
 
 const html = `<title>Sinapse</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="theme-color" content="#0E1020">
+<meta name="theme-color" content="#0A1120">
 <link rel="icon" href="${icon}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap">

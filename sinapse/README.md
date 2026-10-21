@@ -2,7 +2,7 @@
 
 App de revisões e flashcards de medicina com repetição espaçada. Acompanha o estudante do 1º período até a prova de residência.
 
-Esta pasta tem o **protótipo 0.2**: um app web instalável (PWA) que funciona offline, sem dependências e sem servidor.
+Esta pasta tem o **protótipo 0.3**: um app web instalável (PWA) que funciona offline, sem dependências e sem servidor.
 
 - App no ar: https://paulosergio4.github.io/meus-projetos/sinapse/
 - Especificação completa: [documento do projeto](https://claude.ai/artifact/JBiZiVvTYQRgeir8dUdS1s)
@@ -16,13 +16,13 @@ Esta pasta tem o **protótipo 0.2**: um app web instalável (PWA) que funciona o
 | Onboarding | Nome, fase do curso, prova e data da prova |
 | Início | Revisões do dia, plano de hoje (revisões e questões), sequência, contagem até a prova, decks por grande área |
 | Estudar | Revisão do dia, modo 5 minutos, reforço dos erros (sem alterar a agenda), revisão por área, criar card, gerar com IA |
-| Revisão | Frente e verso, lacuna e oclusão de imagem (ECG). Nas lacunas, a pessoa **digita a resposta**: o app aceita sinônimos, ignora acentos, tolera pequenos erros de digitação e sugere a nota |
+| Revisão | Frente e verso, lacuna e oclusão de imagem (ECG). Nas lacunas, a pessoa **digita a resposta**: o app aceita sinônimos, ignora acentos, tolera pequenos erros de digitação e sugere a nota. Botão **Pular** (ou tecla P) e animação de virar o card |
 | Questões | Treino por área com comentário imediato; **simulado** cronometrado (3 min por questão) com gabarito comentado; alternativas embaralhadas a cada tentativa |
 | Caderno de erros | Toda questão errada entra no caderno e vira um card de revisão do conceito; sai do caderno quando a pessoa acerta |
 | Casos clínicos | Casos em etapas (dor torácica, gestante com cefaleia): a cada etapa chega uma informação nova e a pessoa decide a conduta |
 | Cronograma | Contagem até a prova, cards novos por dia calculados para terminar o conteúdo uma semana antes, reta final só de revisão, foco nas áreas mais fracas |
 | Desempenho | Acerto dos cards, mapa por grande área e subtema, acerto em questões por área, histórico de simulados |
-| Ajustes | Conta, digitar resposta (liga/desliga), cards novos por dia, meta de questões, avançar o relógio para testar, apagar progresso |
+| Ajustes | Conta, 4 paletas de cores, digitar resposta (liga/desliga), cards novos por dia, meta de questões, avançar o relógio para testar, apagar progresso |
 
 O agendamento usa o algoritmo **FSRS-4.5** com os pesos padrão (`js/fsrs.js`), com testes em `tests/`.
 O progresso fica salvo no `localStorage` do navegador.
