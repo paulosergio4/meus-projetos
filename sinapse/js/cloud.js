@@ -1,6 +1,6 @@
 // Nuvem: login com Google pelo Supabase e progresso salvo na conta.
 // Só é carregado quando SUPABASE_URL e SUPABASE_KEY estão preenchidos em config.js.
-import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
+import { SUPABASE_URL, SUPABASE_KEY, CLOUD_LOGIN_READY } from './config.js';
 
 const SUPABASE_JS = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.1/dist/umd/supabase.js';
 const TABLE = 'progress';
@@ -9,7 +9,7 @@ let client = null;
 let loading = null;
 
 export function cloudEnabled() {
-  return Boolean(SUPABASE_URL && SUPABASE_KEY);
+  return Boolean(SUPABASE_URL && SUPABASE_KEY && CLOUD_LOGIN_READY);
 }
 
 export function loadCloud() {
