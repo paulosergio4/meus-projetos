@@ -68,12 +68,12 @@ header{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:col
 
 /* Hero */
 .hero{padding-block:clamp(56px,9vw,112px) clamp(48px,7vw,88px)}
-.hero-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:clamp(32px,6vw,80px);align-items:center}
+.hero-grid{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);gap:clamp(32px,5vw,72px);align-items:center}
 .hero h1{font-size:clamp(2.4rem,5.6vw,4.4rem);font-weight:800;margin-top:18px}
 .hero h1 em{font-style:normal;color:var(--olive);font-weight:300}
 .hero .lede{margin-top:22px}
 .hero-ctas{display:flex;flex-wrap:wrap;gap:12px;margin-top:34px}
-.hero-meta{display:flex;flex-wrap:wrap;gap:28px;margin-top:44px;padding-top:24px;border-top:1px solid var(--line);font-size:.82rem;color:var(--muted)}
+.hero-meta{display:grid;grid-template-columns:repeat(3,max-content);justify-content:space-between;gap:16px 24px;margin-top:44px;padding-top:24px;border-top:1px solid var(--line);font-size:.82rem;color:var(--muted)}
 .hero-meta strong{display:block;color:var(--ink);font-size:.95rem;font-weight:600}
 @media (max-width:900px){.hero-grid{grid-template-columns:1fr}}
 
@@ -82,8 +82,8 @@ header{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:col
 .panel-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
 .panel-head span{font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:600}
 .panel-head i{font-style:normal;font-family:var(--font-data);font-size:.72rem;color:var(--muted)}
-.kpis{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:12px;margin-top:20px}
-.kpi{padding:14px;border-radius:12px;background:var(--beige);min-width:0;display:flex;flex-direction:column;gap:2px}
+.kpis{display:grid;grid-template-columns:1.2fr .95fr 1.15fr;gap:10px;margin-top:20px}
+.kpi{padding:14px 13px;border-radius:12px;background:var(--beige);min-width:0;display:flex;flex-direction:column;gap:2px}
 .kpi small{display:block;font-size:.68rem;color:var(--muted);font-weight:500}
 .kpi b{display:block;font-family:var(--font-data);font-size:clamp(.95rem,1.15vw,1.15rem);font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap}
 .kpi em{display:block;font-style:normal;font-size:.7rem;color:var(--olive);font-weight:600}
@@ -263,6 +263,14 @@ body{transition:background-color .35s ease,color .35s ease}
 .service svg{transition:transform .3s ease,stroke .3s ease}
 .service:hover svg{transform:translateY(-2px) scale(1.08);stroke:var(--copper,#C0743F)}
 @media (prefers-reduced-motion:reduce){.service.svc.pre,.service.svc.pre *{opacity:1!important;transform:none!important;stroke-dashoffset:0!important}}
+
+/* ===== Ajuste do topo ===== */
+.hero-meta > div{min-width:0}
+.hero-meta > div,.hero-meta strong{white-space:nowrap}
+.hero .kpi em{white-space:nowrap}
+.hero .panel{align-self:center}
+@media (max-width:1180px) and (min-width:901px){.hero-meta{grid-template-columns:max-content max-content;justify-content:start}.hero .kpi em{white-space:normal}}
+@media (max-width:560px){.hero-meta{grid-template-columns:1fr;gap:14px}.hero-meta strong,.hero-meta > div{white-space:normal}}
 </style>
 <style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 </head>
@@ -312,9 +320,9 @@ body{transition:background-color .35s ease,color .35s ease}
           <a class="btn ghost" href="#servicos">Ver serviços</a>
         </div>
         <div class="hero-meta">
-          <div><strong>Simples, Presumido e Real</strong>Todos os regimes tributários</div>
-          <div><strong>Portal 24h</strong>Guias e documentos no celular</div>
-          <div><strong>Relatório mensal</strong>Painel com seus indicadores</div>
+          <div><strong>Todos os regimes</strong>Simples, Presumido e Real</div>
+          <div><strong>Portal 24h</strong>Guias no celular</div>
+          <div><strong>Relatório mensal</strong>Seus indicadores no painel</div>
         </div>
       </div>
 
