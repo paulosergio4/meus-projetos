@@ -703,3 +703,41 @@ body.has-bar .screen { padding-top: 16px; }
   .brand-ring { animation: dot-ring 3.2s ease-out infinite !important; }
   .lock-btn { animation: lock-pulse 2.4s ease-in-out infinite !important; }
 }
+
+/* v0.9.5 — botão de biometria no login */
+.login-sheet .bio-login { gap: 10px; border-color: color-mix(in srgb, var(--violet) 45%, var(--line)); color: var(--fg); }
+.login-sheet .bio-login svg { color: var(--violet-ink); }
+
+/* v0.9.5 — abertura do app
+   Aparece já no HTML, antes do JavaScript, e some sozinha depois de ~2 s.
+   As animações usam !important para rodar mesmo com "remover animações" ligado. */
+.splash {
+  position: fixed; inset: 0; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px;
+  background: radial-gradient(120% 70% at 50% 42%, color-mix(in srgb, var(--violet, #3D8BFF) 22%, #0A1120) 0%, #0A1120 62%);
+  animation: splash-failsafe .4s ease 5s forwards !important;
+}
+.splash.out { animation: splash-out .65s cubic-bezier(.4,0,.2,1) forwards !important; pointer-events: none; }
+.splash-logo { width: 116px; height: 116px; overflow: visible; filter: drop-shadow(0 18px 46px color-mix(in srgb, var(--violet, #3D8BFF) 45%, transparent));
+  animation: splash-logo-in .7s cubic-bezier(.2,.9,.3,1.2) both !important; }
+.splash-bg { fill: #121B30; stroke: rgb(255 255 255 / .08); stroke-width: 4; }
+.splash-line { fill: none; stroke: var(--violet, #3D8BFF); stroke-width: 36; stroke-linecap: round; stroke-linejoin: round;
+  stroke-dasharray: 100; stroke-dashoffset: 100; animation: draw-line 1s cubic-bezier(.65,0,.35,1) .35s forwards !important; }
+.splash-dot { fill: var(--amber, #FF9F43); transform-origin: 416px 296px; transform: scale(0);
+  animation: pop .45s cubic-bezier(.34,1.56,.64,1) 1.25s forwards, beat 1.6s ease-in-out 1.7s infinite !important; }
+.splash-ring { fill: none; stroke: var(--amber, #FF9F43); stroke-width: 12; transform-origin: 416px 296px; opacity: 0;
+  animation: splash-ring 1s ease-out 1.3s forwards !important; }
+.splash-name { font: 800 34px/1 var(--font-display, 'Plus Jakarta Sans', system-ui, sans-serif); letter-spacing: -1px; color: #F2F5FB;
+  animation: splash-name-in .7s cubic-bezier(.2,.8,.2,1) 1.05s both !important; }
+@keyframes splash-logo-in { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: none; } }
+@keyframes splash-name-in { from { opacity: 0; transform: translateY(10px); letter-spacing: 6px; } to { opacity: 1; transform: none; letter-spacing: -1px; } }
+@keyframes splash-ring { 0% { opacity: .8; transform: scale(1); } 100% { opacity: 0; transform: scale(3.2); } }
+@keyframes splash-out { to { opacity: 0; transform: scale(1.06); visibility: hidden; } }
+@keyframes splash-failsafe { to { opacity: 0; visibility: hidden; pointer-events: none; } }
+/* Enquanto a abertura está na tela, a entrada do login espera para começar depois dela. */
+body.splashing .login *, body.splashing .lock * { animation-play-state: paused !important; }
+/* Abertura no tema claro */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) .splash { background: radial-gradient(120% 70% at 50% 42%, color-mix(in srgb, var(--violet, #3D8BFF) 16%, #F4F7FC) 0%, #F4F7FC 62%); }
+  :root:not([data-theme="dark"]) .splash-bg { fill: #FFFFFF; stroke: rgb(10 17 32 / .08); }
+  :root:not([data-theme="dark"]) .splash-name { color: #0E1626; }
+}

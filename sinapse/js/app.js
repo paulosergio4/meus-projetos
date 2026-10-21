@@ -63,7 +63,7 @@ function animateCard(cls, ms, then) {
   setTimeout(() => { ui.animating = false; then(); }, ms);
 }
 
-const APP_VERSION = '0.9.4';
+const APP_VERSION = '0.9.5';
 const root = document.getElementById('app');
 
 // ---------- utilitários ----------
@@ -381,6 +381,7 @@ function viewLogin() {
     <section class="login-sheet" aria-label="Entrar">
       <div id="gsi-slot" class="gsi-slot" hidden></div>
       <button class="btn google big" id="google-btn" data-act="google">${GOOGLE_G} Entrar com Google</button>
+      <button class="btn ghost big bio-login" id="bio-login" data-act="bio-login" ${bioAvailable ? '' : 'hidden'}>${icon('finger', 20)} Entrar com biometria</button>
       ${EXIGIR_LOGIN ? '' : '<button class="btn ghost big" data-act="guest">Continuar sem conta</button>'}
       <p class="login-legal">Ao entrar, você concorda com os <a href="termos.html" target="_blank" rel="noopener">Termos de Uso e a Política de Privacidade</a>. ${cloudEnabled() ? 'Seu progresso fica salvo na sua conta Google.' : 'Seu progresso fica salvo neste aparelho.'}</p>
     </section>
@@ -1177,7 +1178,13 @@ function accountPanel() {
 
 // ---------- biometria ----------
 let bioAvailable = false;
-biometricAvailable().then((ok) => { bioAvailable = ok; if (ui.view === 'settings') render(); });
+biometricAvailable().then((ok) => {
+  bioAvailable = ok;
+  if (ui.view === 'settings') render();
+  // Na tela de login, só mostra o botão (sem redesenhar, para não reiniciar a animação).
+  const b = document.getElementById('bio-login');
+  if (b && ok) b.hidden = false;
+});
 
 const BIO_ASKED = 'sinapse:bioAsked';
 function bioAsked() { try { return localStorage.getItem(BIO_ASKED) === '1'; } catch (e) { return true; } }
@@ -1346,7 +1353,9 @@ function render() {
   // Ao abrir o app bloqueado, já chama a biometria (se o aparelho exigir um toque, o botão continua lá).
   if (ui.view === 'lock' && !ui.autoUnlockTried) {
     ui.autoUnlockTried = true;
-    setTimeout(() => { if (ui.view === 'lock') doUnlock(true); }, 350);
+    // Espera a abertura terminar para a tela da digital não aparecer por cima dela.
+    const wait = document.body.classList.contains('splashing') ? Math.max(350, 2500 - performance.now()) : 350;
+    setTimeout(() => { if (ui.view === 'lock') doUnlock(true); }, wait);
   }
   if (ui.view === 'quiz' && ui.quiz && ui.quiz.mode === 'simulado' && !ui.quiz.finished) startQuizTimer();
   else stopQuizTimer();
@@ -1605,6 +1614,25 @@ const actions = {
   },
   guest: () => finishLogin({ name: '', email: '', picture: '', provider: 'guest' }),
   unlock: () => doUnlock(),
+  // Login pela biometria: funciona quando este aparelho já entrou com o Google e ativou a digital.
+  'bio-login': async () => {
+    if (!biometricEnabled()) {
+      toast('Na primeira vez, entre com o Google. Logo depois o app pergunta se você quer usar a biometria nas próximas.');
+      return;
+    }
+    let u = null;
+    try { u = await currentCloudUser(); } catch (e) { u = null; }
+    if (!u) {
+      toast('Sua sessão terminou. Entre com o Google uma vez e a biometria volta a funcionar.');
+      return;
+    }
+    try { await unlockWithBiometric(); } catch (e) { toast('Não foi possível confirmar. Tente de novo.'); return; }
+    const prevSaved = store.data.savedAt || 0;
+    store.data.user = userFromSession(u);
+    store.save();
+    go(store.data.profile ? 'home' : 'onboarding');
+    syncOnLogin(prevSaved).then(() => render());
+  },
   'bio-yes': async () => {
     const u = store.data.user || {};
     try {
@@ -1755,6 +1783,18 @@ document.addEventListener('keydown', (e) => {
 applyPalette();
 render();
 bootCloud();
+
+// Abertura: a tela de entrada fica por cerca de 2 s e depois se desfaz, revelando o app.
+(function endSplash() {
+  const splash = document.getElementById('splash');
+  if (!splash) { document.body.classList.remove('splashing'); return; }
+  const SPLASH_MS = 2100;
+  setTimeout(() => {
+    splash.classList.add('out');
+    document.body.classList.remove('splashing');
+    setTimeout(() => splash.remove(), 700);
+  }, Math.max(0, SPLASH_MS - performance.now()));
+})();
 
 // Atualização automática: quando sai uma versão nova, o service worker novo assume
 // e a página recarrega uma vez, sem precisar limpar nada no celular.
