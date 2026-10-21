@@ -16,7 +16,7 @@ export const CLOUD_LOGIN_READY = true;
 
 // Login obrigatório: quando true, some o "Continuar sem conta" e só entra quem fizer
 // login com o Google. Fica false durante a fase de testes.
-export const EXIGIR_LOGIN = false;
+export const EXIGIR_LOGIN = true;
 
 // Login com Google sem Supabase (opcional, só identifica a pessoa, não salva na nuvem).
 // Com o Supabase configurado, este campo não é usado: o Client ID vai no painel do Supabase.
