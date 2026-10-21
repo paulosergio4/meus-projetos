@@ -675,12 +675,31 @@ body.has-bar .screen { padding-top: 16px; }
 .sheet {
   width: min(420px, 100%); align-items: center; padding: 28px 22px calc(22px + env(safe-area-inset-bottom));
   border-radius: 24px; background: var(--surface, #111a2e); border: 1px solid var(--line, rgb(255 255 255 / .08));
-  box-shadow: 0 24px 60px rgb(0 0 0 / .45); animation: sheet-up .35s cubic-bezier(.2, .9, .3, 1.1);
+  box-shadow: 0 24px 60px rgb(0 0 0 / .45); animation: bio-sheet-up .35s cubic-bezier(.2, .9, .3, 1.1);
 }
 .sheet h2 { font-size: 22px; }
 .sheet .btn.big { width: 100%; }
 .lock-btn.sm { width: 72px; height: 72px; pointer-events: none; }
 @media (min-width: 640px) { .sheet-backdrop { align-items: center; } }
 @keyframes sheet-fade { from { opacity: 0; } }
-@keyframes sheet-up { from { transform: translateY(40px); opacity: 0; } }
+@keyframes bio-sheet-up { from { transform: translateY(40px); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .sheet-backdrop, .sheet { animation: none; } }
+
+/* v0.9.4 — animações da marca também com "remover animações" ligado no celular.
+   Muitos aparelhos ligam essa opção no modo de economia de bateria. Aqui a abertura
+   vira um surgimento suave (sem deslocamento) e o logo continua pulsando; o resto
+   do app segue sem animação nesse modo. */
+@keyframes soft-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .login .login-logo { animation: soft-in .9s ease both !important; }
+  .login .login-title { animation: soft-in .9s ease .45s both !important; }
+  .login .login-tagline { animation: soft-in .9s ease .6s both !important; }
+  .login .login-points { animation: soft-in .9s ease .75s both !important; }
+  .login .login-sheet { animation: soft-in .9s ease .9s both !important; }
+  .login .logo-line { animation: draw-line 1.6s cubic-bezier(.65,0,.35,1) .25s both !important; }
+  .login .logo-dot { animation: pop .5s ease-out 1.6s both, beat 2.4s ease-in-out 2.3s infinite !important; }
+  .brand-line { animation: ecg-loop 3.2s ease-in-out infinite !important; }
+  .brand-dot { animation: dot-beat 3.2s ease-in-out infinite !important; }
+  .brand-ring { animation: dot-ring 3.2s ease-out infinite !important; }
+  .lock-btn { animation: lock-pulse 2.4s ease-in-out infinite !important; }
+}

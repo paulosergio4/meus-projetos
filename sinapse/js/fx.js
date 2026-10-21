@@ -131,20 +131,15 @@ export function startSynapseFx(canvas) {
   function loop(t) {
     const dt = Math.min(48, t - last);
     last = t;
-    step(dt);
+    step(reduce ? dt * 0.45 : dt);
     draw();
     raf = requestAnimationFrame(loop);
   }
 
   resize();
   window.addEventListener('resize', resize);
-  if (reduce) {
-    // Movimento reduzido: um quadro parado, com alguns nós acesos.
-    nodes.slice(0, 5).forEach((n) => { n.glow = 0.8; });
-    draw();
-  } else {
-    raf = requestAnimationFrame(loop);
-  }
+  // Com "remover animações" ligado no celular, a rede continua viva, só mais lenta.
+  raf = requestAnimationFrame(loop);
 
   return function stop() {
     cancelAnimationFrame(raf);
