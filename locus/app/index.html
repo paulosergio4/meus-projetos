@@ -155,10 +155,23 @@ p.s{margin:0 0 16px;color:var(--muted);font-size:13px}
 /* ---------- login ---------- */
 .login{position:absolute;inset:0;background:var(--bg);z-index:30;display:flex;flex-direction:column;padding:70px 26px calc(28px + env(safe-area-inset-bottom,0px))}
 .login[hidden]{display:none}
-.login .lg{width:190px}
+.login .lg{width:200px;overflow:visible}
 .login h3{font-size:28px;font-weight:800;letter-spacing:-.02em;margin:40px 0 6px;line-height:1.1}
 .login p{margin:0 0 26px;color:var(--muted)}
 .login .sp{flex:1}
+.login{overflow-y:auto}
+.login h3{margin-top:28px!important}
+.login p{margin-bottom:18px!important}
+.quem{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:16px;padding:4px;border-radius:16px;background:var(--soft)}
+.quem button{display:grid;gap:1px;padding:9px 4px;border-radius:12px;text-align:center;color:var(--muted);transition:background .25s,color .25s,box-shadow .25s;min-width:0}
+.quem b{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.quem span{font-size:10.5px;opacity:.8}
+.quem button[aria-pressed="true"]{background:var(--card);color:var(--ink);box-shadow:0 2px 8px rgba(31,36,22,.1)}
+.ou{display:flex;align-items:center;gap:12px;margin:16px 0 12px;color:var(--dim);font-size:12px}
+.ou::before,.ou::after{content:"";flex:1;height:1px;background:var(--line)}
+.gbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px;border-radius:16px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-weight:600;font-size:14.5px}
+.gbtn svg{width:20px;height:20px}
+.gbtn:active{transform:scale(.98)}
 .login .alt{text-align:center;font-size:12.5px;color:var(--muted);margin-top:14px}
 .login .bio{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:12px;font-weight:600;color:var(--olive)}
 .login .bio svg{width:20px;height:20px}
@@ -256,18 +269,25 @@ body{font-variant-numeric:tabular-nums}
 
       <!-- login -->
       <div class="login" id="login">
-        <svg class="lg" viewBox="0 0 428 120" role="img" aria-label="Lócus Contabilidade Estratégica">
+        <svg class="lg" viewBox="0 0 448 120" role="img" aria-label="Lócus Contabilidade Estratégica">
           <g transform="translate(6,8) scale(1.06)"><rect x="16" y="10" width="19" height="80" rx="5" fill="var(--ink)"/><rect x="16" y="71" width="74" height="19" rx="5" fill="var(--ink)"/><path d="M65 53 V66 M40 41 H53" stroke="#B9C38E" stroke-width="3.4" stroke-linecap="round" stroke-dasharray="0.1 6.2"/><circle cx="65" cy="41" r="11.5" fill="#C0743F"/></g>
           <text x="128" y="78" font-family="Montserrat, sans-serif" font-weight="700" font-size="70" letter-spacing="7" fill="var(--ink)">LOCUS</text><circle cx="203" cy="18" r="6" fill="#C0743F"/>
           <text x="129" y="108" font-family="Montserrat, sans-serif" font-weight="500" font-size="13.3" letter-spacing="4.2" fill="var(--olive)">CONTABILIDADE ESTRATÉGICA</text>
         </svg>
         <h3>Olá! Que bom ter você por aqui.</h3>
         <p>Entre para ver suas guias, seus números e falar com a Lócus.</p>
+        <div class="quem" role="group" aria-label="Como você quer entrar">
+          <button type="button" data-quem="empresa" aria-pressed="true"><b>Empresa</b><span>CNPJ</span></button>
+          <button type="button" data-quem="socio" aria-pressed="false"><b>Dono ou sócio</b><span>CPF</span></button>
+          <button type="button" data-quem="func" aria-pressed="false"><b>Funcionário</b><span>E-mail</span></button>
+        </div>
         <form id="loginForm" novalidate>
-          <div class="field"><label for="l-user">CPF ou CNPJ</label><input id="l-user" inputmode="numeric" value="12.345.678/0001-90" autocomplete="off"></div>
+          <div class="field"><label for="l-user" id="l-lab">CNPJ da empresa</label><input id="l-user" inputmode="numeric" value="12.345.678/0001-90" autocomplete="off"></div>
           <div class="field"><label for="l-pass">Senha</label><input id="l-pass" type="password" value="exemplo123" autocomplete="off"></div>
           <button class="btn" type="submit">Entrar</button>
         </form>
+        <div class="ou"><span>ou</span></div>
+        <button class="gbtn" type="button" id="google"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>Entrar com Google</button>
         <button class="bio" type="button" id="bio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 11v3M8.5 8.5a5 5 0 0 1 8 2.5c.4 2.2.3 4.5-.3 6.6M6 12c0-1 .2-2 .6-2.8M9 21c.9-2 1.4-4.2 1.3-6.5M12 21c.6-1.3 1-2.7 1.1-4.2M18.7 7A8 8 0 0 0 4.3 9M4 14.5c.2-1.1.2-2.2 0-3.3"/></svg>Entrar com biometria</button>
         <div class="sp"></div>
         <div class="alt">Primeiro acesso? O convite chega no seu WhatsApp.</div>
@@ -462,6 +482,12 @@ document.addEventListener("click",e=>{
 function entrar(){logged=true;$("login").hidden=true;stack=[];tab=role==="cli"?"inicio":"clientes";render();}
 $("loginForm").addEventListener("submit",e=>{e.preventDefault();entrar();});
 $("bio").onclick=entrar;
+const QUEM={empresa:["CNPJ da empresa","12.345.678/0001-90","numeric"],socio:["CPF do dono ou sócio","123.456.789-00","numeric"],func:["E-mail do funcionário","carla@mercadobompreco.com.br","email"]};
+document.querySelectorAll("[data-quem]").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("[data-quem]").forEach(x=>x.setAttribute("aria-pressed",x===b));
+  const [l,v,m]=QUEM[b.dataset.quem];$("l-lab").textContent=l;const i=$("l-user");i.value=v;i.inputMode=m;i.type=m==="email"?"email":"text";});
+$("google").onclick=()=>{const g=$("google");g.disabled=true;g.lastChild.textContent="Conectando ao Google…";
+  setTimeout(()=>{g.disabled=false;g.lastChild.textContent="Entrar com Google";entrar();},1100);};
 function setRole(r){role=r;$("as-cli").setAttribute("aria-pressed",r==="cli");$("as-eq").setAttribute("aria-pressed",r==="eq");$("m-role").textContent=r==="cli"?"Ver como equipe":"Ver como cliente";tab=r==="cli"?"inicio":"clientes";stack=[];closeSheet();if(logged)render();else{renderLegend();}}
 $("as-cli").onclick=()=>setRole("cli");$("as-eq").onclick=()=>setRole("eq");$("m-role").onclick=()=>setRole(role==="cli"?"eq":"cli");
 
