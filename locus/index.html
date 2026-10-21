@@ -1,626 +1,560 @@
 <!doctype html>
 <html lang="pt-BR">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="Lócus Contabilidade Estratégica: contabilidade guiada por dados em Pompéu – MG. Fiscal, contábil, departamento pessoal, abertura de empresas e painéis de gestão.">
-<meta name="theme-color" content="#56623A">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%232E3620'/%3E%3Crect x='24' y='18' width='16' height='62' rx='4' fill='%23F3EEE2'/%3E%3Crect x='24' y='65' width='56' height='15' rx='4' fill='%23F3EEE2'/%3E%3Ccircle cx='64' cy='40' r='11' fill='%23C0743F'/%3E%3C/svg%3E">
-<title>Lócus Contabilidade Estratégica</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<style>
-/* Layout: faixas horizontais alternando bege e verde-oliva, conteúdo em grade de 12 colunas, hero com painel de dados ao lado */
-:root{
-  --olive:#56623A;        /* verde-oliva botânico */
-  --olive-deep:#2E3620;
-  --olive-soft:#8C9866;
-  --beige:#EAE2D0;        /* bege natural */
-  --paper:#F6F2E9;
-  --ink:#1F2416;
-  --muted:#5E6450;
-  --line:#D4CAB2;
-  --card:#FFFDF8;
-  --on-olive:#F3EEE2;
-  --font-display:"Montserrat",system-ui,-apple-system,"Segoe UI",sans-serif;
-  --font-body:"Montserrat",system-ui,-apple-system,"Segoe UI",sans-serif;
-  --font-data:"IBM Plex Mono",ui-monospace,"Consolas",monospace;
-  --wrap:1160px;
-}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --olive:#9BA872;--olive-deep:#141810;--olive-soft:#6E7A4C;--beige:#22281A;--paper:#181C12;
-  --ink:#ECE6D7;--muted:#AEB29C;--line:#3A412C;--card:#1F2417;--on-olive:#141810;color-scheme:dark}}
-:root[data-theme="dark"]{
-  --olive:#9BA872;--olive-deep:#141810;--olive-soft:#6E7A4C;--beige:#22281A;--paper:#181C12;
-  --ink:#ECE6D7;--muted:#AEB29C;--line:#3A412C;--card:#1F2417;--on-olive:#141810;color-scheme:dark}
+  <head>
+    <meta charset="utf-8" />
 
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
-body{background:var(--paper);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.65;font-weight:400}
-a{color:inherit}
-.wrap{max-width:var(--wrap);margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
-h1,h2,h3{font-family:var(--font-display);text-wrap:balance;margin:0;line-height:1.12;letter-spacing:-.02em}
-h2{font-size:clamp(1.8rem,3.4vw,2.6rem);font-weight:700}
-h3{font-size:1.1rem;font-weight:600;letter-spacing:-.01em}
-p{margin:0}
-.eyebrow{font-size:.72rem;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--olive)}
-.lede{color:var(--muted);font-size:1.06rem;max-width:58ch}
-:focus-visible{outline:2px solid var(--olive);outline-offset:3px;border-radius:4px}
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Lócus</title>
 
-/* Cabeçalho */
-body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--paper)}
-header{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:color-mix(in srgb,var(--paper) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
-.nav{display:flex;align-items:center;justify-content:space-between;gap:24px;padding-block:14px}
-.brand{display:flex;align-items:center;gap:12px;text-decoration:none}
-.brand-name{display:flex;flex-direction:column;line-height:1}
-.brand-name b{font-weight:800;font-size:1.25rem;letter-spacing:.06em}
-.brand-name small{font-size:.58rem;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);margin-top:4px;font-weight:500}
-.nav ul{display:flex;gap:28px;list-style:none;margin:0;padding:0;font-size:.88rem;font-weight:500}
-.nav ul a{text-decoration:none;color:var(--muted);transition:color .2s}
-.nav ul a:hover{color:var(--ink)}
-.btn{display:inline-flex;align-items:center;gap:10px;font-family:var(--font-body);font-weight:600;font-size:.9rem;text-decoration:none;padding:13px 22px;border-radius:999px;border:1px solid var(--olive);background:var(--olive);color:var(--on-olive);cursor:pointer;transition:transform .2s,background .2s;white-space:nowrap;line-height:1.2}
-.btn:hover{transform:translateY(-1px);background:var(--olive-deep);border-color:var(--olive-deep);color:var(--on-olive)}
-.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
-.btn.ghost:hover{border-color:var(--olive);background:transparent;color:var(--olive)}
-@media (max-width:860px){.nav ul{display:none}.nav .btn{padding:10px 16px;font-size:.82rem}}
-@media (max-width:480px){.nav{gap:12px}.nav .btn{padding:9px 14px;font-size:.78rem}.brand svg{width:32px;height:32px}.brand-name b{font-size:1.1rem}.brand-name small{letter-spacing:.14em;font-size:.54rem}}
+    <title>Lócus Contabilidade Estratégica</title>
 
-/* Hero */
-.hero{padding-block:clamp(56px,9vw,112px) clamp(48px,7vw,88px)}
-.hero-grid{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);gap:clamp(32px,5vw,72px);align-items:center}
-.hero h1{font-size:clamp(2.4rem,5.6vw,4.4rem);font-weight:800;margin-top:18px}
-.hero h1 em{font-style:normal;color:var(--olive);font-weight:300}
-.hero .lede{margin-top:22px}
-.hero-ctas{display:flex;flex-wrap:wrap;gap:12px;margin-top:34px}
-.hero-meta{display:grid;grid-template-columns:repeat(3,max-content);justify-content:space-between;gap:16px 24px;margin-top:44px;padding-top:24px;border-top:1px solid var(--line);font-size:.82rem;color:var(--muted)}
-.hero-meta strong{display:block;color:var(--ink);font-size:.95rem;font-weight:600}
-@media (max-width:900px){.hero-grid{grid-template-columns:1fr}}
+    <meta
+      name="description"
+      content="Lócus Contabilidade Estratégica: contabilidade guiada por dados em Pompéu – MG. Fiscal, contábil, departamento pessoal, abertura de empresas e painéis de gestão."
+    />
 
-/* Painel de dados (ilustrativo) */
-.panel{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:26px;box-shadow:0 30px 60px -40px rgba(30,36,20,.45);min-width:0}
-.panel-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
-.panel-head span{font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:600}
-.panel-head i{font-style:normal;font-family:var(--font-data);font-size:.72rem;color:var(--muted)}
-.kpis{display:grid;grid-template-columns:1.2fr .95fr 1.15fr;gap:10px;margin-top:20px}
-.kpi{padding:14px 13px;border-radius:12px;background:var(--beige);min-width:0;display:flex;flex-direction:column;gap:2px}
-.kpi small{display:block;font-size:.68rem;color:var(--muted);font-weight:500}
-.kpi b{display:block;font-family:var(--font-data);font-size:clamp(.95rem,1.15vw,1.15rem);font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap}
-.kpi em{display:block;font-style:normal;font-size:.7rem;color:var(--olive);font-weight:600}
-@media (max-width:560px){.kpis{grid-template-columns:1fr;gap:10px}.kpi{flex-direction:row;flex-wrap:wrap;align-items:baseline;justify-content:space-between;column-gap:12px}.kpi small{width:100%}.panel{padding:20px}.panel-head{flex-wrap:wrap}}
-.chart{margin-top:22px}
-.chart svg{width:100%;height:auto;display:block}
-.chart-legend{display:flex;gap:18px;font-size:.72rem;color:var(--muted);margin-top:8px}
-.chart-legend span::before{content:"";display:inline-block;width:10px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle;background:var(--olive)}
-.chart-legend span.b::before{background:var(--line)}
-.panel-foot{margin-top:18px;font-size:.72rem;color:var(--muted);border-top:1px dashed var(--line);padding-top:12px}
+    <meta name="theme-color" content="#56623A" />
 
-/* Seções */
-section{padding-block:clamp(64px,9vw,112px)}
-.sec-head{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:end;margin-bottom:52px}
-.sec-head h2{margin-top:12px}
-@media (max-width:800px){.sec-head{grid-template-columns:1fr}}
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%232E3620'/%3E%3Crect x='24' y='18' width='16' height='62' rx='4' fill='%23F3EEE2'/%3E%3Crect x='24' y='65' width='56' height='15' rx='4' fill='%23F3EEE2'/%3E%3Ccircle cx='64' cy='40' r='11' fill='%23C0743F'/%3E%3C/svg%3E"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
-.band-beige{background:var(--beige)}
-.band-olive{background:var(--olive-deep);color:#EEE8DA}
-.band-olive .eyebrow{color:#B9C38E}
-.band-olive .lede{color:#C7C9B5}
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+    <script src="js/main.js" defer></script>
+  </head>
+  <body>
+    <svg class="u-sprite" width="0" height="0" aria-hidden="true">
+      <symbol id="logo" viewBox="0 0 100 100">
+        <rect x="16" y="10" width="19" height="80" rx="5" fill="currentColor" />
+        <rect x="16" y="71" width="74" height="19" rx="5" fill="currentColor" />
+        <path
+          d="M65 53 V66 M40 41 H53"
+          stroke="#B9C38E"
+          stroke-width="3.4"
+          stroke-linecap="round"
+          stroke-dasharray="0.1 6.2"
+        />
+        <circle cx="65" cy="41" r="11.5" fill="#C0743F" />
+      </symbol>
+    </svg>
 
-/* Serviços */
-.services{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:18px;overflow:hidden}
-.service{background:var(--paper);padding:30px 26px;display:flex;flex-direction:column;gap:12px;transition:background .25s}
-.band-beige .service{background:var(--card)}
-.service:hover{background:var(--beige)}
-.band-beige .service:hover{background:var(--paper)}
-.service svg{width:28px;height:28px;stroke:var(--olive);fill:none;stroke-width:1.6}
-.service p{color:var(--muted);font-size:.93rem}
-.service ul{margin:4px 0 0;padding:0;list-style:none;font-size:.82rem;color:var(--muted);display:grid;gap:4px}
-.service ul li::before{content:"—  ";color:var(--olive)}
-@media (max-width:900px){.services{grid-template-columns:1fr 1fr}}
-@media (max-width:580px){.services{grid-template-columns:1fr}}
-
-/* Processo */
-.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;counter-reset:s}
-.step{border-top:2px solid #B9C38E;padding-top:22px}
-.step .num{font-family:var(--font-data);font-size:.8rem;color:#B9C38E}
-.step h3{margin-top:10px;font-size:1.25rem}
-.step p{margin-top:10px;color:#C7C9B5;font-size:.94rem}
-@media (max-width:800px){.steps{grid-template-columns:1fr}}
-
-/* Diferenciais / portal */
-.split{display:grid;grid-template-columns:1fr 1fr;gap:clamp(32px,6vw,72px);align-items:center}
-@media (max-width:860px){.split{grid-template-columns:1fr}}
-.feature-list{display:grid;gap:22px;margin-top:34px}
-.feature{display:grid;grid-template-columns:40px 1fr;gap:16px}
-.feature .dot{width:40px;height:40px;border-radius:50%;background:var(--beige);display:grid;place-items:center}
-.feature .dot svg{width:18px;height:18px;stroke:var(--olive);fill:none;stroke-width:1.8}
-.feature p{color:var(--muted);font-size:.93rem;margin-top:4px}
-.phone{justify-self:center;width:min(300px,100%);aspect-ratio:9/18;border-radius:38px;background:var(--olive-deep);padding:12px;box-shadow:0 40px 80px -40px rgba(20,24,14,.6)}
-.screen{background:var(--paper);border-radius:28px;height:100%;padding:22px 18px;display:flex;flex-direction:column;gap:12px;overflow:hidden}
-.screen .top{display:flex;justify-content:space-between;align-items:center;font-size:.7rem;color:var(--muted)}
-.screen h4{margin:6px 0 0;font-size:1rem;font-weight:700}
-.doc{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px;border-radius:12px;background:var(--card);border:1px solid var(--line);font-size:.75rem}
-.doc b{display:block;font-weight:600;font-size:.78rem}
-.doc span{color:var(--muted)}
-.tag{font-size:.62rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:4px 8px;border-radius:999px;white-space:nowrap}
-.tag.ok{background:color-mix(in srgb,var(--olive) 18%,transparent);color:var(--olive)}
-.tag.due{background:color-mix(in srgb,#B7791F 18%,transparent);color:#9A6618}
-
-/* Diagnóstico CTA */
-.cta{display:grid;grid-template-columns:1.2fr .8fr;gap:40px;align-items:center;background:var(--olive);color:var(--on-olive);border-radius:26px;padding:clamp(32px,5vw,56px)}
-.cta h2{color:inherit}
-.cta p{margin-top:14px;opacity:.88;max-width:52ch}
-.cta .eyebrow{color:inherit;opacity:.75}
-.cta ol{margin:0;padding:0;list-style:none;display:grid;gap:14px;font-size:.92rem}
-.cta ol li{display:grid;grid-template-columns:30px 1fr;gap:10px;align-items:start}
-.cta ol li b{font-family:var(--font-data);font-weight:500;opacity:.7}
-.cta .btn{background:var(--paper);color:var(--ink);border-color:var(--paper);margin-top:26px}
-.cta .btn:hover{background:var(--card);border-color:var(--card);color:var(--ink)}
-@media (max-width:820px){.cta{grid-template-columns:1fr}}
-
-/* Missão, visão, valores */
-.mvv{display:grid;grid-template-columns:1fr 1fr;gap:28px}
-.mvv article{padding:30px;border:1px solid var(--line);border-radius:18px;background:var(--card)}
-.mvv article p{margin-top:12px;color:var(--muted)}
-.values{display:grid;grid-template-columns:repeat(5,1fr);gap:18px;margin-top:28px}
-.value{padding-top:16px;border-top:1px solid var(--line)}
-.value h3{font-size:.98rem}
-.value p{margin-top:8px;font-size:.85rem;color:var(--muted)}
-@media (max-width:980px){.values{grid-template-columns:repeat(2,1fr)}}
-@media (max-width:700px){.mvv{grid-template-columns:1fr}}
-@media (max-width:520px){.values{grid-template-columns:1fr}}
-
-/* Sócios */
-.team{display:grid;grid-template-columns:1fr 1fr;gap:28px}
-.person{display:grid;grid-template-columns:76px 1fr;gap:20px;align-items:start;padding:26px;border-radius:18px;background:var(--card);border:1px solid var(--line)}
-.avatar{width:76px;height:76px;border-radius:50%;background:var(--olive);color:var(--on-olive);display:grid;place-items:center;font-weight:700;font-size:1.4rem;letter-spacing:.04em}
-.person small{display:block;color:var(--olive);font-weight:600;font-size:.78rem;letter-spacing:.04em;margin-top:4px}
-.person p{margin-top:10px;font-size:.92rem;color:var(--muted)}
-@media (max-width:760px){.team{grid-template-columns:1fr}}
-
-/* Contato */
-.contact{display:grid;grid-template-columns:.9fr 1.1fr;gap:clamp(32px,6vw,72px)}
-@media (max-width:860px){.contact{grid-template-columns:1fr}}
-.contact-info{display:grid;gap:22px;margin-top:30px}
-.contact-info div small{display:block;font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:600}
-.contact-info div span{font-weight:600;font-size:1.02rem}
-form{display:grid;grid-template-columns:1fr 1fr;gap:16px;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:clamp(22px,4vw,36px)}
-form .full{grid-column:1/-1}
-label{display:grid;gap:6px;font-size:.8rem;font-weight:600;color:var(--muted)}
-input,select,textarea{font:inherit;font-size:.95rem;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 14px;width:100%}
-input:focus,select:focus,textarea:focus{outline:none;border-color:var(--olive);box-shadow:0 0 0 3px color-mix(in srgb,var(--olive) 20%,transparent)}
-textarea{min-height:110px;resize:vertical}
-.form-msg{font-size:.88rem;color:var(--olive);font-weight:500}
-@media (max-width:560px){form{grid-template-columns:1fr}}
-
-footer{background:var(--olive-deep);color:#C7C9B5;font-size:.85rem}
-.foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:24px;padding-block:40px}
-.foot .brand-name b{color:#EEE8DA}
-.foot .brand-name small{color:#A6AA92}
-.foot-meta{display:grid;gap:4px;text-align:right;font-family:var(--font-data);font-size:.76rem}
-@media (max-width:640px){.foot-meta{text-align:left}}
-
-.reveal{animation:rise .6s cubic-bezier(.2,.7,.2,1) both}
-.reveal{animation-delay:.1s}.reveal.d1{animation-delay:.2s}.reveal.d2{animation-delay:.3s}.reveal.d3{animation-delay:.4s}
-@keyframes rise{from{transform:translateY(14px)}to{transform:none}}
-
-/* ===== Efeitos de rolagem ===== */
-html,body{overflow-x:clip}
-.progress{position:fixed;left:0;top:env(safe-area-inset-top,0px);height:3px;width:100%;transform-origin:0 50%;transform:scaleX(0);background:linear-gradient(90deg,var(--olive),#B9C38E,#C98B5E);z-index:20;pointer-events:none}
-header{transition:box-shadow .3s ease,background .3s ease}
-header .nav{transition:padding .3s ease}
-header.scrolled{box-shadow:0 10px 30px -18px rgba(20,24,14,.55)}
-header.scrolled .nav{padding-block:8px}
-.brand svg{transition:transform .3s ease}
-header.scrolled .brand svg{transform:scale(.86)}
-.sr{transition:opacity .42s cubic-bezier(.2,.7,.2,1),transform .42s cubic-bezier(.2,.7,.2,1);transition-delay:var(--d,0s)}
-.sr.pre{opacity:0;transform:translateY(28px)}
-.sr.pre.from-left{transform:translateX(-36px)}
-.sr.pre.from-right{transform:translateX(36px)}
-.sr.pre.zoom{transform:scale(.94)}
-.panel{will-change:transform}
-.draw{stroke-dasharray:var(--len);stroke-dashoffset:var(--len);transition:stroke-dashoffset 2.2s cubic-bezier(.4,.1,.2,1) .35s}
-.draw.on{stroke-dashoffset:0}
-.nav ul a{position:relative}
-.nav ul a::after{content:"";position:absolute;left:0;right:0;bottom:-6px;height:2px;border-radius:2px;background:var(--olive);transform:scaleX(0);transition:transform .3s ease}
-.nav ul a.active{color:var(--ink)}
-.nav ul a.active::after{transform:scaleX(1)}
-.kpi.sr.pre{transform:translateY(16px) scale(.97)}
-.doc.sr.pre{opacity:0;transform:translateX(48px)}
-.chart .area{transition:opacity 1.2s ease 1.2s}
-.chart .area.pre{opacity:0}
-.chart circle.pre{transform:scale(0)}
-.chart circle{transform-box:fill-box;transform-origin:center;transition:transform .5s cubic-bezier(.3,1.6,.5,1) 2.4s}
-@media (prefers-reduced-motion:reduce){.sr.pre{opacity:1!important;transform:none!important}.draw{stroke-dashoffset:0!important}.progress{display:none}}
-
-/* ===== Logo: ponto no lugar do acento do Ó ===== */
-.o-dot{position:relative;display:inline-block}
-.o-dot::before{content:"";position:absolute;left:50%;top:-.26em;width:.2em;height:.2em;border-radius:50%;background:#C0743F;transform:translateX(-50%)}
-
-/* ===== Botão claro / escuro ===== */
-.nav-acoes{display:flex;align-items:center;gap:10px}
-.tema-btn{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--ink);display:grid;place-items:center;cursor:pointer;transition:border-color .2s,background .2s,transform .2s;flex:none}
-.tema-btn:hover{border-color:var(--olive);transform:rotate(-12deg)}
-.tema-btn svg{width:18px;height:18px}
-.ic-sol{display:none}
-:root[data-theme="dark"] .ic-sol{display:block}:root[data-theme="dark"] .ic-lua{display:none}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .ic-sol{display:block}:root:not([data-theme="light"]) .ic-lua{display:none}}
-body{transition:background-color .35s ease,color .35s ease}
-@media (max-width:480px){.tema-btn{width:36px;height:36px}.nav-acoes{gap:8px}.brand-name small{letter-spacing:.06em!important;font-size:.5rem!important;white-space:nowrap}.brand{gap:8px}}
-
-/* ===== Serviços: cartões giram para frente, ícone se desenha, itens deslizam ===== */
-.services{perspective:1200px;transition:background-color .6s ease .5s,border-color .6s ease .5s}
-.services:has(.service.pre){background-color:transparent;border-color:transparent}
-.service.svc{transform-origin:50% 0;transition:opacity .5s ease,transform .7s cubic-bezier(.2,.8,.2,1),background .25s;transition-delay:var(--d,0s),var(--d,0s),0s}
-.service.svc.pre{opacity:0;transform:rotateX(-28deg) translateY(18px)}
-.service svg *{stroke-dasharray:1;stroke-dashoffset:0;transition:stroke-dashoffset .9s cubic-bezier(.4,.1,.2,1);transition-delay:calc(var(--d,0s) + .25s)}
-.service.svc.pre svg *{stroke-dashoffset:1}
-.service h3,.service > p{transition:opacity .45s ease,transform .45s ease;transition-delay:calc(var(--d,0s) + .2s)}
-.service.svc.pre h3,.service.svc.pre > p{opacity:0;transform:translateY(8px)}
-.service ul li{transition:opacity .4s ease,transform .4s ease;transition-delay:calc(var(--d,0s) + .38s)}
-.service ul li+li{transition-delay:calc(var(--d,0s) + .46s)}
-.service.svc.pre ul li{opacity:0;transform:translateX(-12px)}
-.service svg{transition:transform .3s ease,stroke .3s ease}
-.service:hover svg{transform:translateY(-2px) scale(1.08);stroke:var(--copper,#C0743F)}
-@media (prefers-reduced-motion:reduce){.service.svc.pre,.service.svc.pre *{opacity:1!important;transform:none!important;stroke-dashoffset:0!important}}
-
-/* ===== Ajuste do topo ===== */
-.hero-meta > div{min-width:0}
-.hero-meta > div,.hero-meta strong{white-space:nowrap}
-.hero .kpi em{white-space:nowrap}
-.hero .panel{align-self:center}
-@media (max-width:1180px) and (min-width:901px){.hero-meta{grid-template-columns:max-content max-content;justify-content:start}.hero .kpi em{white-space:normal}}
-@media (max-width:560px){.hero-meta{grid-template-columns:1fr;gap:14px}.hero-meta strong,.hero-meta > div{white-space:normal}}
-</style>
-<style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
-</head>
-<body>
-<svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <symbol id="logo" viewBox="0 0 100 100">
-    <rect x="16" y="10" width="19" height="80" rx="5" fill="currentColor"/>
-    <rect x="16" y="71" width="74" height="19" rx="5" fill="currentColor"/>
-    <path d="M65 53 V66 M40 41 H53" stroke="#B9C38E" stroke-width="3.4" stroke-linecap="round" stroke-dasharray="0.1 6.2"/>
-    <circle cx="65" cy="41" r="11.5" fill="#C0743F"/>
-  </symbol>
-</svg>
-
-<div class="progress" id="progress" aria-hidden="true"></div>
-<header id="topo">
-  <div class="wrap nav">
-    <a class="brand" href="#inicio" aria-label="Lócus Contabilidade Estratégica, início">
-      <svg width="40" height="40" style="color:var(--ink)"><use href="#logo"/></svg>
-      <span class="brand-name"><b>L<span class="o-dot">O</span>CUS</b><small>Contabilidade Estratégica</small></span>
-    </a>
-    <ul>
-      <li><a href="#servicos">Serviços</a></li>
-      <li><a href="#como">Como trabalhamos</a></li>
-      <li><a href="#portal">Portal do cliente</a></li>
-      <li><a href="#sobre">Sobre</a></li>
-    </ul>
-    <div class="nav-acoes">
-      <button class="tema-btn" type="button" id="tema-btn" aria-label="Alternar fundo claro ou escuro" title="Fundo claro / escuro">
-        <svg class="ic-lua" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/></svg>
-        <svg class="ic-sol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
-      </button>
-      <a class="btn" href="#contato">Fale conosco</a>
-    </div>
-  </div>
-</header>
-
-<main id="inicio">
-  <div class="wrap hero">
-    <div class="hero-grid">
-      <div>
-        <span class="eyebrow reveal">Contabilidade guiada por dados · Pompéu – MG</span>
-        <h1 class="reveal d1">O ponto exato para o <em>crescimento</em> do seu negócio.</h1>
-        <p class="lede reveal d2">Cuidamos da rotina fiscal, contábil e trabalhista da sua empresa e transformamos esses números em painéis claros. Você entende para onde vai o dinheiro e decide com segurança.</p>
-        <div class="hero-ctas reveal d3">
-          <a class="btn" href="#diagnostico">Quero o diagnóstico gratuito
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-          <a class="btn ghost" href="#servicos">Ver serviços</a>
+    <div class="progress" id="progress" aria-hidden="true"></div>
+    <header id="topo">
+      <div class="wrap nav">
+        <a class="brand" href="#inicio" aria-label="Lócus Contabilidade Estratégica, início">
+          <svg class="u-ink" width="40" height="40"><use href="#logo" /></svg>
+          <span class="brand-name"
+            ><b>L<span class="o-dot">O</span>CUS</b><small>Contabilidade Estratégica</small></span
+          >
+        </a>
+        <ul>
+          <li><a href="#servicos">Serviços</a></li>
+          <li><a href="#como">Como trabalhamos</a></li>
+          <li><a href="#portal">Portal do cliente</a></li>
+          <li><a href="#sobre">Sobre</a></li>
+        </ul>
+        <div class="nav-acoes">
+          <button
+            class="tema-btn"
+            type="button"
+            id="tema-btn"
+            aria-label="Alternar fundo claro ou escuro"
+            title="Fundo claro / escuro"
+          >
+            <svg
+              class="ic-lua"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z" />
+            </svg>
+            <svg
+              class="ic-sol"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="4" />
+              <path
+                d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"
+              />
+            </svg>
+          </button>
+          <a class="btn" href="#contato">Fale conosco</a>
         </div>
-        <div class="hero-meta">
-          <div><strong>Todos os regimes</strong>Simples, Presumido e Real</div>
-          <div><strong>Portal 24h</strong>Guias no celular</div>
-          <div><strong>Relatório mensal</strong>Seus indicadores no painel</div>
+      </div>
+    </header>
+
+    <main id="inicio">
+      <div class="wrap hero">
+        <div class="hero-grid">
+          <div>
+            <span class="eyebrow reveal">Contabilidade guiada por dados · Pompéu – MG</span>
+            <h1 class="reveal d1">O ponto exato para o <em>crescimento</em> do seu negócio.</h1>
+            <p class="lede reveal d2">
+              Cuidamos da rotina fiscal, contábil e trabalhista da sua empresa e transformamos esses números
+              em painéis claros. Você entende para onde vai o dinheiro e decide com segurança.
+            </p>
+            <div class="hero-ctas reveal d3">
+              <a class="btn" href="#diagnostico"
+                >Quero o diagnóstico gratuito
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M5 12h14M13 6l6 6-6 6" /></svg
+              ></a>
+              <a class="btn ghost" href="#servicos">Ver serviços</a>
+            </div>
+            <div class="hero-meta">
+              <div><strong>Todos os regimes</strong>Simples, Presumido e Real</div>
+              <div><strong>Portal 24h</strong>Guias no celular</div>
+              <div><strong>Relatório mensal</strong>Seus indicadores no painel</div>
+            </div>
+          </div>
+
+          <div class="panel reveal d2" aria-label="Exemplo ilustrativo do painel mensal entregue ao cliente">
+            <div class="panel-head"><span>Painel mensal · exemplo</span><i>competência 09/2026</i></div>
+            <div class="kpis">
+              <div class="kpi">
+                <small>Faturamento</small
+                ><b data-to="184" data-pre="R$ " data-suf=" mil" data-dec="0">R$ 184 mil</b
+                ><em data-to="8.4" data-pre="+" data-suf="% no mês" data-dec="1">+8,4% no mês</em>
+              </div>
+              <div class="kpi">
+                <small>Margem líquida</small><b data-to="11.7" data-suf="%" data-dec="1">11,7%</b
+                ><em data-to="1.9" data-pre="+" data-suf=" p.p." data-dec="1">+1,9 p.p.</em>
+              </div>
+              <div class="kpi">
+                <small>Carga tributária</small><b data-to="6.1" data-suf="%" data-dec="1">6,1%</b
+                ><em>Simples Nacional</em>
+              </div>
+            </div>
+            <div class="chart">
+              <svg
+                viewBox="0 0 360 150"
+                role="img"
+                aria-label="Gráfico de faturamento e despesas de abril a setembro"
+              >
+                <g stroke="var(--line)" stroke-width="1">
+                  <line x1="30" y1="20" x2="350" y2="20" />
+                  <line x1="30" y1="60" x2="350" y2="60" />
+                  <line x1="30" y1="100" x2="350" y2="100" />
+                  <line x1="30" y1="130" x2="350" y2="130" />
+                </g>
+                <g font-family="IBM Plex Mono, monospace" font-size="9" fill="var(--muted)">
+                  <text x="0" y="23">200</text>
+                  <text x="0" y="63">150</text>
+                  <text x="0" y="103">100</text>
+                  <text x="6" y="133">75</text>
+                  <text x="30" y="146">abr</text>
+                  <text x="94" y="146">mai</text>
+                  <text x="158" y="146">jun</text>
+                  <text x="222" y="146">jul</text>
+                  <text x="286" y="146">ago</text>
+                  <text x="334" y="146">set</text>
+                </g>
+                <path
+                  class="area"
+                  d="M36 92 L100 84 L164 76 L228 64 L292 50 L342 37 L342 130 L36 130 Z"
+                  fill="var(--olive)"
+                  opacity=".12"
+                />
+                <path
+                  class="draw"
+                  d="M36 92 L100 84 L164 76 L228 64 L292 50 L342 37"
+                  fill="none"
+                  stroke="var(--olive)"
+                  stroke-width="2.4"
+                  stroke-linejoin="round"
+                />
+                <path
+                  d="M36 110 L100 106 L164 108 L228 101 L292 96 L342 92"
+                  fill="none"
+                  stroke="var(--line)"
+                  stroke-width="2"
+                  stroke-dasharray="4 4"
+                />
+                <circle cx="342" cy="37" r="4" fill="var(--olive)" />
+              </svg>
+              <div class="chart-legend">
+                <span>Faturamento (R$ mil)</span><span class="b">Despesas (R$ mil)</span>
+              </div>
+            </div>
+            <p class="panel-foot">
+              Números de exemplo. Cada cliente recebe o painel com os dados reais da própria empresa.
+            </p>
+          </div>
         </div>
       </div>
 
-      <div class="panel reveal d2" aria-label="Exemplo ilustrativo do painel mensal entregue ao cliente">
-        <div class="panel-head"><span>Painel mensal · exemplo</span><i>competência 09/2026</i></div>
-        <div class="kpis">
-          <div class="kpi"><small>Faturamento</small><b data-to="184" data-pre="R$ " data-suf=" mil" data-dec="0">R$ 184 mil</b><em data-to="8.4" data-pre="+" data-suf="% no mês" data-dec="1">+8,4% no mês</em></div>
-          <div class="kpi"><small>Margem líquida</small><b data-to="11.7" data-suf="%" data-dec="1">11,7%</b><em data-to="1.9" data-pre="+" data-suf=" p.p." data-dec="1">+1,9 p.p.</em></div>
-          <div class="kpi"><small>Carga tributária</small><b data-to="6.1" data-suf="%" data-dec="1">6,1%</b><em>Simples Nacional</em></div>
+      <section id="servicos" class="band-beige">
+        <div class="wrap">
+          <div class="sec-head">
+            <div>
+              <span class="eyebrow">Serviços</span>
+              <h2>Da guia de imposto à decisão estratégica.</h2>
+            </div>
+            <p class="lede">
+              A base é a contabilidade bem feita, no prazo e dentro da lei. Por cima dela, entregamos análise
+              para você saber onde melhorar.
+            </p>
+          </div>
+          <div class="services">
+            <div class="service">
+              <svg viewBox="0 0 24 24">
+                <path pathLength="1" d="M4 4h12l4 4v12H4z" />
+                <path pathLength="1" d="M8 12h8M8 16h5" />
+              </svg>
+              <h3>Contabilidade</h3>
+              <p>Escrituração, balancetes e demonstrações em dia, prontos para banco, sócio ou licitação.</p>
+              <ul>
+                <li>Balanço e DRE</li>
+                <li>ECD e ECF</li>
+              </ul>
+            </div>
+            <div class="service">
+              <svg viewBox="0 0 24 24"><path pathLength="1" d="M4 20V10M10 20V4M16 20v-7M22 20H2" /></svg>
+              <h3>Fiscal e tributário</h3>
+              <p>
+                Apuração de impostos, obrigações acessórias e revisão do regime para pagar só o necessário.
+              </p>
+              <ul>
+                <li>Simples, Presumido e Real</li>
+                <li>SPED Fiscal e EFD</li>
+              </ul>
+            </div>
+            <div class="service">
+              <svg viewBox="0 0 24 24">
+                <circle pathLength="1" cx="9" cy="8" r="3.5" />
+                <path pathLength="1" d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5" />
+                <path pathLength="1" d="M16 4.5a3.5 3.5 0 0 1 0 7M18.5 14.8c1.6.8 2.6 2.5 3 5.2" />
+              </svg>
+              <h3>Departamento pessoal</h3>
+              <p>Folha, admissões, férias e rescisões com eSocial transmitido no prazo.</p>
+              <ul>
+                <li>Folha e pró-labore</li>
+                <li>eSocial e FGTS Digital</li>
+              </ul>
+            </div>
+            <div class="service">
+              <svg viewBox="0 0 24 24">
+                <path pathLength="1" d="M12 3v18M3 12h18" />
+                <circle pathLength="1" cx="12" cy="12" r="9" />
+              </svg>
+              <h3>Abertura de empresas</h3>
+              <p>CNPJ, alvará, inscrições e escolha do regime certo desde o primeiro dia.</p>
+              <ul>
+                <li>MEI para ME</li>
+                <li>Alterações contratuais</li>
+              </ul>
+            </div>
+            <div class="service">
+              <svg viewBox="0 0 24 24">
+                <rect pathLength="1" x="3" y="3" width="18" height="18" rx="2" />
+                <path pathLength="1" d="M7 15l3-3 3 2 4-5" />
+              </svg>
+              <h3>Painéis de gestão</h3>
+              <p>Relatório mensal em painel visual com faturamento, margem, despesas e impostos.</p>
+              <ul>
+                <li>Indicadores por mês</li>
+                <li>Comparativo anual</li>
+              </ul>
+            </div>
+            <div class="service">
+              <svg viewBox="0 0 24 24">
+                <path pathLength="1" d="M12 2l3 6 6 .9-4.5 4.3 1 6.3L12 16.6 6.5 19.5l1-6.3L3 8.9 9 8z" />
+              </svg>
+              <h3>Planejamento tributário</h3>
+              <p>Simulação de cenários para reduzir a carga de impostos de forma legal.</p>
+              <ul>
+                <li>Comparativo de regimes</li>
+                <li>Fator R e anexos</li>
+              </ul>
+            </div>
+          </div>
         </div>
-        <div class="chart">
-          <svg viewBox="0 0 360 150" role="img" aria-label="Gráfico de faturamento e despesas de abril a setembro">
-            <g stroke="var(--line)" stroke-width="1">
-              <line x1="30" y1="20" x2="350" y2="20"/><line x1="30" y1="60" x2="350" y2="60"/><line x1="30" y1="100" x2="350" y2="100"/><line x1="30" y1="130" x2="350" y2="130"/>
-            </g>
-            <g font-family="IBM Plex Mono, monospace" font-size="9" fill="var(--muted)">
-              <text x="0" y="23">200</text><text x="0" y="63">150</text><text x="0" y="103">100</text><text x="6" y="133">75</text>
-              <text x="30" y="146">abr</text><text x="94" y="146">mai</text><text x="158" y="146">jun</text><text x="222" y="146">jul</text><text x="286" y="146">ago</text><text x="334" y="146">set</text>
-            </g>
-            <path class="area" d="M36 92 L100 84 L164 76 L228 64 L292 50 L342 37 L342 130 L36 130 Z" fill="var(--olive)" opacity=".12"/>
-            <path class="draw" d="M36 92 L100 84 L164 76 L228 64 L292 50 L342 37" fill="none" stroke="var(--olive)" stroke-width="2.4" stroke-linejoin="round"/>
-            <path d="M36 110 L100 106 L164 108 L228 101 L292 96 L342 92" fill="none" stroke="var(--line)" stroke-width="2" stroke-dasharray="4 4"/>
-            <circle cx="342" cy="37" r="4" fill="var(--olive)"/>
-          </svg>
-          <div class="chart-legend"><span>Faturamento (R$ mil)</span><span class="b">Despesas (R$ mil)</span></div>
+      </section>
+
+      <section id="como" class="band-olive">
+        <div class="wrap">
+          <div class="sec-head">
+            <div>
+              <span class="eyebrow">Como trabalhamos</span>
+              <h2>Três etapas para colocar sua empresa no ponto certo.</h2>
+            </div>
+            <p class="lede">
+              Antes de qualquer contrato, olhamos os seus números. Assim a conversa começa pelo que importa
+              para o seu negócio.
+            </p>
+          </div>
+          <div class="steps">
+            <div class="step">
+              <span class="num">Etapa 1</span>
+              <h3>Diagnóstico</h3>
+              <p>
+                Analisamos três meses de extratos e notas e mostramos em um painel onde estão as perdas e as
+                oportunidades.
+              </p>
+            </div>
+            <div class="step">
+              <span class="num">Etapa 2</span>
+              <h3>Organização</h3>
+              <p>Ajustamos regime tributário, plano de contas e rotina de envio de documentos pelo portal.</p>
+            </div>
+            <div class="step">
+              <span class="num">Etapa 3</span>
+              <h3>Acompanhamento</h3>
+              <p>
+                Todo mês você recebe as guias, o painel de indicadores e uma conversa sobre os próximos
+                passos.
+              </p>
+            </div>
+          </div>
         </div>
-        <p class="panel-foot">Números de exemplo. Cada cliente recebe o painel com os dados reais da própria empresa.</p>
-      </div>
-    </div>
-  </div>
+      </section>
 
-  <section id="servicos" class="band-beige">
-    <div class="wrap">
-      <div class="sec-head">
-        <div><span class="eyebrow">Serviços</span><h2>Da guia de imposto à decisão estratégica.</h2></div>
-        <p class="lede">A base é a contabilidade bem feita, no prazo e dentro da lei. Por cima dela, entregamos análise para você saber onde melhorar.</p>
-      </div>
-      <div class="services">
-        <div class="service">
-          <svg viewBox="0 0 24 24"><path pathLength="1" d="M4 4h12l4 4v12H4z"/><path pathLength="1" d="M8 12h8M8 16h5"/></svg>
-          <h3>Contabilidade</h3>
-          <p>Escrituração, balancetes e demonstrações em dia, prontos para banco, sócio ou licitação.</p>
-          <ul><li>Balanço e DRE</li><li>ECD e ECF</li></ul>
+      <section id="portal">
+        <div class="wrap split">
+          <div>
+            <span class="eyebrow">Portal do cliente</span>
+            <h2 class="u-mt-12">Sua empresa organizada na palma da mão.</h2>
+            <p class="lede u-mt-18">
+              Trabalhamos com o sistema Domínio e o portal Onvio. Nada de documento perdido no WhatsApp.
+            </p>
+            <div class="feature-list">
+              <div class="feature">
+                <div class="dot">
+                  <svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 21h16" /></svg>
+                </div>
+                <div>
+                  <h3>Guias sempre disponíveis</h3>
+                  <p>DAS, DARF, FGTS e holerites publicados assim que gerados, com aviso no celular.</p>
+                </div>
+              </div>
+              <div class="feature">
+                <div class="dot">
+                  <svg viewBox="0 0 24 24"><path d="M4 4h16v12H8l-4 4z" /></svg>
+                </div>
+                <div>
+                  <h3>Solicitações com histórico</h3>
+                  <p>Admissão, rescisão ou dúvida viram um chamado com prazo e resposta registrada.</p>
+                </div>
+              </div>
+              <div class="feature">
+                <div class="dot">
+                  <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10" /></svg>
+                </div>
+                <div>
+                  <h3>Notas capturadas automaticamente</h3>
+                  <p>Os XML das suas notas fiscais chegam direto da SEFAZ e da prefeitura, sem digitação.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="phone" aria-label="Exemplo ilustrativo da tela do portal do cliente">
+            <div class="screen">
+              <div class="top"><span>Portal Lócus</span><span>exemplo</span></div>
+              <h4>Outubro de 2026</h4>
+              <div class="doc">
+                <div><b>DAS · Simples Nacional</b><span>vence 20/11</span></div>
+                <span class="tag due">A pagar</span>
+              </div>
+              <div class="doc">
+                <div><b>Folha de setembro</b><span>8 holerites</span></div>
+                <span class="tag ok">Pronto</span>
+              </div>
+              <div class="doc">
+                <div><b>FGTS Digital</b><span>vence 20/10</span></div>
+                <span class="tag ok">Pago</span>
+              </div>
+              <div class="doc">
+                <div><b>Painel de setembro</b><span>margem 11,7%</span></div>
+                <span class="tag ok">Novo</span>
+              </div>
+              <div class="doc">
+                <div><b>Notas recebidas</b><span>142 XML importados</span></div>
+                <span class="tag ok">OK</span>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="service">
-          <svg viewBox="0 0 24 24"><path pathLength="1" d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
-          <h3>Fiscal e tributário</h3>
-          <p>Apuração de impostos, obrigações acessórias e revisão do regime para pagar só o necessário.</p>
-          <ul><li>Simples, Presumido e Real</li><li>SPED Fiscal e EFD</li></ul>
+      </section>
+
+      <section class="u-pt-0" id="diagnostico">
+        <div class="wrap">
+          <div class="cta">
+            <div>
+              <span class="eyebrow">Diagnóstico financeiro gratuito</span>
+              <h2 class="u-mt-12">Descubra onde o dinheiro da sua empresa está indo.</h2>
+              <p>
+                Envie três meses de extratos ou planilhas. Devolvemos um painel com as despesas por categoria,
+                a margem real e os pontos de atenção. Sem custo e sem compromisso.
+              </p>
+              <a class="btn" href="#contato">Solicitar diagnóstico</a>
+            </div>
+            <ol>
+              <li><b>01</b><span>Você envia extratos ou planilhas dos últimos 3 meses</span></li>
+              <li><b>02</b><span>Organizamos e classificamos cada lançamento</span></li>
+              <li><b>03</b><span>Apresentamos o painel em uma reunião de 30 minutos</span></li>
+            </ol>
+          </div>
         </div>
-        <div class="service">
-          <svg viewBox="0 0 24 24"><circle pathLength="1" cx="9" cy="8" r="3.5"/><path pathLength="1" d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><path pathLength="1" d="M16 4.5a3.5 3.5 0 0 1 0 7M18.5 14.8c1.6.8 2.6 2.5 3 5.2"/></svg>
-          <h3>Departamento pessoal</h3>
-          <p>Folha, admissões, férias e rescisões com eSocial transmitido no prazo.</p>
-          <ul><li>Folha e pró-labore</li><li>eSocial e FGTS Digital</li></ul>
+      </section>
+
+      <section id="sobre" class="band-beige">
+        <div class="wrap">
+          <div class="sec-head">
+            <div>
+              <span class="eyebrow">Quem somos</span>
+              <h2>Precisão contábil com olhar de dados.</h2>
+            </div>
+            <p class="lede">
+              A Lócus nasceu para ir além do envio de guias. Atuamos no ponto onde a contabilidade encontra a
+              análise de dados.
+            </p>
+          </div>
+          <div class="mvv">
+            <article>
+              <span class="eyebrow">Missão</span>
+              <p>
+                Transformar a complexidade contábil em inteligência de negócios, com estruturação financeira,
+                análises precisas e direcionamento estratégico para decisões seguras e lucrativas.
+              </p>
+            </article>
+            <article>
+              <span class="eyebrow">Visão</span>
+              <p>
+                Ser o escritório de contabilidade e gestão de referência na região, reconhecido pela análise
+                de dados aplicada aos negócios e pela excelência estratégica.
+              </p>
+            </article>
+          </div>
+          <div class="values">
+            <div class="value">
+              <h3>Precisão analítica</h3>
+              <p>Rigor em cada número e conformidade legal em cada entrega.</p>
+            </div>
+            <div class="value">
+              <h3>Decisão por dados</h3>
+              <p>Orientação baseada nos números reais de cada cliente.</p>
+            </div>
+            <div class="value">
+              <h3>Foco no ponto certo</h3>
+              <p>Resolver na raiz o que gera valor e crescimento.</p>
+            </div>
+            <div class="value">
+              <h3>Clareza</h3>
+              <p>Informação fiscal complexa traduzida em painéis simples.</p>
+            </div>
+            <div class="value">
+              <h3>Parceria ativa</h3>
+              <p>Lado a lado com o gestor no dia a dia da empresa.</p>
+            </div>
+          </div>
+
+          <div class="team u-mt-56">
+            <div class="person">
+              <div class="avatar">PS</div>
+              <div>
+                <h3>Paulo Sérgio</h3>
+                <small>Sócio · Tecnologia e análise de dados</small>
+                <p>
+                  Cinco anos em TI, com experiência em automação e rotina fiscal de varejo. Responsável pelos
+                  painéis e pela automação do escritório.
+                </p>
+              </div>
+            </div>
+            <div class="person">
+              <div class="avatar">B</div>
+              <div>
+                <h3>Bruno</h3>
+                <small>Sócio · Contabilidade e atendimento</small>
+                <p>
+                  Responsável pelo relacionamento com os clientes e pela rotina contábil e fiscal das empresas
+                  atendidas.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="service">
-          <svg viewBox="0 0 24 24"><path pathLength="1" d="M12 3v18M3 12h18"/><circle pathLength="1" cx="12" cy="12" r="9"/></svg>
-          <h3>Abertura de empresas</h3>
-          <p>CNPJ, alvará, inscrições e escolha do regime certo desde o primeiro dia.</p>
-          <ul><li>MEI para ME</li><li>Alterações contratuais</li></ul>
-        </div>
-        <div class="service">
-          <svg viewBox="0 0 24 24"><rect pathLength="1" x="3" y="3" width="18" height="18" rx="2"/><path pathLength="1" d="M7 15l3-3 3 2 4-5"/></svg>
-          <h3>Painéis de gestão</h3>
-          <p>Relatório mensal em painel visual com faturamento, margem, despesas e impostos.</p>
-          <ul><li>Indicadores por mês</li><li>Comparativo anual</li></ul>
-        </div>
-        <div class="service">
-          <svg viewBox="0 0 24 24"><path pathLength="1" d="M12 2l3 6 6 .9-4.5 4.3 1 6.3L12 16.6 6.5 19.5l1-6.3L3 8.9 9 8z"/></svg>
-          <h3>Planejamento tributário</h3>
-          <p>Simulação de cenários para reduzir a carga de impostos de forma legal.</p>
-          <ul><li>Comparativo de regimes</li><li>Fator R e anexos</li></ul>
-        </div>
-      </div>
-    </div>
-  </section>
+      </section>
 
-  <section id="como" class="band-olive">
-    <div class="wrap">
-      <div class="sec-head">
-        <div><span class="eyebrow">Como trabalhamos</span><h2>Três etapas para colocar sua empresa no ponto certo.</h2></div>
-        <p class="lede">Antes de qualquer contrato, olhamos os seus números. Assim a conversa começa pelo que importa para o seu negócio.</p>
-      </div>
-      <div class="steps">
-        <div class="step"><span class="num">Etapa 1</span><h3>Diagnóstico</h3><p>Analisamos três meses de extratos e notas e mostramos em um painel onde estão as perdas e as oportunidades.</p></div>
-        <div class="step"><span class="num">Etapa 2</span><h3>Organização</h3><p>Ajustamos regime tributário, plano de contas e rotina de envio de documentos pelo portal.</p></div>
-        <div class="step"><span class="num">Etapa 3</span><h3>Acompanhamento</h3><p>Todo mês você recebe as guias, o painel de indicadores e uma conversa sobre os próximos passos.</p></div>
-      </div>
-    </div>
-  </section>
-
-  <section id="portal">
-    <div class="wrap split">
-      <div>
-        <span class="eyebrow">Portal do cliente</span>
-        <h2 style="margin-top:12px">Sua empresa organizada na palma da mão.</h2>
-        <p class="lede" style="margin-top:18px">Trabalhamos com o sistema Domínio e o portal Onvio. Nada de documento perdido no WhatsApp.</p>
-        <div class="feature-list">
-          <div class="feature"><div class="dot"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg></div>
-            <div><h3>Guias sempre disponíveis</h3><p>DAS, DARF, FGTS e holerites publicados assim que gerados, com aviso no celular.</p></div></div>
-          <div class="feature"><div class="dot"><svg viewBox="0 0 24 24"><path d="M4 4h16v12H8l-4 4z"/></svg></div>
-            <div><h3>Solicitações com histórico</h3><p>Admissão, rescisão ou dúvida viram um chamado com prazo e resposta registrada.</p></div></div>
-          <div class="feature"><div class="dot"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg></div>
-            <div><h3>Notas capturadas automaticamente</h3><p>Os XML das suas notas fiscais chegam direto da SEFAZ e da prefeitura, sem digitação.</p></div></div>
+      <section id="contato">
+        <div class="wrap contact">
+          <div>
+            <span class="eyebrow">Contato</span>
+            <h2 class="u-mt-12">Vamos conversar sobre a sua empresa.</h2>
+            <p class="lede u-mt-18">Conte um pouco sobre o seu negócio. Respondemos em até um dia útil.</p>
+            <div class="contact-info">
+              <div><small>WhatsApp</small><span>(37) 00000-0000</span></div>
+              <div><small>E-mail</small><span>contato@locus.com.br</span></div>
+              <div><small>Endereço</small><span>Pompéu – MG</span></div>
+              <div><small>Atendimento</small><span>Segunda a sexta, 8h às 18h</span></div>
+            </div>
+          </div>
+          <form id="form-contato" novalidate>
+            <label>Nome<input id="f-nome" name="nome" required placeholder="Seu nome" /></label>
+            <label>Empresa<input id="f-empresa" name="empresa" placeholder="Nome da empresa" /></label>
+            <label
+              >WhatsApp<input id="f-tel" name="tel" inputmode="tel" placeholder="(37) 9 0000-0000"
+            /></label>
+            <label
+              >Interesse
+              <select id="f-interesse" name="interesse">
+                <option>Diagnóstico gratuito</option>
+                <option>Trocar de contador</option>
+                <option>Abrir empresa</option>
+                <option>Planejamento tributário</option>
+                <option>Outro assunto</option>
+              </select></label
+            >
+            <label class="full"
+              >Mensagem<textarea
+                id="f-msg"
+                name="msg"
+                placeholder="Ramo, regime tributário, número de funcionários..."
+              ></textarea>
+            </label>
+            <div class="full cta-row">
+              <button class="btn" type="submit">Enviar mensagem</button>
+              <span class="form-msg" id="form-msg" role="status"></span>
+            </div>
+          </form>
         </div>
-      </div>
-      <div class="phone" aria-label="Exemplo ilustrativo da tela do portal do cliente">
-        <div class="screen">
-          <div class="top"><span>Portal Lócus</span><span>exemplo</span></div>
-          <h4>Outubro de 2026</h4>
-          <div class="doc"><div><b>DAS · Simples Nacional</b><span>vence 20/11</span></div><span class="tag due">A pagar</span></div>
-          <div class="doc"><div><b>Folha de setembro</b><span>8 holerites</span></div><span class="tag ok">Pronto</span></div>
-          <div class="doc"><div><b>FGTS Digital</b><span>vence 20/10</span></div><span class="tag ok">Pago</span></div>
-          <div class="doc"><div><b>Painel de setembro</b><span>margem 11,7%</span></div><span class="tag ok">Novo</span></div>
-          <div class="doc"><div><b>Notas recebidas</b><span>142 XML importados</span></div><span class="tag ok">OK</span></div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="wrap foot">
+        <div class="brand">
+          <svg class="u-cream" width="36" height="36"><use href="#logo" /></svg>
+          <span class="brand-name"
+            ><b>L<span class="o-dot">O</span>CUS</b><small>Contabilidade Estratégica</small></span
+          >
         </div>
-      </div>
-    </div>
-  </section>
-
-  <section id="diagnostico" style="padding-top:0">
-    <div class="wrap">
-      <div class="cta">
-        <div>
-          <span class="eyebrow">Diagnóstico financeiro gratuito</span>
-          <h2 style="margin-top:12px">Descubra onde o dinheiro da sua empresa está indo.</h2>
-          <p>Envie três meses de extratos ou planilhas. Devolvemos um painel com as despesas por categoria, a margem real e os pontos de atenção. Sem custo e sem compromisso.</p>
-          <a class="btn" href="#contato">Solicitar diagnóstico</a>
-        </div>
-        <ol>
-          <li><b>01</b><span>Você envia extratos ou planilhas dos últimos 3 meses</span></li>
-          <li><b>02</b><span>Organizamos e classificamos cada lançamento</span></li>
-          <li><b>03</b><span>Apresentamos o painel em uma reunião de 30 minutos</span></li>
-        </ol>
-      </div>
-    </div>
-  </section>
-
-  <section id="sobre" class="band-beige">
-    <div class="wrap">
-      <div class="sec-head">
-        <div><span class="eyebrow">Quem somos</span><h2>Precisão contábil com olhar de dados.</h2></div>
-        <p class="lede">A Lócus nasceu para ir além do envio de guias. Atuamos no ponto onde a contabilidade encontra a análise de dados.</p>
-      </div>
-      <div class="mvv">
-        <article><span class="eyebrow">Missão</span><p>Transformar a complexidade contábil em inteligência de negócios, com estruturação financeira, análises precisas e direcionamento estratégico para decisões seguras e lucrativas.</p></article>
-        <article><span class="eyebrow">Visão</span><p>Ser o escritório de contabilidade e gestão de referência na região, reconhecido pela análise de dados aplicada aos negócios e pela excelência estratégica.</p></article>
-      </div>
-      <div class="values">
-        <div class="value"><h3>Precisão analítica</h3><p>Rigor em cada número e conformidade legal em cada entrega.</p></div>
-        <div class="value"><h3>Decisão por dados</h3><p>Orientação baseada nos números reais de cada cliente.</p></div>
-        <div class="value"><h3>Foco no ponto certo</h3><p>Resolver na raiz o que gera valor e crescimento.</p></div>
-        <div class="value"><h3>Clareza</h3><p>Informação fiscal complexa traduzida em painéis simples.</p></div>
-        <div class="value"><h3>Parceria ativa</h3><p>Lado a lado com o gestor no dia a dia da empresa.</p></div>
-      </div>
-
-      <div class="team" style="margin-top:56px">
-        <div class="person"><div class="avatar">PS</div><div><h3>Paulo Sérgio</h3><small>Sócio · Tecnologia e análise de dados</small><p>Cinco anos em TI, com experiência em automação e rotina fiscal de varejo. Responsável pelos painéis e pela automação do escritório.</p></div></div>
-        <div class="person"><div class="avatar">B</div><div><h3>Bruno</h3><small>Sócio · Contabilidade e atendimento</small><p>Responsável pelo relacionamento com os clientes e pela rotina contábil e fiscal das empresas atendidas.</p></div></div>
-      </div>
-    </div>
-  </section>
-
-  <section id="contato">
-    <div class="wrap contact">
-      <div>
-        <span class="eyebrow">Contato</span>
-        <h2 style="margin-top:12px">Vamos conversar sobre a sua empresa.</h2>
-        <p class="lede" style="margin-top:18px">Conte um pouco sobre o seu negócio. Respondemos em até um dia útil.</p>
-        <div class="contact-info">
-          <div><small>WhatsApp</small><span>(37) 00000-0000</span></div>
-          <div><small>E-mail</small><span>contato@locus.com.br</span></div>
-          <div><small>Endereço</small><span>Pompéu – MG</span></div>
-          <div><small>Atendimento</small><span>Segunda a sexta, 8h às 18h</span></div>
+        <div class="foot-meta">
+          <span>CNPJ 00.000.000/0001-00</span>
+          <span>CRC-MG 000000/O</span>
+          <span>© 2026 Lócus Contabilidade Estratégica</span>
         </div>
       </div>
-      <form id="form-contato" novalidate>
-        <label>Nome<input id="f-nome" name="nome" required placeholder="Seu nome"></label>
-        <label>Empresa<input id="f-empresa" name="empresa" placeholder="Nome da empresa"></label>
-        <label>WhatsApp<input id="f-tel" name="tel" inputmode="tel" placeholder="(37) 9 0000-0000"></label>
-        <label>Interesse
-          <select id="f-interesse" name="interesse">
-            <option>Diagnóstico gratuito</option><option>Trocar de contador</option><option>Abrir empresa</option><option>Planejamento tributário</option><option>Outro assunto</option>
-          </select></label>
-        <label class="full">Mensagem<textarea id="f-msg" name="msg" placeholder="Ramo, regime tributário, número de funcionários..."></textarea></label>
-        <div class="full" style="display:flex;flex-wrap:wrap;align-items:center;gap:16px">
-          <button class="btn" type="submit">Enviar mensagem</button>
-          <span class="form-msg" id="form-msg" role="status"></span>
-        </div>
-      </form>
-    </div>
-  </section>
-</main>
-
-<footer>
-  <div class="wrap foot">
-    <div class="brand">
-      <svg width="36" height="36" style="color:#EEE8DA"><use href="#logo"/></svg>
-      <span class="brand-name"><b>L<span class="o-dot">O</span>CUS</b><small>Contabilidade Estratégica</small></span>
-    </div>
-    <div class="foot-meta">
-      <span>CNPJ 00.000.000/0001-00</span>
-      <span>CRC-MG 000000/O</span>
-      <span>© 2026 Lócus Contabilidade Estratégica</span>
-    </div>
-  </div>
-</footer>
-
-<script>
-document.getElementById('form-contato').addEventListener('submit', function(e){
-  e.preventDefault();
-  var nome = document.getElementById('f-nome');
-  var msg = document.getElementById('form-msg');
-  if(!nome.value.trim()){ msg.textContent = 'Preencha o seu nome para continuar.'; nome.focus(); return; }
-  msg.textContent = 'Obrigado, ' + nome.value.trim().split(' ')[0] + '. Esta é uma versão de demonstração; o envio será ativado quando o site for publicado no domínio da Lócus.';
-});
-
-/* ===== Efeitos de rolagem ===== */
-(function(){
-  var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var hdr=document.getElementById('topo'), bar=document.getElementById('progress');
-  var panel=document.querySelector('.hero .panel');
-  var links=[].slice.call(document.querySelectorAll('.nav ul a'));
-  var secs=links.map(function(a){return document.querySelector(a.getAttribute('href'));});
-  var ticking=false;
-  function onScroll(){
-    var y=window.scrollY||document.documentElement.scrollTop;
-    var h=document.documentElement.scrollHeight-window.innerHeight;
-    if(bar) bar.style.transform='scaleX('+(h>0?Math.min(1,y/h):0)+')';
-    if(hdr) hdr.classList.toggle('scrolled',y>24);
-    if(panel&&!reduce&&window.innerWidth>900) panel.style.transform='translateY('+Math.min(60,y*0.12)+'px)';
-    var cur=-1; secs.forEach(function(s,i){ if(s&&s.getBoundingClientRect().top<window.innerHeight*0.4) cur=i; });
-    links.forEach(function(a,i){a.classList.toggle('active',i===cur);});
-    ticking=false;
-  }
-  window.addEventListener('scroll',function(){ if(!ticking){ticking=true;requestAnimationFrame(onScroll);} },{passive:true});
-  onScroll();
-
-  // painel de exemplo: linha, área, ponto e números contando quando o painel aparece
-  var line=document.querySelector('.draw'), area=document.querySelector('.chart .area'), dot=document.querySelector('.chart circle');
-  if(line&&line.getTotalLength) line.style.setProperty('--len',Math.ceil(line.getTotalLength()));
-  var counters=[].slice.call(document.querySelectorAll('.kpi [data-to]'));
-  function fmt(el,v){var d=+el.dataset.dec||0;return (el.dataset.pre||'')+v.toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d})+(el.dataset.suf||'');}
-  function contar(el,atraso){var alvo=+el.dataset.to,dur=1500,t0=performance.now()+atraso;el.textContent=fmt(el,0);
-    (function passo(t){var x=Math.max(0,Math.min(1,(t-t0)/dur));el.textContent=fmt(el,alvo*(1-Math.pow(1-x,3)));if(x<1)requestAnimationFrame(passo);else el.textContent=fmt(el,alvo);})(performance.now());}
-  var kpis=[].slice.call(document.querySelectorAll('.hero .kpi'));
-  function playPanel(){
-    if(line) line.classList.add('on'); if(area) area.classList.remove('pre'); if(dot) dot.classList.remove('pre');
-    kpis.forEach(function(k){k.classList.remove('pre');});
-    counters.forEach(function(el,i){contar(el,150+Math.floor(i/2)*110);});
-  }
-  if(!reduce&&panel){
-    if(area) area.classList.add('pre'); if(dot) dot.classList.add('pre');
-    kpis.forEach(function(k,i){k.classList.add('sr','pre');k.style.setProperty('--d',(0.1+i*0.1)+'s');});
-    counters.forEach(function(el){el.textContent=fmt(el,0);});
-    if('IntersectionObserver' in window){
-      var po=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){po.disconnect();requestAnimationFrame(function(){requestAnimationFrame(playPanel);});}});},{threshold:.25});
-      po.observe(panel);
-    } else playPanel();
-  } else if(line){ line.classList.add('on'); }
-
-  if(reduce||!('IntersectionObserver' in window)) return;
-  var groups=[
-    ['.sec-head > div','from-left'],['.sec-head > .lede','from-right'],
-    ['.service','svc'],['.step',''],['.feature','from-left'],['.phone','zoom'],
-    ['.cta','zoom'],['.doc','doc'],['.mvv article',''],['.value',''],['.person',''],
-    ['.contact > div','from-left'],['.contact form','from-right'],['.hero-meta > div','']
-  ];
-  var vh=window.innerHeight, els=[];
-  groups.forEach(function(g){
-    var list=[].slice.call(document.querySelectorAll(g[0]));
-    list.forEach(function(el,i){
-      el.classList.add('sr'); if(g[1]&&g[1]!=='doc') el.classList.add(g[1]);
-      var cols=g[1]==='svc'?(window.innerWidth>900?3:window.innerWidth>580?2:1):1;
-      el.style.setProperty('--d',(g[1]==='doc'?0.18+i*0.07:g[1]==='svc'?0.05+((i%cols)+Math.floor(i/cols))*0.09:0.04+Math.min(i,5)*0.05)+'s');
-      // só esconde o que ainda está abaixo da tela: a página fica completa ao carregar
-      if(el.getBoundingClientRect().top>vh*0.92){ el.classList.add('pre'); els.push(el); }
-    });
-  });
-  var io=new IntersectionObserver(function(es){
-    es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.remove('pre'); io.unobserve(e.target);} });
-  },{rootMargin:'0px 0px -8% 0px',threshold:0.12});
-  els.forEach(function(el){io.observe(el);});
-  // segurança: se algo não disparar, mostra tudo depois de alguns segundos parado no fim
-  window.addEventListener('scroll',function(){ if(window.innerHeight+window.scrollY>=document.documentElement.scrollHeight-4){ els.forEach(function(el){el.classList.remove('pre');}); } },{passive:true});
-})();
-
-/* ===== claro / escuro ===== */
-(function(){
-  var root=document.documentElement, KEY='locus-tema-site';
-  try{var salvo=localStorage.getItem(KEY); if(salvo==='light'||salvo==='dark') root.setAttribute('data-theme',salvo);}catch(e){}
-  function escuro(){var t=root.getAttribute('data-theme'); if(t) return t==='dark'; return !!(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);}
-  function barra(){var m=document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute('content',escuro()?'#181C12':'#56623A');}
-  barra();
-  var b=document.getElementById('tema-btn');
-  if(b) b.addEventListener('click',function(){var novo=escuro()?'light':'dark'; root.setAttribute('data-theme',novo); try{localStorage.setItem(KEY,novo);}catch(e){} barra();});
-})();
-</script>
-</body>
+    </footer>
+  </body>
 </html>
