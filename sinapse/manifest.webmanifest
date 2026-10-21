@@ -1,0 +1,14 @@
+{
+  "name": "Sinapse",
+  "short_name": "Sinapse",
+  "description": "Revisões e flashcards de medicina com repetição espaçada.",
+  "lang": "pt-BR",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0E1020",
+  "theme_color": "#0E1020",
+  "icons": [
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

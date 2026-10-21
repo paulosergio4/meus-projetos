@@ -1,0 +1,39 @@
+// Service worker: guarda os arquivos do app para funcionar offline.
+const CACHE = 'sinapse-v1';
+const SHELL = [
+  './',
+  './index.html',
+  './css/styles.css',
+  './js/app.js',
+  './js/data.js',
+  './js/fsrs.js',
+  './js/store.js',
+  './manifest.webmanifest',
+  './icons/icon.svg',
+];
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys()
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim()),
+  );
+});
+
+// Rede primeiro (para pegar atualizações); sem internet, usa o cache.
+self.addEventListener('fetch', (event) => {
+  if (event.request.method !== 'GET') return;
+  event.respondWith(
+    fetch(event.request)
+      .then((res) => {
+        const copy = res.clone();
+        caches.open(CACHE).then((c) => c.put(event.request, copy)).catch(() => {});
+        return res;
+      })
+      .catch(() => caches.match(event.request).then((hit) => hit || caches.match('./index.html'))),
+  );
+});
