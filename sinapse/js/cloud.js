@@ -149,6 +149,22 @@ export async function adminQuestions(status) {
   return data;
 }
 
+// Rascunhos que precisam de imagem e ainda não têm (de uma prova ou de todas).
+export async function adminImageDrafts(prova, ano) {
+  const c = await loadCloud();
+  if (!c) return [];
+  const out = [];
+  for (let from = 0; ; from += 1000) {
+    let q = c.from('questions').select('id, prova, ano, numero, stem').eq('status', 'rascunho').eq('needs_image', true).is('image_url', null);
+    if (prova) q = q.eq('prova', prova).eq('ano', ano);
+    const { data, error } = await q.order('ano').order('prova').order('numero').range(from, from + 999);
+    if (error) throw error;
+    out.push(...data);
+    if (data.length < 1000) break;
+  }
+  return out;
+}
+
 export async function adminProvas() {
   const c = await loadCloud();
   if (!c) return [];

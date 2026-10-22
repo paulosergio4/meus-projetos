@@ -3,8 +3,9 @@
 import {
   loadCloud, signInWithGoogle, signOutCloud, currentSessionUser, checkIsAdmin,
   callImportarProva, adminQuestions, adminProvas, adminUpdateQuestion, adminDeleteQuestion,
-  uploadQuestionImage, adminList, adminAdd, adminRemove, adminSearchQuestions, callOrganizarPasta, adminReports, adminResolveReport, adminOpenReportsCount, adminSubscribers, adminGrant, adminRevoke,
+  uploadQuestionImage, adminList, adminAdd, adminRemove, adminSearchQuestions, callOrganizarPasta, adminReports, adminResolveReport, adminOpenReportsCount, adminSubscribers, adminGrant, adminRevoke, adminImageDrafts,
 } from '../js/cloud.js';
+import { openPdf, figurasDoPdf, acharPdf } from './figuras.js';
 import { extractPdfText, shrinkImage, fileToB64 } from '../js/tools.js';
 import { AREAS } from '../js/data.js';
 
@@ -57,6 +58,7 @@ const st = {
   pasteTarget: null,
   subs: null,
   reports: null, reportsTab: 'aberto', openReports: 0, repEdit: null,
+  fig: { running: false, stop: false, total: 0, ok: 0, falhou: 0, atual: '', fim: null },
   lote: { step: 'pick', files: null, fila: null, ignorados: [], jaImportadas: new Set(), running: false, stop: false, log: [], startedAt: 0, totals: { provas: 0, publicadas: 0, rascunhos: 0 } },
 };
 
@@ -126,7 +128,7 @@ function viewImport() {
     const p = s.progress || { done: 0, total: 1 };
     const pct = Math.round((p.done / Math.max(1, p.total)) * 100);
     return `${h}<section class="panel stack-sm adm-progress">
-      <h2>${s.step === 'reading' ? 'Lendo o gabarito oficial…' : `Importando: ${p.done} de ${p.total} questões`}</h2>
+      <h2>${s.step === 'reading' ? 'Lendo o gabarito oficial…' : p.imagens ? `Buscando imagens: ${p.done} de ${p.total}` : `Importando: ${p.done} de ${p.total} questões`}</h2>
       <span class="bar"><span class="fill violet" style="width:${pct}%"></span></span>
       <p class="muted small">${s.step === 'reading' ? 'Leva alguns segundos.' : 'A IA separa 10 questões por vez. Deixe esta aba aberta.'}</p>
     </section>`;
@@ -146,7 +148,7 @@ function viewImport() {
     return `${h}<section class="panel stack-sm">
       <h2>${esc(s.prova)} importada</h2>
       <p><strong>${r.publicadas}</strong> ${r.publicadas === 1 ? 'questão publicada' : 'questões publicadas'} no app.</p>
-      ${r.rascunhos.length ? `<p>${r.rascunhos.length} em rascunho (imagem ou sem gabarito): ${r.rascunhos.join(', ')}. <button class="link-btn" data-act="view" data-v="rascunhos">Ver rascunhos</button></p>` : ''}
+      ${r.rascunhos.length ? `<p>${r.rascunhos.length} em rascunho (imagem ou sem gabarito): ${r.rascunhos.join(', ')}.${r.imgs ? ` ${r.imgs} já com a imagem recortada do PDF, só conferir.` : ''} <button class="link-btn" data-act="view" data-v="rascunhos">Ver rascunhos</button></p>` : ''}
       ${r.anuladas.length ? `<p class="muted">Anuladas, fora do app: ${r.anuladas.join(', ')}.</p>` : ''}
       ${r.faltando.length ? `<p class="bad-ink">Não encontradas no texto do PDF: ${r.faltando.join(', ')}.</p>` : ''}
       ${r.erro ? `<p class="bad-ink">${esc(r.erro)}</p><button class="btn ghost" data-act="imp-resume">Continuar de onde parou</button>` : ''}
@@ -184,7 +186,7 @@ async function setFile(kind, f) {
     try {
       const { text, pages } = await extractPdfText(await f.arrayBuffer());
       if (text.replace(/\[página \d+\]/g, '').trim().length < 500) { toast('Este PDF parece escaneado (sem texto). Use o PDF original da banca.'); return; }
-      s.provaFile = { name: f.name, size: f.size, text, pages };
+      s.provaFile = { name: f.name, size: f.size, text, pages, file: f };
     } catch (e) { toast(e.message || 'Não foi possível ler o PDF.'); return; }
   }
   render();
@@ -215,6 +217,11 @@ async function runImport(startAt) {
     s.progress.done = nums.filter((n) => n <= ate).length;
     render();
   }
+  if (s.summary.rascunhos.length && s.provaFile.file) {
+    s.progress = { done: 0, total: s.summary.rascunhos.length, imagens: true };
+    render();
+    s.summary.imgs = await figurasDaProva(s.provaFile.file, s.prova.trim(), Number(s.ano), (r) => { s.progress.done += 1; render(); });
+  }
   s.step = 'done';
   st.drafts = null;
   st.provas = null;
@@ -238,7 +245,7 @@ function viewDrafts() {
   const h = head('Rascunhos', 'Questões que precisam de imagem ou estão sem gabarito. Arraste a imagem para o quadro, ou clique no quadro e cole com Ctrl+V.');
   if (!st.drafts) { load('drafts', () => adminQuestions('rascunho')); return `${h}<p class="muted">Carregando…</p>`; }
   if (!st.drafts.length) return `${h}<div class="panel note">Nenhuma questão em rascunho.</div>`;
-  return `${h}<div class="adm-cards">${st.drafts.map((q) => `<article class="panel stack-sm">
+  return `${h}${figPanel()}<div class="adm-cards">${st.drafts.map((q) => `<article class="panel stack-sm">
       <div class="row wrap gap-sm"><span class="tag">${esc(q.prova)} ${q.ano} · Q${q.numero}</span><span class="tag violet">${esc(areaName(q.area))} · ${esc(q.sub)}</span><span class="tag ${q.needs_image ? 'amber' : 'bad'}">${q.needs_image ? 'Precisa da imagem' : 'Sem gabarito'}</span></div>
       ${questionBlock(q)}
       ${q.needs_image ? imageZone(q) : ''}
@@ -247,6 +254,75 @@ function viewDrafts() {
         <button class="btn good-solid" data-act="publish" data-v="${q.id}" ${q.answer == null ? 'disabled' : ''}>${icon('check', 18)} Publicar</button>
       </div>
     </article>`).join('')}</div>`;
+}
+
+// ----- imagens automáticas -----
+function figPanel() {
+  const F = st.fig;
+  const semImg = (st.drafts || []).filter((q) => q.needs_image && !q.image_url).length;
+  if (F.running) {
+    const feitas = F.ok + F.falhou;
+    const pct = Math.round((feitas / Math.max(1, F.total)) * 100);
+    return `<section class="panel stack-sm adm-progress">
+      <div class="row wrap gap-sm"><h2 class="grow">Buscando imagens: ${feitas} de ${F.total}</h2><button class="btn ghost" data-act="fig-stop" ${F.stop ? 'disabled' : ''}>${F.stop ? 'Parando…' : 'Parar'}</button></div>
+      <span class="bar"><span class="fill violet" style="width:${pct}%"></span></span>
+      <p class="muted small">${F.ok} com imagem · ${F.falhou} sem achar${F.atual ? ` · agora: ${esc(F.atual)}` : ''}. Deixe esta aba aberta.</p>
+    </section>`;
+  }
+  const fim = F.fim ? `<p class="small"><strong>${F.fim.ok}</strong> ${F.fim.ok === 1 ? 'questão ganhou' : 'questões ganharam'} imagem${F.fim.falhou ? ` · ${F.fim.falhou} sem achar (coloque à mão)` : ''}${F.fim.semPdf ? ` · ${F.fim.semPdf} de provas cujo PDF não estava na pasta` : ''}. Confira cada uma abaixo antes de publicar.</p>` : '';
+  if (!semImg) return fim ? `<div class="panel stack-xs">${fim}</div>` : '';
+  return `<label class="adm-drop" data-drop="figs" for="fig-dir">
+      ${icon('image', 28)}
+      <span class="stack-xs grow"><strong>Buscar imagens automaticamente (${semImg} sem imagem)</strong><span class="muted small">Arraste aqui a pasta das provas (a mesma da importação) ou clique para escolher. A IA acha a figura de cada questão no PDF e recorta; a questão continua aqui para você conferir.</span></span>
+      <span class="btn primary">Escolher pasta</span>
+      <input id="fig-dir" type="file" webkitdirectory directory multiple class="visually-hidden" data-fig-dir="1">
+    </label>${fim}`;
+}
+
+async function figRun(fileList) {
+  const F = st.fig;
+  if (F.running) return;
+  const files = new Map();
+  for (const f of fileList) if (/\.pdf$/i.test(f.name)) files.set(f._path || f.webkitRelativePath || f.name, f);
+  if (!files.size) { toast('Nenhum PDF nessa pasta.'); return; }
+  let drafts;
+  try { drafts = await adminImageDrafts(); } catch (e) { toast('Não foi possível carregar os rascunhos.'); return; }
+  if (!drafts.length) { toast('Nenhum rascunho sem imagem.'); return; }
+  Object.assign(F, { running: true, stop: false, total: drafts.length, ok: 0, falhou: 0, atual: '', fim: null });
+  render();
+  const grupos = new Map();
+  for (const q of drafts) { const k = `${q.prova}|${q.ano}`; if (!grupos.has(k)) grupos.set(k, []); grupos.get(k).push(q); }
+  let semPdf = 0;
+  for (const [k, qs] of grupos) {
+    if (F.stop) break;
+    const [prova, ano] = [k.slice(0, k.lastIndexOf('|')), Number(k.slice(k.lastIndexOf('|') + 1))];
+    F.atual = `${prova} · procurando o PDF`; render();
+    let achado = null;
+    try { achado = await acharPdf(files, prova, ano, qs); } catch (e) { achado = null; }
+    if (!achado) { semPdf += qs.length; F.falhou += qs.length; render(); continue; }
+    F.atual = prova; render();
+    try {
+      await figurasDoPdf(achado.doc, qs, (r) => { if (r.ok) F.ok += 1; else F.falhou += 1; render(); }, () => F.stop);
+    } catch (e) { /* segue para a próxima prova */ }
+    achado.doc.destroy();
+  }
+  F.fim = { ok: F.ok, falhou: F.falhou - semPdf, semPdf };
+  F.running = false; F.stop = false; F.atual = '';
+  st.drafts = null;
+  render();
+  toast(`Imagens: ${F.ok} encontradas.`);
+}
+
+// Depois de importar uma prova: já busca as imagens dos rascunhos dela no mesmo PDF.
+async function figurasDaProva(file, prova, ano, onStep) {
+  try {
+    const qs = await adminImageDrafts(prova, ano);
+    if (!qs.length) return 0;
+    const doc = await openPdf(file);
+    const r = await figurasDoPdf(doc, qs, onStep || (() => {}));
+    doc.destroy();
+    return r.ok;
+  } catch (e) { return 0; }
 }
 
 function imageZone(q) {
@@ -428,11 +504,11 @@ function viewLote() {
   const fila = L.fila || [];
   const saved = loteSaved();
   const done = fila.filter((j) => j.status === 'ok').length;
-  const pend = fila.filter((j) => !['ok', 'pulada', 'erro'].includes(j.status)).length;
+  const pend = fila.filter((j) => !['ok', 'pulada', 'erro', 'imagens'].includes(j.status)).length;
   const elapsed = L.startedAt ? Date.now() - L.startedAt : 0;
   const processed = fila.filter((j) => ['ok', 'pulada', 'erro'].includes(j.status) && j.ranNow).length;
   const eta = L.running && processed ? (elapsed / processed) * pend : 0;
-  const statusTag = (j) => ({ fila: '<span class="tag">Na fila</span>', lendo: '<span class="tag violet">Lendo…</span>', gabarito: '<span class="tag violet">Lendo gabarito…</span>', importando: `<span class="tag violet">Importando ${j.done || 0}/${j.total || '?'}</span>`, ok: `<span class="tag good">${j.pub} publicadas${j.ras ? ` · ${j.ras} rascunho` : ''}</span>`, pulada: `<span class="tag amber">${esc(j.motivo)}</span>`, erro: `<span class="tag bad">${esc(j.motivo)}</span>` })[j.status] || '';
+  const statusTag = (j) => ({ fila: '<span class="tag">Na fila</span>', lendo: '<span class="tag violet">Lendo…</span>', gabarito: '<span class="tag violet">Lendo gabarito…</span>', importando: `<span class="tag violet">Importando ${j.done || 0}/${j.total || '?'}</span>`, imagens: `<span class="tag violet">Buscando imagens… ${j.imgs || 0}</span>`, ok: `<span class="tag good">${j.pub} publicadas${j.ras ? ` · ${j.ras} rascunho${j.imgs ? ` (${j.imgs} com imagem)` : ''}` : ''}</span>`, pulada: `<span class="tag amber">${esc(j.motivo)}</span>`, erro: `<span class="tag bad">${esc(j.motivo)}</span>` })[j.status] || '';
   return `${h}<section class="panel stack-sm">
       <div class="row wrap gap-sm"><h2 class="grow">${fila.length} provas objetivas encontradas</h2>
         ${L.running ? `<span class="muted small">${fmtMin(elapsed)} rodando${eta ? ` · faltam ~${fmtMin(eta)}` : ''}</span><button class="btn ghost" data-act="lote-stop" ${L.stop ? 'disabled' : ''}>${L.stop ? 'Parando…' : 'Pausar'}</button>`
@@ -527,6 +603,11 @@ async function loteJob(j) {
   j.status = falhas && !j.pub ? 'erro' : 'ok';
   if (j.status === 'erro') j.motivo = 'Falhou na importação';
   else if (falhas) j.motivo = `${falhas} lote(s) falharam`;
+  if (j.status === 'ok' && j.ras) {
+    j.status = 'imagens'; j.imgs = 0; render();
+    await figurasDaProva(file, j.prova, j.ano, (r) => { if (r.ok) { j.imgs += 1; render(); } });
+    j.status = 'ok';
+  }
 }
 
 async function loteRun() {
@@ -539,7 +620,7 @@ async function loteRun() {
     await loteJob(j);
     if (['ok', 'pulada', 'erro'].includes(j.status)) {
       const saved = loteSaved();
-      saved[j.arquivo_prova] = { status: j.status, pub: j.pub || 0, ras: j.ras || 0, motivo: j.motivo || '' };
+      saved[j.arquivo_prova] = { status: j.status, pub: j.pub || 0, ras: j.ras || 0, imgs: j.imgs || 0, motivo: j.motivo || '' };
       loteSave(saved);
     }
     render();
@@ -576,6 +657,7 @@ const actions = {
     render();
   },
   'lote-run': () => { if (!st.lote.running) loteRun(); },
+  'fig-stop': () => { st.fig.stop = true; render(); },
   'lote-stop': () => { st.lote.stop = true; render(); },
   'lote-reset': () => { Object.assign(st.lote, { step: 'pick', files: null, fila: null, ignorados: [] }); render(); },
   login: async () => {
@@ -688,6 +770,7 @@ root.addEventListener('change', (e) => {
   if (t.dataset.imp === 'definitivo') st.imp.definitivo = t.checked;
   if (t.dataset.gtime) { const w = document.getElementById('g-date-wrap'); if (w) w.hidden = t.value !== 'data'; }
   if (t.dataset.loteDir) loteOrganize([...(t.files || [])]);
+  if (t.dataset.figDir) figRun([...(t.files || [])]);
   if (t.dataset.file) setFile(t.dataset.file, t.files && t.files[0]);
   if (t.dataset.img) setImage(t.dataset.img, t.files && t.files[0]);
   if (t.dataset.qf && t.dataset.qf !== 'text') { st.q[t.dataset.qf] = t.value; st.q.page = 0; st.q.open = null; st.q.rows = null; render(); }
@@ -774,6 +857,7 @@ root.addEventListener('drop', async (e) => {
   e.preventDefault();
   z.classList.remove('over');
   if (z.dataset.drop === 'lote') { loteOrganize(await filesFromDrop(e.dataTransfer)); return; }
+  if (z.dataset.drop === 'figs') { figRun(await filesFromDrop(e.dataTransfer)); return; }
   const f = e.dataTransfer.files && e.dataTransfer.files[0];
   if (z.dataset.drop) setFile(z.dataset.drop, f);
   else setImage(z.dataset.dropImg, f);
@@ -788,7 +872,7 @@ document.addEventListener('paste', (e) => {
   setImage(st.pasteTarget, item.getAsFile());
 });
 
-window.addEventListener('beforeunload', (e) => { if (st.lote.running || st.imp.step === 'importing') { e.preventDefault(); e.returnValue = ''; } });
+window.addEventListener('beforeunload', (e) => { if (st.lote.running || st.fig.running || st.imp.step === 'importing') { e.preventDefault(); e.returnValue = ''; } });
 
 render();
 boot();

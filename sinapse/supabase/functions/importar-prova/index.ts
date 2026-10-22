@@ -222,6 +222,65 @@ ${LISTA_AREAS}`;
       });
     }
 
+    // 3) action "figuras": recebe a foto de uma página da prova com as imagens do PDF marcadas em
+    //    caixas numeradas e diz qual figura é de qual questão (ou a área, se a figura for desenhada).
+    if (body.action === 'figuras') {
+      const img = String(body.imagem || '');
+      if (!img || img.length > 6_000_000) return json(400, { error: 'imagem', message: 'Página inválida.' });
+      const qs = (Array.isArray(body.questoes) ? body.questoes : []).slice(0, 12).map((q: any) => ({
+        numero: Number(q.numero), inicio: String(q.inicio || '').slice(0, 160), continua: Boolean(q.continua),
+      })).filter((q: any) => Number.isInteger(q.numero));
+      if (!qs.length) return json(400, { error: 'dados', message: 'Sem questões.' });
+      const caixas = Number(body.caixas) || 0;
+      const lista = qs.map((q: any) => `- Questão ${q.numero}${q.continua ? ' (começou na página anterior; aqui pode estar só o fim dela)' : ''}: começa com "${q.inicio}"`).join('\n');
+      const content = [
+        { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: img } },
+        {
+          type: 'text',
+          text: `Esta é uma página de prova de residência médica. ${caixas ? `As imagens embutidas no PDF estão marcadas com caixas vermelhas numeradas de 1 a ${caixas}.` : 'Não há imagens embutidas marcadas nesta página.'}
+Questões que precisam de figura (foto, ECG, radiografia, tomografia, gráfico, tabela, esquema):
+${lista}
+Para cada questão, diga onde está a figura DELA nesta página:
+- "caixas": os números das caixas vermelhas que são a figura dessa questão (pode ser mais de uma, ex.: imagens A e B).
+- Se a figura existe na página mas não está em nenhuma caixa (tabela ou gráfico desenhado, ou a página é toda escaneada), deixe "caixas" vazio e dê "area" com x, y, largura e altura em frações da página (0 a 1, origem no canto superior esquerdo), cobrindo a figura inteira com legendas, sem pegar o texto das alternativas.
+- Se a figura dessa questão não está nesta página, "encontrada": false.
+Use a posição na página: a figura de uma questão fica entre o início dela e o início da próxima questão, normalmente logo após o enunciado. Não atribua a mesma caixa a duas questões. Entregue pela ferramenta.`,
+        },
+      ];
+      const tool = {
+        name: 'entregar_figuras',
+        description: 'Onde está a figura de cada questão nesta página.',
+        input_schema: {
+          type: 'object',
+          properties: {
+            figuras: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  numero: { type: 'integer' },
+                  encontrada: { type: 'boolean' },
+                  caixas: { type: 'array', items: { type: 'integer' } },
+                  area: { type: 'object', properties: { x: { type: 'number' }, y: { type: 'number' }, w: { type: 'number' }, h: { type: 'number' } } },
+                },
+                required: ['numero', 'encontrada'],
+              },
+            },
+          },
+          required: ['figuras'],
+        },
+      };
+      const { input } = await claude(apiKey, 'Você localiza figuras em páginas de provas médicas com precisão. Responda só pelo que vê na página.', content, tool, 1500);
+      const nums = new Set(qs.map((q: any) => q.numero));
+      const clamp = (v: unknown) => Math.max(0, Math.min(1, Number(v) || 0));
+      const figuras = ((input.figuras || []) as any[]).filter((f) => nums.has(Number(f.numero))).map((f) => {
+        const cx = (Array.isArray(f.caixas) ? f.caixas : []).map(Number).filter((n: number) => Number.isInteger(n) && n >= 1 && n <= caixas);
+        const a = f.area && typeof f.area === 'object' ? { x: clamp(f.area.x), y: clamp(f.area.y), w: clamp(f.area.w), h: clamp(f.area.h) } : null;
+        return { numero: Number(f.numero), encontrada: Boolean(f.encontrada) && (cx.length > 0 || Boolean(a && a.w > 0.03 && a.h > 0.02)), caixas: cx, area: cx.length ? null : a };
+      });
+      return json(200, { figuras });
+    }
+
     return json(400, { error: 'acao', message: 'Ação desconhecida.' });
   } catch (e) {
     return json(502, { error: 'ia', message: e instanceof Error ? e.message : 'Falha na IA.' });
