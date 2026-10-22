@@ -33,6 +33,8 @@ const ui = {
   createType: 'cloze',
   qArea: 'all',       // filtro do treino de questões
   qSub: 'all',        // subtema do treino
+  fArea: 'all',       // sessão livre de cards: área
+  fCount: 20,         // sessão livre de cards: quantidade
   qCount: 10,
   simSize: 10,
   quiz: null,         // treino, simulado ou caderno de erros em andamento
@@ -66,7 +68,7 @@ function animateCard(cls, ms, then) {
   setTimeout(() => { ui.animating = false; then(); }, ms);
 }
 
-const APP_VERSION = '0.18.1';
+const APP_VERSION = '0.19.0';
 const root = document.getElementById('app');
 
 // ---------- utilitários ----------
@@ -992,6 +994,14 @@ function viewStudy() {
       ${modeRow('start-quick', 'bolt', 'Modo 5 minutos', '10 cards rápidos, sem digitar', Math.min(10, due), 'amber', !due)}
       ${modeRow('start-weak', 'repeat', 'Reforço dos erros', 'Cards que você já errou. Não altera a agenda', weak, 'bad', !weak)}
     </section>
+    <section class="panel stack-sm" aria-label="Sessão livre">
+      <div class="row gap-md"><span class="badge good">${icon('cards')}</span><div class="stack-xs grow"><h2>Sessão livre</h2><p class="muted small">Cards aleatórios na quantidade que você quiser. Os que você ainda não viu vêm primeiro.</p></div></div>
+      <p class="small strong">Área</p>
+      ${chipGroup('f-area', ui.fArea, [['all', 'Todas']].concat(AREAS.map((a) => [a.id, a.short])))}
+      <p class="small strong">Quantidade</p>
+      ${chipGroup('f-count', ui.fCount, [10, 20, 30, 50, 100].map((n) => [n, String(n)]))}
+      <button class="btn primary big" data-act="start-free" ${freePool().length ? '' : 'disabled'}>Começar · ${plural(Math.min(ui.fCount, freePool().length), 'card', 'cards')}</button>
+    </section>
     <section class="stack-sm" aria-label="Por grande área">
       <h2>Por grande área</h2>
       ${deckList()}
@@ -1252,6 +1262,19 @@ function viewQuestions() {
 
 function treinoPool() {
   return QUESTIONS.filter((q) => (ui.qArea === 'all' || q.area === ui.qArea) && (ui.qSub === 'all' || q.sub === ui.qSub));
+}
+
+function freePool() {
+  return store.allCards().filter((c) => ui.fArea === 'all' || c.area === ui.fArea);
+}
+
+// Sessão livre: aleatória, com os cards nunca vistos na frente e os já respondidos no fim.
+function pickFreeCards() {
+  const seen = (c) => !!store.data.sched[c.id];
+  const pool = freePool();
+  const fresh = shuffle(pool.filter((c) => !seen(c)));
+  const old = shuffle(pool.filter(seen));
+  return fresh.concat(old).slice(0, ui.fCount).map((c) => c.id);
 }
 
 function pickQuestions(ids, n) {
@@ -2088,6 +2111,9 @@ const actions = {
   // questões
   'q-area': (v) => { ui.qArea = v; ui.qSub = 'all'; render(); },
   'q-sub': (v) => { ui.qSub = v; render(); },
+  'f-area': (v) => { ui.fArea = v; render(); },
+  'f-count': (v) => { ui.fCount = Number(v); render(); },
+  'start-free': () => startSession(ui.fArea === 'all' ? 'Sessão livre' : `Sessão livre · ${areaById(ui.fArea).short}`, pickFreeCards()),
   'q-count': (v) => { ui.qCount = Number(v); render(); },
   'sim-size': (v) => { ui.simSize = Number(v); render(); },
   'start-treino': () => {
