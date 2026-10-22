@@ -37,6 +37,8 @@ const ui = {
   fCount: 20,         // sessão livre de cards: quantidade
   qCount: 10,
   simSize: 10,
+  simBanca: 'all',    // simulado: banca
+  simArea: 'all',     // simulado: área
   quiz: null,         // treino, simulado ou caderno de erros em andamento
   quizTimer: 0,
   caseRun: null,      // caso clínico em andamento
@@ -68,7 +70,7 @@ function animateCard(cls, ms, then) {
   setTimeout(() => { ui.animating = false; then(); }, ms);
 }
 
-const APP_VERSION = '0.19.1';
+const APP_VERSION = '0.20.0';
 const root = document.getElementById('app');
 
 // ---------- utilitários ----------
@@ -347,7 +349,7 @@ const QBANK_KEY = 'sinapse:qbank';
 
 function rowToQuestion(r) {
   return {
-    id: `b_${r.id}`, area: r.area, sub: r.sub, stem: r.stem, options: r.options, answer: r.answer,
+    id: `b_${r.id}`, banca: r.banca || '', area: r.area, sub: r.sub, stem: r.stem, options: r.options, answer: r.answer,
     explanation: r.explanation || '', aiComment: r.explanation_ai !== false, fact: r.fact || null,
     image: r.image_url || null, keepOrder: true,
     source: `${r.prova}${r.prova.includes(String(r.ano)) ? '' : ` ${r.ano}`} · Q${r.numero}`,
@@ -1251,7 +1253,13 @@ function viewQuestions() {
 
     <section class="panel stack-sm" aria-label="Simulado">
       <div class="row gap-md"><span class="badge amber">${icon('clock')}</span><div class="stack-xs grow"><h2>Simulado</h2><p class="muted small">Cronômetro de 3 min por questão e correção só no fim, como na prova.</p></div></div>
-      ${chipGroup('sim-size', ui.simSize, [[10, '10 questões · 30 min'], [QUESTIONS.length, `${QUESTIONS.length} questões · ${QUESTIONS.length * 3} min`]])}
+      <p class="small strong">Banca</p>
+      ${chipGroup('sim-banca', ui.simBanca, [['all', 'Todas']].concat(simBancas().map(([b, n]) => [esc(b), `${esc(bancaLabel(b))} <span class="muted">${n}</span>`])))}
+      <p class="small strong">Área</p>
+      ${chipGroup('sim-area', ui.simArea, [['all', 'Todas']].concat(AREAS.filter((a) => simPool('all').some((q) => q.area === a.id)).map((a) => [a.id, a.short])))}
+      <p class="small strong">Quantidade</p>
+      ${chipGroup('sim-size', ui.simSize, [10, 20, 30, 50, 100, 120].map((n) => [n, String(n)]))}
+      <p class="muted small">${plural(Math.min(ui.simSize, simPool().length), 'questão', 'questões')} · ${Math.min(ui.simSize, simPool().length) * 3} min${simPool().length < ui.simSize ? ` (só há ${simPool().length} com esse filtro)` : ''}</p>
       <button class="btn ghost big" data-act="start-simulado">Iniciar simulado</button>
     </section>
 
@@ -1262,6 +1270,17 @@ function viewQuestions() {
 
 function treinoPool() {
   return QUESTIONS.filter((q) => (ui.qArea === 'all' || q.area === ui.qArea) && (ui.qSub === 'all' || q.sub === ui.qSub));
+}
+
+const BANCA_NOMES = { INEP: 'Revalida (INEP)' };
+function bancaLabel(b) { return BANCA_NOMES[b] || b; }
+function simBancas() {
+  const n = {};
+  for (const q of QUESTIONS) if (q.banca) n[q.banca] = (n[q.banca] || 0) + 1;
+  return Object.entries(n).sort((a, b) => b[1] - a[1]);
+}
+function simPool(area = ui.simArea) {
+  return QUESTIONS.filter((q) => (ui.simBanca === 'all' || q.banca === ui.simBanca) && (area === 'all' || q.area === area));
 }
 
 function freePool() {
@@ -2148,6 +2167,8 @@ const actions = {
   'start-free': () => startSession(ui.fArea === 'all' ? 'Sessão livre' : `Sessão livre · ${areaById(ui.fArea).short}`, pickFreeCards()),
   'q-count': (v) => { ui.qCount = Number(v); render(); },
   'sim-size': (v) => { ui.simSize = Number(v); render(); },
+  'sim-banca': (v) => { ui.simBanca = v; if (!simPool().length) ui.simArea = 'all'; render(); },
+  'sim-area': (v) => { ui.simArea = v; render(); },
   'start-treino': () => {
     const ids = treinoPool().map((q) => q.id);
     const title = ui.qArea === 'all' ? 'Treino' : `Treino · ${ui.qSub !== 'all' ? ui.qSub : areaById(ui.qArea).short}`;
@@ -2158,7 +2179,11 @@ const actions = {
     const left = Math.max(1, store.data.settings.questionsPerDay - store.questionsToday().length);
     startQuiz('treino', pickQuestions(QUESTIONS.map((q) => q.id), left), 'Questões do dia');
   },
-  'start-simulado': () => startQuiz('simulado', shuffle(QUESTIONS.map((q) => q.id)).slice(0, ui.simSize), `Simulado ${ui.simSize} questões`),
+  'start-simulado': () => {
+    const ids = shuffle(simPool().map((q) => q.id)).slice(0, ui.simSize);
+    const parts = [ui.simBanca !== 'all' ? bancaLabel(ui.simBanca) : '', ui.simArea !== 'all' ? areaById(ui.simArea).short : ''].filter(Boolean);
+    startQuiz('simulado', ids, `Simulado ${ids.length} questões${parts.length ? ` · ${parts.join(' · ')}` : ''}`);
+  },
   'start-errors': () => startQuiz('erros', shuffle(store.openErrors().map(([id]) => id)), 'Caderno de erros'),
   'q-pick': (v) => {
     const z = ui.quiz;
