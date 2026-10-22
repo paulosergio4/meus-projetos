@@ -64,7 +64,7 @@ function animateCard(cls, ms, then) {
   setTimeout(() => { ui.animating = false; then(); }, ms);
 }
 
-const APP_VERSION = '0.12.0';
+const APP_VERSION = '0.12.1';
 const root = document.getElementById('app');
 
 // ---------- utilitários ----------
@@ -439,7 +439,7 @@ function admImport(a) {
       <p><strong>${s.publicadas}</strong> ${s.publicadas === 1 ? 'questão publicada' : 'questões publicadas'} no app.</p>
       ${s.rascunhos.length ? `<p class="muted small">${s.rascunhos.length === 1 ? '1 ficou' : `${s.rascunhos.length} ficaram`} em rascunho (depende${s.rascunhos.length === 1 ? '' : 'm'} de imagem ou sem gabarito): ${s.rascunhos.join(', ')}.</p>` : ''}
       ${s.anuladas.length ? `<p class="muted small">Anuladas, fora do app: ${s.anuladas.join(', ')}.</p>` : ''}
-      ${s.faltando.length ? `<p class="muted small bad-ink">Não encontradas no texto do PDF: ${s.faltando.join(', ')}. Se forem muitas, o PDF pode ser escaneado (imagem), e aí precisa de um PDF com texto.</p>` : ''}
+      ${s.faltando.length ? `<p class="muted small bad-ink">Não encontradas no texto do PDF: ${s.faltando.join(', ')}. Podem ser questões discursivas, de formação geral ou que estão como imagem no PDF.</p><button class="btn ghost" data-act="adm-import-missing">Tentar de novo as que faltaram</button>` : ''}
       ${s.erro ? `<p class="bad-ink small">${esc(s.erro)}</p><button class="btn ghost" data-act="adm-import-resume">Continuar de onde parou</button>` : ''}
       <button class="btn primary" data-act="adm-new">Importar outra prova</button>
     </section>`;
@@ -497,32 +497,64 @@ function admLoad(what) {
     .finally(() => { a.busy = false; if (ui.view === 'admin') render(); });
 }
 
-async function admRunImport(startAt) {
+// Agrupa números em faixas contíguas de até `size` (a função recebe uma faixa por vez).
+function admRanges(list, size) {
+  const out = [];
+  for (const n of list) {
+    const last = out[out.length - 1];
+    if (last && n === last[1] + 1 && n - last[0] < size) last[1] = n;
+    else out.push([n, n]);
+  }
+  return out;
+}
+
+async function admCall(a, de, ate) {
+  const body = { action: 'questoes', banca: a.banca.trim(), prova: a.prova.trim(), ano: Number(a.ano), de, ate, texto: a.provaFile.text, respostas: a.gab.respostas, anuladas: a.gab.anuladas };
+  let lastErr = null;
+  for (let tent = 0; tent < 2; tent += 1) {
+    try { return await callImportarProva(body); } catch (e) { lastErr = e; }
+  }
+  throw lastErr;
+}
+
+// Importa em lotes de 10; o que a IA não achar no lote é tentado de novo de 2 em 2.
+async function admRunImport(only) {
   const a = admState();
   const nums = admNumbers(a.gab);
-  const total = nums.length;
-  const first = startAt || nums[0];
-  const last = nums[nums.length - 1];
-  if (!startAt) a.summary = { publicadas: 0, rascunhos: [], anuladas: [], faltando: [], erro: '', next: null };
+  const todo = only || nums;
+  if (!only || !a.summary) a.summary = { publicadas: 0, rascunhos: [], anuladas: [], faltando: [], erro: '', pendentes: [] };
   a.summary.erro = '';
+  a.summary.faltando = a.summary.faltando.filter((n) => !todo.includes(n));
   a.step = 'importing';
-  a.progress = { done: nums.filter((n) => n < first).length, total };
+  a.progress = { done: 0, total: todo.length };
   render();
-  for (let de = first; de <= last; de += 10) {
-    const ate = Math.min(last, de + 9);
-    const body = { action: 'questoes', banca: a.banca.trim(), prova: a.prova.trim(), ano: Number(a.ano), de, ate, texto: a.provaFile.text, respostas: a.gab.respostas, anuladas: a.gab.anuladas };
-    let r = null;
-    for (let tent = 0; tent < 2 && !r; tent += 1) {
-      try { r = await callImportarProva(body); } catch (e) { if (tent === 1) { a.summary.erro = `Parou nas questões ${de} a ${ate}: ${e.message}`; a.summary.next = de; } }
-    }
-    if (!r) break;
+  const record = (r, faixa) => {
     a.summary.publicadas += r.publicadas;
     a.summary.rascunhos.push(...r.rascunhos);
     a.summary.anuladas.push(...r.anuladas);
-    a.summary.faltando.push(...r.nao_encontradas.filter((n) => nums.includes(n)));
-    a.progress.done = nums.filter((n) => n <= ate).length;
+    return r.nao_encontradas.filter((n) => faixa.includes(n));
+  };
+  const ranges = admRanges(todo, 10);
+  for (let i = 0; i < ranges.length; i += 1) {
+    const [de, ate] = ranges[i];
+    const faixa = todo.filter((n) => n >= de && n <= ate);
+    try {
+      let missing = record(await admCall(a, de, ate), faixa);
+      for (const [d2, a2] of admRanges(missing, 2)) {
+        const sub = missing.filter((n) => n >= d2 && n <= a2);
+        try { missing = missing.filter((n) => !sub.includes(n)).concat(record(await admCall(a, d2, a2), sub)); } catch (e) { /* fica como faltando */ }
+      }
+      a.summary.faltando.push(...missing);
+    } catch (e) {
+      a.summary.erro = `Parou nas questões ${de} a ${ate}: ${e.message}`;
+      a.summary.pendentes = ranges.slice(i).flatMap(([x, y]) => todo.filter((n) => n >= x && n <= y));
+      break;
+    }
+    a.progress.done = todo.filter((n) => n <= ate).length;
     if (ui.view === 'admin') render();
   }
+  if (!a.summary.erro) a.summary.pendentes = [];
+  a.summary.faltando = [...new Set(a.summary.faltando)].sort((x, y) => x - y);
   a.step = 'done';
   a.rascunhos = null;
   a.provas = null;
@@ -2088,7 +2120,8 @@ const actions = {
     render();
   },
   'adm-import-run': () => admRunImport(),
-  'adm-import-resume': () => admRunImport(admState().summary.next),
+  'adm-import-resume': () => admRunImport(admState().summary.pendentes),
+  'adm-import-missing': () => admRunImport(admState().summary.faltando.slice()),
   'adm-publish': async (id) => {
     try { await adminUpdateQuestion(id, { status: 'publicada' }); toast('Questão publicada.'); } catch (e) { toast('Não foi possível publicar.'); return; }
     const a = admState(); a.rascunhos = a.rascunhos.filter((q) => q.id !== id); render(); refreshBank();
