@@ -25,6 +25,20 @@ const AREAS: Record<string, string[]> = {
 const LISTA_AREAS = Object.entries(AREAS).map(([id, subs]) => `${id}: ${subs.join('; ')}`).join('\n');
 const LETRAS = 'ABCDEFGH';
 
+// Garante área e subtema da lista do app (o subtema decide a área quando a IA erra a área).
+const norm = (t: string) => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+function classificar(areaIA: string, subIA: string): { area: string; sub: string } {
+  const s = norm(subIA);
+  const todas = Object.entries(AREAS).flatMap(([id, subs]) => subs.map((x) => ({ id, x })));
+  const exata = todas.filter((t) => norm(t.x) === s);
+  if (exata.length) return { area: (exata.find((t) => t.id === areaIA) || exata[0]).id, sub: (exata.find((t) => t.id === areaIA) || exata[0]).x };
+  const parcial = todas.find((t) => s && (s.includes(norm(t.x)) || norm(t.x).includes(s)));
+  if (parcial) return { area: parcial.id, sub: parcial.x };
+  // Sem correspondência: mantém o texto da IA em vez de chutar um subtema errado.
+  const area = AREAS[areaIA] ? areaIA : 'clinica';
+  return { area, sub: subIA.trim().slice(0, 60) || 'Geral' };
+}
+
 async function claude(apiKey: string, system: string, content: unknown[], tool: Record<string, unknown>, maxTokens: number) {
   const resp = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -155,7 +169,7 @@ Deno.serve(async (req) => {
 - Copie enunciado e alternativas FIELMENTE do texto da prova, só corrigindo quebras de linha e hifenização da extração do PDF.
 - NUNCA decida a resposta: a letra correta é a do gabarito oficial informado. Escreva o comentário justificando essa letra.
 - Se a alternativa oficial parecer errada para você, ainda assim comente a oficial e não altere nada.
-- Classifique em uma área e um subtema desta lista (use o id da área):
+- Classifique em uma área e um subtema EXATAMENTE como escritos nesta lista (use o id da área; não invente subtemas):
 ${LISTA_AREAS}`;
       const content = [
         { type: 'text', text: `TEXTO DA PROVA (${prova}):\n${texto.slice(0, 400_000)}` },
@@ -172,8 +186,7 @@ ${LISTA_AREAS}`;
         if (!stem || options.length < 2) continue;
         const letra = respostas[numero];
         const answer = letra ? LETRAS.indexOf(letra) : -1;
-        const area = AREAS[q.area] ? q.area : 'clinica';
-        const sub = String(q.subtema || '').trim().slice(0, 60) || AREAS[area][0];
+        const { area, sub } = classificar(String(q.area || ''), String(q.subtema || ''));
         const needsImage = Boolean(q.depende_de_imagem);
         let status = 'publicada';
         if (anuladas.has(numero)) status = 'anulada';
