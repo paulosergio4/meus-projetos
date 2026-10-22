@@ -659,8 +659,15 @@ async function loteJob(j) {
   try {
     if (j.arquivo_gabarito) {
       const gf = L.files.get(j.arquivo_gabarito);
-      if (gf.size > MAX_PDF) { j.status = 'erro'; j.motivo = 'Gabarito com mais de 10 MB'; return; }
-      gab = await callImportarProva({ action: 'gabarito', pdf: await fileToB64(gf), tipo: j.tipo || '' });
+      if (gf.size > MAX_PDF) {
+        // PDF grande demais para mandar inteiro: manda só o texto do gabarito.
+        let gt = '';
+        try { ({ text: gt } = await extractPdfText(await gf.arrayBuffer())); } catch (e) { gt = ''; }
+        if (gt.replace(/\[página \d+\]/g, '').trim().length < 100) { j.status = 'erro'; j.motivo = 'Gabarito com mais de 10 MB e sem texto'; return; }
+        gab = await callImportarProva({ action: 'gabarito', text: gt, tipo: j.tipo || '' });
+      } else {
+        gab = await callImportarProva({ action: 'gabarito', pdf: await fileToB64(gf), tipo: j.tipo || '' });
+      }
     } else {
       const tail = pagesOf(text).slice(-8).join('\n');
       if (!/gabarito/i.test(tail)) { j.status = 'pulada'; j.motivo = 'Sem gabarito oficial'; return; }
