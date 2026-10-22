@@ -17,7 +17,7 @@ export const PLANS = [
   },
   {
     id: 'residencia', name: 'Residência', tagline: 'Reta final para a prova',
-    monthly: 49.9, yearly: 399,
+    monthly: 59.9, yearly: 479,
     features: ['Tudo do Pro', '1.000 cards gerados por IA por mês', 'Simulados ilimitados', 'Caderno de erros', 'Casos clínicos', 'Prioridade em novidades'],
   },
 ];

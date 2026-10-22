@@ -4,8 +4,8 @@ Modelo **freemium com login obrigatório**: a pessoa entra com a conta Google, u
 
 | | Grátis | Pro | Residência |
 |---|---|---|---|
-| Preço mensal | R$ 0 | R$ 29,90 | R$ 49,90 |
-| Preço anual | — | R$ 239 (R$ 19,92/mês) | R$ 399 (R$ 33,25/mês) |
+| Preço mensal | R$ 0 | R$ 29,90 | R$ 59,90 |
+| Preço anual | — | R$ 239 (R$ 19,92/mês) | R$ 479 (R$ 39,92/mês) |
 | Revisão espaçada e decks prontos | ✓ | ✓ | ✓ |
 | Cards novos por dia | 10 | Ilimitados | Ilimitados |
 | Criar cards próprios | até 100 | Ilimitados | Ilimitados |
@@ -51,5 +51,5 @@ Os passos 2 a 4 o Claude faz; o 1 precisa da sua conta.
 - Custo de IA por assinante, usando o limite inteiro: Pro ~R$ 0,70/mês, Residência ~R$ 2,20/mês (Claude Haiku 5.5).
 - Taxa do meio de pagamento (Pix/cartão): reservar uns 5% do preço.
 - Pro a R$ 29,90: valor de "assinatura de estudo" do dia a dia, abaixo dos cursinhos de residência.
-- Residência a R$ 49,90: teto pedido; inclui caderno de erros, casos e mais IA.
-- Anual com ~33% de desconto (R$ 239 e R$ 399) para puxar quem vai estudar o ano todo até a prova.
+- Residência a R$ 59,90: inclui caderno de erros, casos e mais IA. Referência de mercado: MedwayFlix (questões comentadas, flashcards e mentorias) a R$ 99,90/mês ou R$ 810/ano em out/2026. Ficamos em ~60% disso porque os comentários ainda são de IA; dá para subir quando forem revisados por médico.
+- Anual com ~33% de desconto (R$ 239 e R$ 479) para puxar quem vai estudar o ano todo até a prova.
