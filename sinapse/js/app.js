@@ -70,7 +70,7 @@ function animateCard(cls, ms, then) {
   setTimeout(() => { ui.animating = false; then(); }, ms);
 }
 
-const APP_VERSION = '0.20.0';
+const APP_VERSION = '0.20.1';
 const root = document.getElementById('app');
 
 // ---------- utilitários ----------
@@ -1259,7 +1259,7 @@ function viewQuestions() {
       ${chipGroup('sim-area', ui.simArea, [['all', 'Todas']].concat(AREAS.filter((a) => simPool('all').some((q) => q.area === a.id)).map((a) => [a.id, a.short])))}
       <p class="small strong">Quantidade</p>
       ${chipGroup('sim-size', ui.simSize, [10, 20, 30, 50, 100, 120].map((n) => [n, String(n)]))}
-      <p class="muted small">${plural(Math.min(ui.simSize, simPool().length), 'questão', 'questões')} · ${Math.min(ui.simSize, simPool().length) * 3} min${simPool().length < ui.simSize ? ` (só há ${simPool().length} com esse filtro)` : ''}</p>
+      ${(() => { const pl = simPlan(); return `<p class="muted small">${plural(pl.ids.length, 'questão', 'questões')} · ${pl.ids.length * 3} min${simPool().length < ui.simSize ? ` (só há ${simPool().length} com esse filtro)` : ''}${pl.split ? `<br>Divididas por área: ${pl.split.map(([a, k]) => `${areaById(a).short} ${k}`).join(' · ')}` : ''}</p>`; })()}
       <button class="btn ghost big" data-act="start-simulado">Iniciar simulado</button>
     </section>
 
@@ -1281,6 +1281,27 @@ function simBancas() {
 }
 function simPool(area = ui.simArea) {
   return QUESTIONS.filter((q) => (ui.simBanca === 'all' || q.banca === ui.simBanca) && (area === 'all' || q.area === area));
+}
+
+// Simulado com todas as áreas: divide a quantidade igualmente entre as áreas (como nas provas),
+// e o que faltar numa área é completado pelas outras.
+function simPlan() {
+  const pool = simPool();
+  const n = Math.min(ui.simSize, pool.length);
+  if (ui.simArea !== 'all') return { ids: shuffle(pool.map((q) => q.id)).slice(0, n), split: null };
+  const byArea = {};
+  for (const q of pool) (byArea[q.area] = byArea[q.area] || []).push(q.id);
+  const areas = AREAS.map((a) => a.id).filter((a) => byArea[a]);
+  const quota = Object.fromEntries(areas.map((a) => [a, 0]));
+  let left = n;
+  while (left > 0) {
+    const open = areas.filter((a) => quota[a] < byArea[a].length);
+    if (!open.length) break;
+    const each = Math.max(1, Math.floor(left / open.length));
+    for (const a of shuffle(open)) { if (!left) break; const add = Math.min(each, byArea[a].length - quota[a], left); quota[a] += add; left -= add; }
+  }
+  const ids = shuffle(areas.flatMap((a) => shuffle(byArea[a]).slice(0, quota[a])));
+  return { ids, split: areas.filter((a) => quota[a]).map((a) => [a, quota[a]]) };
 }
 
 function freePool() {
@@ -2180,7 +2201,7 @@ const actions = {
     startQuiz('treino', pickQuestions(QUESTIONS.map((q) => q.id), left), 'Questões do dia');
   },
   'start-simulado': () => {
-    const ids = shuffle(simPool().map((q) => q.id)).slice(0, ui.simSize);
+    const { ids } = simPlan();
     const parts = [ui.simBanca !== 'all' ? bancaLabel(ui.simBanca) : '', ui.simArea !== 'all' ? areaById(ui.simArea).short : ''].filter(Boolean);
     startQuiz('simulado', ids, `Simulado ${ids.length} questões${parts.length ? ` · ${parts.join(' · ')}` : ''}`);
   },
