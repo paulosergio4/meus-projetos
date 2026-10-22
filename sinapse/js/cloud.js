@@ -149,6 +149,20 @@ export async function adminQuestions(status) {
   return data;
 }
 
+// Questões já gravadas de um ano (prova, número e enunciado), para achar a prova de um PDF e o que falta.
+export async function adminQuestionsOfYear(ano) {
+  const c = await loadCloud();
+  if (!c) return [];
+  const out = [];
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await c.from('questions').select('prova, numero, stem').eq('ano', ano).order('id').range(from, from + 999);
+    if (error) throw error;
+    out.push(...data);
+    if (data.length < 1000) break;
+  }
+  return out;
+}
+
 // Rascunhos que precisam de imagem e ainda não têm (de uma prova ou de todas).
 export async function adminImageDrafts(prova, ano) {
   const c = await loadCloud();

@@ -3,7 +3,7 @@
 import {
   loadCloud, signInWithGoogle, signOutCloud, currentSessionUser, checkIsAdmin,
   callImportarProva, adminQuestions, adminProvas, adminUpdateQuestion, adminDeleteQuestion,
-  uploadQuestionImage, adminList, adminAdd, adminRemove, adminSearchQuestions, callOrganizarPasta, adminReports, adminResolveReport, adminOpenReportsCount, adminSubscribers, adminGrant, adminRevoke, adminImageDrafts,
+  uploadQuestionImage, adminList, adminAdd, adminRemove, adminSearchQuestions, callOrganizarPasta, adminReports, adminResolveReport, adminOpenReportsCount, adminSubscribers, adminGrant, adminRevoke, adminImageDrafts, adminQuestionsOfYear,
 } from '../js/cloud.js';
 import { openPdf, figurasDoPdf, acharPdf } from './figuras.js';
 import { extractPdfText, shrinkImage, fileToB64 } from '../js/tools.js';
@@ -196,27 +196,20 @@ async function runImport(startAt) {
   const s = st.imp;
   const nums = gabNumbers(s.gab);
   const first = startAt || nums[0];
-  const last = nums[nums.length - 1];
   if (!startAt) s.summary = { publicadas: 0, rascunhos: [], anuladas: [], faltando: [], erro: '', next: null };
   s.summary.erro = '';
   s.step = 'importing';
   s.progress = { done: nums.filter((n) => n < first).length, total: nums.length };
   render();
-  for (let de = first; de <= last; de += 10) {
-    const ate = Math.min(last, de + 9);
-    const body = { action: 'questoes', banca: s.banca.trim(), prova: s.prova.trim(), ano: Number(s.ano), de, ate, texto: s.provaFile.text, respostas: s.gab.respostas, anuladas: s.gab.anuladas };
-    let r = null;
-    for (let t = 0; t < 2 && !r; t += 1) {
-      try { r = await callImportarProva(body); } catch (e) { if (t === 1) { s.summary.erro = `Parou nas questões ${de} a ${ate}: ${e.message}`; s.summary.next = de; } }
-    }
-    if (!r) break;
-    s.summary.publicadas += r.publicadas;
-    s.summary.rascunhos.push(...r.rascunhos);
-    s.summary.anuladas.push(...r.anuladas);
-    s.summary.faltando.push(...r.nao_encontradas.filter((n) => nums.includes(n)));
-    s.progress.done = nums.filter((n) => n <= ate).length;
-    render();
-  }
+  const todo = nums.filter((n) => n >= first);
+  const r = await importNums({ banca: s.banca.trim(), prova: s.prova.trim(), ano: Number(s.ano), texto: s.provaFile.text, respostas: s.gab.respostas, anuladas: s.gab.anuladas }, todo, {
+    onChunk: (n) => { s.progress.done = Math.min(s.progress.total, s.progress.done + n); render(); },
+  });
+  s.summary.publicadas += r.publicadas;
+  s.summary.rascunhos.push(...r.rascunhos);
+  s.summary.anuladas.push(...r.anuladas);
+  s.summary.faltando.push(...r.faltando);
+  if (r.falhas && r.faltando.length === todo.length) { s.summary.erro = 'A importação falhou. Confira a internet e tente de novo.'; s.summary.next = first; }
   if (s.summary.rascunhos.length && s.provaFile.file) {
     s.progress = { done: 0, total: s.summary.rascunhos.length, imagens: true };
     render();
@@ -513,7 +506,9 @@ function viewLote() {
       <div class="row wrap gap-sm"><h2 class="grow">${fila.length} provas objetivas encontradas</h2>
         ${L.running ? `<span class="muted small">${fmtMin(elapsed)} rodando${eta ? ` · faltam ~${fmtMin(eta)}` : ''}</span><button class="btn ghost" data-act="lote-stop" ${L.stop ? 'disabled' : ''}>${L.stop ? 'Parando…' : 'Pausar'}</button>`
           : pend ? `<button class="btn primary" data-act="lote-run">${icon('upload', 18)} Importar ${pend} ${pend === 1 ? 'prova' : 'provas'}</button>` : '<span class="tag good">Concluído</span>'}
+        ${!L.running && fila.some((j) => j.ja && !j.completar) ? `<button class="btn ghost" data-act="lote-complete">Completar questões faltantes</button>` : ''}
         ${L.running ? '' : '<button class="btn ghost" data-act="lote-reset">Escolher outra pasta</button>'}</div>
+      ${!L.running && fila.some((j) => j.ja && !j.completar) ? '<p class="muted small">"Completar" confere cada prova já importada com o gabarito e importa só as questões que ficaram de fora.</p>' : ''}
       <p class="muted small">${done} importadas · ${L.totals.publicadas} questões publicadas · ${L.totals.rascunhos} em rascunho${Object.keys(saved).length ? ' · o progresso fica salvo neste computador' : ''}</p>
       <div class="adm-list">${fila.map((j) => `<div class="adm-row static"><span class="stack-xs grow"><strong>${esc(j.prova)}</strong><span class="muted small">${esc(j.arquivo_prova)}${j.arquivo_gabarito ? ` + ${esc(j.arquivo_gabarito.split('/').pop())}` : ' · gabarito: procurar no próprio PDF'}${j.tipo ? ` · ${esc(j.tipo)}` : ''}</span></span>${statusTag(j)}</div>`).join('')}</div>
     </section>
@@ -535,8 +530,8 @@ async function loteOrganize(fileList) {
     L.fila = org.provas.map((p) => {
       const key = p.arquivo_prova;
       const prev = saved[key];
-      if (prev && prev.status === 'ok') return { ...p, ...prev };
-      if (ja.has(`${p.prova}|${p.ano}`)) return { ...p, status: 'pulada', motivo: 'Já importada' };
+      if (prev && prev.status === 'ok') return { ...p, ...prev, ja: true };
+      if (ja.has(`${p.prova}|${p.ano}`)) return { ...p, status: 'pulada', motivo: 'Já importada', ja: true };
       return { ...p, status: 'fila' };
     });
     L.ignorados = org.ignorados || [];
@@ -551,6 +546,58 @@ async function loteOrganize(fileList) {
 
 function pagesOf(text) {
   return text.split(/\[página \d+\]\n?/).filter((x) => x.trim());
+}
+
+// Importa uma lista de números (não precisam ser seguidos). Lote que volta cortado ou com questões
+// faltando é refeito em lotes menores (10 → 5 → 2) antes de desistir.
+async function importNums(base, nums, { size = 10, onChunk = () => {}, stop = () => false } = {}) {
+  const tot = { publicadas: 0, rascunhos: [], anuladas: [], faltando: [], falhas: 0 };
+  const want = new Set(nums);
+  const runs = [];
+  let cur = [];
+  for (const n of [...nums].sort((a, b) => a - b)) {
+    if (cur.length && (n !== cur[cur.length - 1] + 1 || cur.length >= size)) { runs.push(cur); cur = []; }
+    cur.push(n);
+  }
+  if (cur.length) runs.push(cur);
+  const retry = [];
+  const one = async (c) => {
+    let r = null;
+    for (let t = 0; t < 2 && !r; t += 1) { try { r = await callImportarProva({ ...base, action: 'questoes', de: c[0], ate: c[c.length - 1] }); } catch (e) { /* tenta de novo */ } }
+    if (!r) { tot.falhas += 1; if (size > 2) retry.push(...c); else tot.faltando.push(...c); onChunk(c.length, null); return; }
+    tot.publicadas += r.publicadas; tot.rascunhos.push(...r.rascunhos); tot.anuladas.push(...r.anuladas);
+    const falta = (r.nao_encontradas || []).filter((n) => want.has(n));
+    if (falta.length && size > 2) retry.push(...falta); else tot.faltando.push(...falta);
+    onChunk(c.length - falta.length, r);
+  };
+  // O 1º lote vai sozinho para a IA guardar a prova no cache; os outros vão de três em três.
+  if (runs.length && !stop()) await one(runs.shift());
+  const worker = async () => { while (runs.length && !stop()) await one(runs.shift()); };
+  await Promise.all([worker(), worker(), worker()]);
+  if (stop()) { for (const c of runs) tot.faltando.push(...c); }
+  if (retry.length && !stop()) {
+    const sub = await importNums(base, retry, { size: size > 5 ? 5 : 2, onChunk, stop });
+    tot.publicadas += sub.publicadas; tot.rascunhos.push(...sub.rascunhos); tot.anuladas.push(...sub.anuladas); tot.faltando.push(...sub.faltando);
+    tot.falhas = sub.falhas;
+  }
+  return tot;
+}
+
+const normTxt = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+const yearCache = new Map();
+// Qual prova do banco é este PDF (pelos enunciados já gravados) e quais números ela já tem.
+async function provaNoBanco(text, ano) {
+  if (!yearCache.has(ano)) yearCache.set(ano, await adminQuestionsOfYear(ano));
+  const by = new Map();
+  for (const r of yearCache.get(ano)) { if (!by.has(r.prova)) by.set(r.prova, []); by.get(r.prova).push(r); }
+  const t = normTxt(text);
+  let best = null;
+  for (const [prova, list] of by) {
+    const amostra = list.slice(0, 12);
+    const hits = amostra.filter((r) => { const k = normTxt(r.stem).slice(0, 60); return k.length >= 30 && t.includes(k); }).length;
+    if (hits >= 3 && (!best || hits > best.hits)) best = { prova, hits, nums: new Set(list.map((r) => r.numero)) };
+  }
+  return best;
 }
 
 async function loteJob(j) {
@@ -580,29 +627,29 @@ async function loteJob(j) {
   if (nums.length < 5) { j.status = 'pulada'; j.motivo = 'Sem gabarito oficial'; return; }
   if (/prelimin/i.test(gab.observacao || '') && !/definitiv/i.test(gab.observacao || '')) { j.status = 'pulada'; j.motivo = 'Gabarito preliminar'; return; }
 
-  // Questões em lotes de 10, três ao mesmo tempo.
+  // Completar: acha esta prova no banco pelo texto e importa só os números que faltam.
+  if (j.completar) {
+    let achada = null;
+    try { achada = await provaNoBanco(text, j.ano); } catch (e) { j.status = 'erro'; j.motivo = 'Não consegui ler o banco'; return; }
+    if (!achada) { j.status = 'pulada'; j.motivo = 'Não achei no banco'; return; }
+    j.prova = achada.prova;
+    const faltam = Object.keys(gab.respostas).map(Number).filter((n) => !achada.nums.has(n));
+    if (!faltam.length) { j.status = 'ok'; j.motivo = 'Completa'; j.pub = 0; j.ras = 0; return; }
+    nums.length = 0;
+    nums.push(...faltam.sort((a, b) => a - b));
+  }
+
+  // Questões em lotes de 10, três ao mesmo tempo; lotes cortados são refeitos menores.
   j.status = 'importando'; j.total = nums.length; j.done = 0; j.pub = 0; j.ras = 0; render();
-  const chunks = [];
-  for (let i = 0; i < nums.length; i += 10) chunks.push(nums.slice(i, i + 10));
-  let falhas = 0;
-  const runChunk = async () => {
-    const c = chunks.shift();
-    const body = { action: 'questoes', banca: j.banca, prova: j.prova, ano: j.ano, de: c[0], ate: c[c.length - 1], texto: text, respostas: gab.respostas, anuladas: gab.anuladas };
-    let r = null;
-    for (let t = 0; t < 2 && !r; t += 1) { try { r = await callImportarProva(body); } catch (e) { if (t === 1) falhas += 1; } }
-    if (r) { j.pub += r.publicadas; j.ras += r.rascunhos.length; L.totals.publicadas += r.publicadas; L.totals.rascunhos += r.rascunhos.length; }
-    j.done += c.length;
-    render();
-  };
-  const worker1 = async () => { if (chunks.length && !L.stop) await runChunk(); };
-  const worker = async () => { while (chunks.length && !L.stop) await runChunk(); };
-  // O 1º lote vai sozinho para a IA guardar a prova no cache; os outros aproveitam em paralelo.
-  await worker1();
-  await Promise.all([worker(), worker(), worker()]);
-  if (L.stop && chunks.length) { j.status = 'fila'; return; }
+  const base = { banca: j.banca, prova: j.prova, ano: j.ano, texto: text, respostas: gab.respostas, anuladas: gab.anuladas };
+  const r = await importNums(base, nums, { onChunk: (n) => { j.done = Math.min(j.total, j.done + n); render(); }, stop: () => L.stop });
+  j.pub = r.publicadas; j.ras = r.rascunhos.length; L.totals.publicadas += r.publicadas; L.totals.rascunhos += r.rascunhos.length;
+  const falhas = r.faltando.length;
+  if (L.stop && falhas) { j.status = 'fila'; return; }
   j.status = falhas && !j.pub ? 'erro' : 'ok';
   if (j.status === 'erro') j.motivo = 'Falhou na importação';
-  else if (falhas) j.motivo = `${falhas} lote(s) falharam`;
+  else if (falhas) j.motivo = `${falhas} não encontradas no PDF`;
+  if (j.completar && j.status === 'ok') j.motivo = `+${j.pub + j.ras} recuperadas${falhas ? ` · ${falhas} não achadas` : ''}`;
   if (j.status === 'ok' && j.ras) {
     j.status = 'imagens'; j.imgs = 0; render();
     await figurasDaProva(file, j.prova, j.ano, (r) => { if (r.ok) { j.imgs += 1; render(); } });
@@ -613,6 +660,7 @@ async function loteJob(j) {
 async function loteRun() {
   const L = st.lote;
   L.running = true; L.stop = false; L.startedAt = Date.now();
+  yearCache.clear();
   render();
   for (const j of L.fila) {
     if (L.stop) break;
@@ -620,7 +668,7 @@ async function loteRun() {
     await loteJob(j);
     if (['ok', 'pulada', 'erro'].includes(j.status)) {
       const saved = loteSaved();
-      saved[j.arquivo_prova] = { status: j.status, pub: j.pub || 0, ras: j.ras || 0, imgs: j.imgs || 0, motivo: j.motivo || '' };
+      if (!j.completar) saved[j.arquivo_prova] = { status: j.status, pub: j.pub || 0, ras: j.ras || 0, imgs: j.imgs || 0, motivo: j.motivo || '' };
       loteSave(saved);
     }
     render();
@@ -658,6 +706,11 @@ const actions = {
   },
   'lote-run': () => { if (!st.lote.running) loteRun(); },
   'fig-stop': () => { st.fig.stop = true; render(); },
+  'lote-complete': () => {
+    if (st.lote.running) return;
+    for (const j of st.lote.fila || []) if (j.ja && ['ok', 'pulada'].includes(j.status)) { j.completar = true; j.status = 'fila'; j.motivo = ''; }
+    loteRun();
+  },
   'lote-stop': () => { st.lote.stop = true; render(); },
   'lote-reset': () => { Object.assign(st.lote, { step: 'pick', files: null, fila: null, ignorados: [] }); render(); },
   login: async () => {
