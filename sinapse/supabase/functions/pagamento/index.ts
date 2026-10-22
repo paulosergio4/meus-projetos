@@ -42,7 +42,13 @@ Deno.serve(async (req) => {
     const conta = me.ok ? await me.json() : {};
     return json(200, {
       metodos: (Array.isArray(lista) ? lista : []).map((m: any) => `${m.id}:${m.payment_type_id}:${m.status}`),
-      conta: { site: conta.site_id, tipo: conta.user_type, status: conta.status?.site_status, email_igual: conta.email === who.user.email },
+      conta: {
+        id: conta.id, apelido: conta.nickname, nome: conta.first_name,
+        email: typeof conta.email === 'string' ? conta.email.replace(/^(.{3}).*(@.*)$/, '$1***$2') : null,
+        site: conta.site_id, tipo: conta.user_type, status: conta.status?.site_status,
+        identidade: conta.status?.user_type?.status ?? conta.identification?.type ?? null,
+        email_igual: conta.email === who.user.email,
+      },
     });
   }
   const plan = String(body.plan || '');
