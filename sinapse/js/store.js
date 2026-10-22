@@ -100,8 +100,20 @@ export const store = {
     this.save();
   },
 
+  // Deck oficial: um card por questão publicada do banco (montado pelo app ao carregar o banco).
+  // Enquanto não há banco, ficam os cards de exemplo.
+  deckCards: [],
+
   allCards() {
-    return SEED_CARDS.concat(this.data.custom);
+    const base = this.deckCards.length ? this.deckCards : SEED_CARDS;
+    // Se a pessoa já tem o card dessa questão pelo caderno de erros, fica só o dela (com o histórico).
+    const mine = new Set();
+    for (const c of this.data.custom) if (c.origin) mine.add(c.origin);
+    return (mine.size ? base.filter((c) => !c.qref || !mine.has(c.qref)) : base).concat(this.data.custom);
+  },
+
+  deckCardFor(questionId) {
+    return this.deckCards.find((c) => c.qref === questionId) || null;
   },
 
   cardById(id) {
@@ -255,6 +267,12 @@ export const store = {
         entry.count += 1;
         entry.solved = false;
         entry.t = this.now();
+      } else if (this.deckCardFor(id) && !this.data.custom.some((c) => c.origin === id)) {
+        // O card dessa questão já está no deck oficial: em vez de criar outro, traz ele para hoje.
+        const cardId = this.deckCardFor(id).id;
+        if (this.stateOf(cardId).state === 'new') this.data.sched[cardId] = { ...scheduleAll(this.stateOf(cardId), this.now())[1], due: this.now() };
+        this.data.errors[id] = { count: 1, solved: false, t: this.now(), cardId };
+        createdCard = true;
       } else if (q.fact && q.fact.front && q.fact.back) {
         const cardId = this.addCustom({ type: 'basic', front: q.fact.front, back: q.fact.back, area: q.area, sub: q.sub, extra: 'Criado pelo caderno de erros.', origin: id }, false);
         this.data.errors[id] = { count: 1, solved: false, t: this.now(), cardId };

@@ -81,6 +81,10 @@ const TOOL_GABARITO = {
   },
 };
 
+// Flashcard do deck oficial: tem que fazer sentido sozinho, sem a questão ao lado.
+const CARD_FRENTE = 'Flashcard autônomo: pergunta curta (até 150 caracteres) com o fato médico principal da questão. Não cite alternativas, letras, "a questão", "o caso acima" nem figuras.';
+const CARD_VERSO = 'Resposta curta e autônoma (até 150 caracteres), sem letra de alternativa.';
+
 const TOOL_QUESTOES = {
   name: 'entregar_questoes',
   description: 'Questões separadas do texto da prova.',
@@ -99,8 +103,8 @@ const TOOL_QUESTOES = {
             area: { type: 'string' },
             subtema: { type: 'string' },
             comentario: { type: 'string', description: 'Comentário curto (3 a 6 frases) explicando por que a alternativa oficial está certa e as outras não.' },
-            card_frente: { type: 'string', description: 'Pergunta curta com o fato principal da questão.' },
-            card_verso: { type: 'string', description: 'Resposta curta.' },
+            card_frente: { type: 'string', description: CARD_FRENTE },
+            card_verso: { type: 'string', description: CARD_VERSO },
           },
           required: ['numero', 'enunciado', 'alternativas'],
         },
@@ -200,7 +204,7 @@ ${LISTA_AREAS}`;
           answer: answer >= 0 && answer < options.length ? answer : null,
           explanation: status === 'anulada' ? null : String(q.comentario || '').trim().slice(0, 2000) || null,
           explanation_ai: true,
-          fact: front && back ? { front: front.slice(0, 300), back: back.slice(0, 300) } : null,
+          fact: front && back ? { front: front.slice(0, 300), back: back.slice(0, 300), v: 2 } : null,
           needs_image: needsImage,
           status,
           created_by: who.user.id,
@@ -220,6 +224,44 @@ ${LISTA_AREAS}`;
         nao_encontradas: nums.filter((n) => !achadas.has(n)),
         truncado: truncated,
       });
+    }
+
+    // 4) action "cards": reescreve o flashcard de questões já publicadas para fazer sentido sozinho
+    //    e grava direto no banco (fact v2). Recebe só os ids; lê o resto do banco.
+    if (body.action === 'cards') {
+      const ids = (Array.isArray(body.ids) ? body.ids : []).map(String).slice(0, 20);
+      if (!ids.length) return json(400, { error: 'dados', message: 'Sem questões.' });
+      const { data: qs, error } = await admin.from('questions').select('id, stem, options, answer, explanation, sub').in('id', ids);
+      if (error || !qs?.length) return json(400, { error: 'dados', message: 'Questões não encontradas.' });
+      const lista = qs.filter((q: any) => q.answer != null && q.options?.[q.answer]).map((q: any, i: number) =>
+        `### ${i + 1}\nSubtema: ${q.sub}\nEnunciado: ${String(q.stem).slice(0, 1500)}\nResposta certa: ${q.options[q.answer]}\nComentário: ${String(q.explanation || '').slice(0, 800)}`).join('\n\n');
+      const tool = {
+        name: 'entregar_cards',
+        description: 'Um flashcard por questão, na mesma ordem.',
+        input_schema: {
+          type: 'object',
+          properties: { cards: { type: 'array', items: { type: 'object', properties: { n: { type: 'integer', description: 'Número da questão na lista (### n).' }, frente: { type: 'string', description: CARD_FRENTE }, verso: { type: 'string', description: CARD_VERSO } }, required: ['n', 'frente', 'verso'] } } },
+          required: ['cards'],
+        },
+      };
+      const validas = qs.filter((q: any) => q.answer != null && q.options?.[q.answer]);
+      const { input } = await claude(apiKey,
+        `Você escreve flashcards de medicina em português do Brasil para revisão espaçada de residência médica.
+Para cada questão, extraia o FATO MÉDICO de maior rendimento que ela cobra e escreva um card que faça sentido sozinho, sem a questão ao lado:
+- A frente traz o contexto mínimo necessário (ex.: "Gestante com diabetes gestacional controlado com dieta: conduta?") e pede uma única coisa.
+- O verso responde direto, com o conceito, não com a letra.
+- Proibido citar alternativas, letras, "a questão", "o caso", "as opções", "a imagem" ou "a figura". Se a questão depende de uma imagem, escreva o fato que a imagem ilustra (ex.: achado clássico → diagnóstico).
+- Use somente o que está no enunciado, na resposta certa e no comentário; não invente valores.`,
+        [{ type: 'text', text: lista }, { type: 'text', text: 'Entregue um card para cada questão pela ferramenta.' }], tool, 6000);
+      let gravados = 0;
+      for (const c of (input.cards || []) as any[]) {
+        const q = validas[Number(c.n) - 1];
+        const front = String(c.frente || '').trim().slice(0, 300), back = String(c.verso || '').trim().slice(0, 300);
+        if (!q || !front || !back) continue;
+        const { error: e2 } = await admin.from('questions').update({ fact: { front, back, v: 2 } }).eq('id', q.id);
+        if (!e2) gravados += 1;
+      }
+      return json(200, { gravados });
     }
 
     // 3) action "figuras": recebe a foto de uma página da prova com as imagens do PDF marcadas em

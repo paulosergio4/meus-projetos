@@ -3,7 +3,7 @@
 import {
   loadCloud, signInWithGoogle, signOutCloud, currentSessionUser, checkIsAdmin,
   callImportarProva, adminQuestions, adminProvas, adminUpdateQuestion, adminDeleteQuestion,
-  uploadQuestionImage, adminList, adminAdd, adminRemove, adminSearchQuestions, callOrganizarPasta, adminReports, adminResolveReport, adminOpenReportsCount, adminSubscribers, adminGrant, adminRevoke, adminImageDrafts, adminQuestionsOfYear,
+  uploadQuestionImage, adminList, adminAdd, adminRemove, adminSearchQuestions, callOrganizarPasta, adminReports, adminResolveReport, adminOpenReportsCount, adminSubscribers, adminGrant, adminRevoke, adminImageDrafts, adminQuestionsOfYear, adminCardsTodo,
 } from '../js/cloud.js';
 import { openPdf, figurasDoPdf, acharPdf } from './figuras.js';
 import { extractPdfText, shrinkImage, fileToB64 } from '../js/tools.js';
@@ -58,6 +58,7 @@ const st = {
   pasteTarget: null,
   subs: null,
   reports: null, reportsTab: 'aberto', openReports: 0, repEdit: null,
+  cards: { info: null, running: false, stop: false, done: 0, total: 0, gravados: 0 },
   fig: { running: false, stop: false, total: 0, ok: 0, falhou: 0, atual: '', fim: null },
   lote: { step: 'pick', files: null, fila: null, ignorados: [], jaImportadas: new Set(), running: false, stop: false, log: [], startedAt: 0, totals: { provas: 0, publicadas: 0, rascunhos: 0 } },
 };
@@ -249,6 +250,45 @@ function viewDrafts() {
     </article>`).join('')}</div>`;
 }
 
+// ----- flashcards do deck oficial -----
+function cardsPanel() {
+  const C = st.cards;
+  if (!C.info && !C.loading) { C.loading = true; adminCardsTodo().then((i) => { C.info = i; }).catch(() => { C.info = { todo: [], total: 0 }; }).finally(() => { C.loading = false; render(); }); }
+  if (C.running) {
+    const pct = Math.round((C.done / Math.max(1, C.total)) * 100);
+    return `<section class="panel stack-sm adm-progress"><div class="row wrap gap-sm"><h2 class="grow">Reescrevendo flashcards: ${C.done} de ${C.total}</h2><button class="btn ghost" data-act="cards-stop" ${C.stop ? 'disabled' : ''}>${C.stop ? 'Parando…' : 'Parar'}</button></div>
+      <span class="bar"><span class="fill violet" style="width:${pct}%"></span></span><p class="muted small">${C.gravados} reescritos. Deixe esta aba aberta.</p></section>`;
+  }
+  if (!C.info) return '';
+  const falta = C.info.todo.length;
+  if (!falta) return `<div class="panel note">Flashcards do deck: todos os ${C.info.total} já estão no padrão novo. Para corrigir um card, abra a questão abaixo.</div>`;
+  return `<section class="panel stack-sm"><div class="row wrap gap-sm"><span class="stack-xs grow"><strong>Flashcards do deck oficial</strong><span class="muted small">Cada questão publicada vira um flashcard no app. ${C.info.total - falta} de ${C.info.total} já estão no padrão novo (fazem sentido sem a questão). ${falta} ainda são do formato antigo; os que citam alternativa ou figura ficam fora do app até serem reescritos.</span></span>
+    <button class="btn primary" data-act="cards-run">Reescrever ${falta} com a IA</button></div></section>`;
+}
+
+async function cardsRun() {
+  const C = st.cards;
+  if (C.running || !C.info) return;
+  const fila = C.info.todo.slice();
+  Object.assign(C, { running: true, stop: false, done: 0, total: fila.length, gravados: 0 });
+  render();
+  const lotes = [];
+  for (let i = 0; i < fila.length; i += 20) lotes.push(fila.slice(i, i + 20));
+  const worker = async () => {
+    while (lotes.length && !C.stop) {
+      const ids = lotes.shift();
+      let r = null;
+      for (let t = 0; t < 2 && !r; t += 1) { try { r = await callImportarProva({ action: 'cards', ids }); } catch (e) { /* tenta de novo */ } }
+      C.done += ids.length; C.gravados += r ? r.gravados : 0;
+      render();
+    }
+  };
+  await Promise.all([worker(), worker(), worker()]);
+  C.running = false; C.stop = false; C.info = null;
+  toast(`${C.gravados} flashcards reescritos.`);
+  render();
+}
+
 // ----- imagens automáticas -----
 function figPanel() {
   const F = st.fig;
@@ -347,7 +387,7 @@ function viewQuestions() {
   if (!st.provas) load('provas', adminProvas);
   if (!q.rows && !st.qLoading) searchQuestions();
   const pages = Math.max(1, Math.ceil(q.count / 50));
-  return `${h}<div class="panel adm-filters">
+  return `${h}${cardsPanel()}<div class="panel adm-filters">
       <label class="field">Prova<select data-qf="prova"><option value="">Todas</option>${(st.provas || []).map((p) => `<option value="${esc(`${p.prova}|${p.ano}`)}" ${q.prova === `${p.prova}|${p.ano}` ? 'selected' : ''}>${esc(p.prova)} ${p.ano}</option>`).join('')}</select></label>
       <label class="field">Área<select data-qf="area"><option value="">Todas</option>${AREAS.map((a) => `<option value="${a.id}" ${q.area === a.id ? 'selected' : ''}>${esc(a.name)}</option>`).join('')}</select></label>
       <label class="field grow">Buscar no enunciado<input type="search" value="${esc(q.text)}" placeholder="Palavra do enunciado" data-qf="text"></label>
@@ -375,6 +415,10 @@ function editor(e) {
     ${e.options.map((o, i) => `<label class="field adm-opt ${i === e.answer ? 'right' : ''}"><span>Alternativa ${LETTERS[i]}${i === e.answer ? ' · resposta do gabarito' : ''}</span><textarea rows="2" data-ed-opt="${i}">${esc(o)}</textarea></label>`).join('')}
     <label class="field">Resposta (gabarito oficial)<select data-ed="answer">${e.options.map((_, i) => `<option value="${i}" ${i === e.answer ? 'selected' : ''}>${LETTERS[i]}</option>`).join('')}</select><small class="muted">Só mude se o gabarito definitivo foi corrigido pela banca.</small></label>
     <label class="field">Comentário<textarea rows="6" data-ed="explanation">${esc(e.explanation || '')}</textarea></label>
+    <div class="adm-grid-2">
+      <label class="field">Flashcard · frente<textarea rows="3" data-ed="fact_front" placeholder="Pergunta curta com o fato principal">${esc((e.fact && e.fact.front) || '')}</textarea></label>
+      <label class="field">Flashcard · verso<textarea rows="3" data-ed="fact_back" placeholder="Resposta curta">${esc((e.fact && e.fact.back) || '')}</textarea></label>
+    </div>
     <label class="switch-row"><span class="grow">Comentário <strong>revisado</strong> (tira o aviso "gerado por IA" no app)</span><input type="checkbox" class="switch" data-ed="reviewed" ${e.explanation_ai === false ? 'checked' : ''}></label>
     ${imageZone(e)}
     <div class="row adm-actions">
@@ -467,7 +511,7 @@ function viewReports() {
     return `<article class="panel stack-sm">
       <div class="row wrap gap-sm"><span class="tag bad">${REASON_LABEL[r.reason] || r.reason}</span>${q ? `<span class="tag">${esc(q.prova)} ${q.ano} · Q${q.numero}</span>` : `<span class="tag">${esc(r.ref || 'Card')}</span>`}<span class="grow"></span><span class="muted small">${new Date(r.created_at).toLocaleString('pt-BR')}</span></div>
       ${r.message ? `<p class="adm-msg">“${esc(r.message)}”</p>` : '<p class="muted small">Sem descrição.</p>'}
-      ${editing ? editor(st.q.edit) : q ? `${questionBlock(q)}${q.explanation ? `<p class="muted small"><strong>Comentário:</strong> ${esc(q.explanation)}</p>` : ''}` : r.ref_text ? `<p class="adm-stem">${esc(r.ref_text)}</p>` : ''}
+      ${editing ? editor(st.q.edit) : q ? `${questionBlock(q)}${q.explanation ? `<p class="muted small"><strong>Comentário:</strong> ${esc(q.explanation)}</p>` : ''}${q.fact && q.fact.front ? `<p class="muted small"><strong>Flashcard:</strong> ${esc(q.fact.front)} → ${esc(q.fact.back || '')}</p>` : ''}` : r.ref_text ? `<p class="adm-stem">${esc(r.ref_text)}</p>` : ''}
       ${st.reportsTab === 'aberto' && !editing ? `<div class="row adm-actions">
         ${q ? `<button class="btn ghost" data-act="rep-edit" data-v="${r.id}">Corrigir questão</button>` : ''}
         <button class="btn ghost" data-act="rep-set" data-v="${r.id}|descartado">Descartar</button>
@@ -706,6 +750,8 @@ const actions = {
   },
   'lote-run': () => { if (!st.lote.running) loteRun(); },
   'fig-stop': () => { st.fig.stop = true; render(); },
+  'cards-run': () => cardsRun(),
+  'cards-stop': () => { st.cards.stop = true; render(); },
   'lote-complete': () => {
     if (st.lote.running) return;
     for (const j of st.lote.fila || []) if (j.ja && ['ok', 'pulada'].includes(j.status)) { j.completar = true; j.status = 'fila'; j.motivo = ''; }
@@ -767,6 +813,8 @@ const actions = {
     const options = e.options.map((o) => o.trim());
     if (!e.stem.trim() || options.some((o) => !o)) { toast('Enunciado e alternativas não podem ficar vazios.'); return; }
     const patch = { area: e.area, sub: e.sub, stem: e.stem.trim(), options, answer: Number(e.answer), explanation: (e.explanation || '').trim() || null, explanation_ai: e.explanation_ai !== false };
+    const ff = e.fact ? { front: String(e.fact.front || '').trim(), back: String(e.fact.back || '').trim() } : null;
+    if (ff) patch.fact = ff.front && ff.back ? ff : null;
     try { await adminUpdateQuestion(e.id, patch); } catch (err) { toast('Não foi possível salvar.'); return; }
     const i = (st.q.rows || []).findIndex((x) => x.id === e.id);
     if (i >= 0) st.q.rows[i] = { ...st.q.rows[i], ...patch };
@@ -814,6 +862,10 @@ root.addEventListener('input', (e) => {
   if (t.dataset.qf === 'text') { st.q.text = t.value; clearTimeout(searchTimer); searchTimer = setTimeout(() => { st.q.page = 0; st.q.open = null; searchQuestions(); }, 400); }
   if (st.q.edit) {
     if (t.dataset.ed && ['stem', 'explanation'].includes(t.dataset.ed)) st.q.edit[t.dataset.ed] = t.value;
+    if (t.dataset.ed === 'fact_front' || t.dataset.ed === 'fact_back') {
+      const f = st.q.edit.fact = { front: '', back: '', ...(st.q.edit.fact || {}) };
+      f[t.dataset.ed === 'fact_front' ? 'front' : 'back'] = t.value;
+    }
     if (t.dataset.edOpt != null) st.q.edit.options[Number(t.dataset.edOpt)] = t.value;
   }
 });
@@ -925,7 +977,7 @@ document.addEventListener('paste', (e) => {
   setImage(st.pasteTarget, item.getAsFile());
 });
 
-window.addEventListener('beforeunload', (e) => { if (st.lote.running || st.fig.running || st.imp.step === 'importing') { e.preventDefault(); e.returnValue = ''; } });
+window.addEventListener('beforeunload', (e) => { if (st.lote.running || st.fig.running || st.cards.running || st.imp.step === 'importing') { e.preventDefault(); e.returnValue = ''; } });
 
 render();
 boot();

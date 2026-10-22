@@ -65,7 +65,7 @@ function animateCard(cls, ms, then) {
   setTimeout(() => { ui.animating = false; then(); }, ms);
 }
 
-const APP_VERSION = '0.16.0';
+const APP_VERSION = '0.17.0';
 const root = document.getElementById('app');
 
 // ---------- utilitários ----------
@@ -351,9 +351,21 @@ function rowToQuestion(r) {
   };
 }
 
+// Mistura as áreas na ordem dos cards novos, sempre do mesmo jeito (o id decide a posição).
+const mixKey = (id) => { let h = 2166136261; for (let i = 0; i < id.length; i += 1) { h ^= id.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
+
 function applyBank(rows) {
   const usable = (rows || []).filter((r) => Array.isArray(r.options) && r.answer != null && r.answer < r.options.length);
-  setBankQuestions(usable.map(rowToQuestion));
+  const qs = usable.map(rowToQuestion);
+  setBankQuestions(qs);
+  // Deck oficial: o fato principal de cada questão vira um flashcard de frente e verso.
+  // Cards antigos (antes da revisão) só entram se fizerem sentido sem a questão ao lado.
+  const dependeDaQuestao = /alternativa|op[cç](ão|ões)|assinale|abaixo|acima|figura|imagem|tabela|gr[aá]fico|ilustra|\bletra\b/i;
+  const limpa = (t) => String(t).replace(/\s*\((?:alternativa|gabarito|letra|resposta|op[cç][aã]o)?\s*[A-E]\)/gi, '').trim();
+  store.deckCards = usable.filter((r) => r.fact && r.fact.front && r.fact.back && (r.fact.v === 2 || !dependeDaQuestao.test(`${r.fact.front} ${limpa(r.fact.back)}`))).map((r) => ({
+    id: `d_${r.id}`, qref: `b_${r.id}`, deck: true, type: 'basic', area: r.area, sub: r.sub,
+    front: String(r.fact.front), back: r.fact.v === 2 ? String(r.fact.back) : limpa(r.fact.back), extra: `Da questão ${rowToQuestion(r).source}`,
+  })).sort((a, b) => mixKey(a.id) - mixKey(b.id));
 }
 
 (() => { try { const c = JSON.parse(localStorage.getItem(QBANK_KEY) || 'null'); if (c && c.rows) applyBank(c.rows); } catch (e) { /* sem cache */ } })();
@@ -633,6 +645,7 @@ function reportContextForQuestion(id) {
 
 function reportContextForCard(card) {
   if (card.origin && card.origin.startsWith('b_') && store.questionById(card.origin)) return reportContextForQuestion(card.origin);
+  if (card.qref && store.questionById(card.qref)) return { ...reportContextForQuestion(card.qref), label: `Flashcard · ${card.sub || ''}` };
   const text = card.type === 'cloze' ? card.text : card.type === 'occlusion' ? `Oclusão ECG região ${card.ask}` : `${card.front} → ${card.back}`;
   return { questionId: null, ref: `card:${card.id}`, refText: text, label: `Card · ${card.sub || ''}` };
 }

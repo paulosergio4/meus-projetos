@@ -163,6 +163,21 @@ export async function adminQuestionsOfYear(ano) {
   return out;
 }
 
+// Questões publicadas cujo flashcard ainda não foi reescrito no padrão do deck (fact v2).
+export async function adminCardsTodo() {
+  const c = await loadCloud();
+  if (!c) return { todo: [], total: 0 };
+  const todo = [];
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await c.from('questions').select('id').eq('status', 'publicada').filter('fact->v', 'is', 'null').order('id').range(from, from + 999);
+    if (error) throw error;
+    todo.push(...data.map((r) => r.id));
+    if (data.length < 1000) break;
+  }
+  const { count } = await c.from('questions').select('id', { count: 'exact', head: true }).eq('status', 'publicada');
+  return { todo, total: count || 0 };
+}
+
 // Rascunhos que precisam de imagem e ainda não têm (de uma prova ou de todas).
 export async function adminImageDrafts(prova, ano) {
   const c = await loadCloud();
