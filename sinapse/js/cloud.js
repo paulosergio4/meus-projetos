@@ -40,10 +40,11 @@ function returnUrl() {
   return location.origin + location.pathname;
 }
 
-export async function signInWithGoogle() {
+// redirectTo opcional: o painel de administração volta pelo endereço do app (já autorizado no Supabase).
+export async function signInWithGoogle(redirectTo) {
   const c = await loadCloud();
   if (!c) throw new Error('Não foi possível conectar ao servidor.');
-  const { error } = await c.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: returnUrl() } });
+  const { error } = await c.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: redirectTo || returnUrl() } });
   if (error) throw error;
 }
 
@@ -196,4 +197,42 @@ export async function uploadQuestionImage(questionId, blob) {
   if (error) throw error;
   const { data } = c.storage.from('questoes').getPublicUrl(path);
   return `${data.publicUrl}?v=${Date.now()}`;
+}
+
+// ---------- painel: administradores e edição ----------
+export async function adminList() {
+  const c = await loadCloud();
+  const { data, error } = await c.rpc('admin_list');
+  if (error) throw error;
+  return data || [];
+}
+
+export async function adminAdd(email) {
+  const c = await loadCloud();
+  const { error } = await c.rpc('admin_add', { p_email: email });
+  if (error) throw new Error(error.message);
+}
+
+export async function adminRemove(userId) {
+  const c = await loadCloud();
+  const { error } = await c.rpc('admin_remove', { p_user: userId });
+  if (error) throw new Error(error.message);
+}
+
+export async function adminSearchQuestions({ status = 'publicada', prova = '', area = '', text = '', from = 0, size = 50 } = {}) {
+  const c = await loadCloud();
+  let q = c.from('questions').select(Q_FIELDS, { count: 'exact' }).eq('status', status);
+  if (prova) { const [p, a] = prova.split('|'); q = q.eq('prova', p).eq('ano', Number(a)); }
+  if (area) q = q.eq('area', area);
+  if (text) q = q.ilike('stem', `%${text.replace(/[%_]/g, '')}%`);
+  const { data, error, count } = await q.order('ano', { ascending: false }).order('prova').order('numero').range(from, from + size - 1);
+  if (error) throw error;
+  return { rows: data || [], count: count || 0 };
+}
+
+export async function currentSessionUser() {
+  const c = await loadCloud();
+  if (!c) return null;
+  const { data } = await c.auth.getSession();
+  return data.session ? data.session.user : null;
 }

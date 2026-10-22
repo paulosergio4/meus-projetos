@@ -1,5 +1,6 @@
 // Sinapse — protótipo. Interface em JavaScript puro, sem dependências.
 import { AREAS, PROVAS, FASES, ECG_REGIONS } from './data.js';
+import { extractPdfText, shrinkImage } from './tools.js';
 import { PLANS, FEATURE_INFO, cobrancaAtiva, effectivePlan, limitsFor, planById, fmtPrice, TRIAL_DAYS } from './plans.js';
 import { QUESTIONS, CASES, setBankQuestions, usingDemoQuestions } from './questions.js';
 import { store } from './store.js';
@@ -64,7 +65,7 @@ function animateCard(cls, ms, then) {
   setTimeout(() => { ui.animating = false; then(); }, ms);
 }
 
-const APP_VERSION = '0.12.2';
+const APP_VERSION = '0.13.0';
 const root = document.getElementById('app');
 
 // ---------- utilitários ----------
@@ -312,6 +313,11 @@ async function bootCloud() {
     if (local && local.cloud) { store.signOut(); go('login'); }
     return;
   }
+  // Login começado no painel de administração: volta para lá.
+  try {
+    const t = Number(localStorage.getItem('sinapse:goAdmin') || 0);
+    if (t && Date.now() - t < 10 * 60 * 1000) { localStorage.removeItem('sinapse:goAdmin'); location.replace('admin/'); return; }
+  } catch (e) { /* sem armazenamento */ }
   const prevSaved = store.data.savedAt || 0;
   const already = local && local.cloud && local.id === u.id;
   store.data.user = userFromSession(u);
@@ -367,44 +373,6 @@ async function refreshAdmin() {
 }
 
 // ---------- administração: importar provas ----------
-const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-const PDFJS_WORKER = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-let pdfjsLoading = null;
-
-function loadPdfJs() {
-  if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
-  if (!pdfjsLoading) {
-    pdfjsLoading = new Promise((resolve, reject) => {
-      const sc = document.createElement('script');
-      sc.src = PDFJS;
-      sc.onload = () => { window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER; resolve(window.pdfjsLib); };
-      sc.onerror = () => { pdfjsLoading = null; reject(new Error('Não foi possível carregar o leitor de PDF.')); };
-      document.head.appendChild(sc);
-    });
-  }
-  return pdfjsLoading;
-}
-
-// Texto da prova, página por página (provas das bancas costumam ser PDF de texto).
-async function extractPdfText(buffer) {
-  const lib = await loadPdfJs();
-  const doc = await lib.getDocument({ data: new Uint8Array(buffer) }).promise;
-  const parts = [];
-  for (let n = 1; n <= doc.numPages; n += 1) {
-    const page = await doc.getPage(n);
-    const tc = await page.getTextContent();
-    let line = '';
-    const lines = [];
-    for (const it of tc.items) {
-      line += it.str;
-      if (it.hasEOL) { lines.push(line); line = ''; } else if (it.str && !/\s$/.test(it.str)) line += ' ';
-    }
-    if (line) lines.push(line);
-    parts.push(`[página ${n}]\n${lines.join('\n')}`);
-  }
-  return { text: parts.join('\n\n'), pages: doc.numPages };
-}
-
 function admState() {
   if (!ui.adm) ui.adm = { tab: 'importar', step: 'form', banca: '', prova: '', ano: String(new Date().getFullYear() - 1), tipo: '', provaFile: null, gabFile: null, definitivo: false, gab: null, progress: null, summary: null, rascunhos: null, provas: null, busy: false };
   return ui.adm;
@@ -474,26 +442,6 @@ function admImport(a) {
     <label class="switch-row" for="adm-def"><span class="grow">É o gabarito <strong>definitivo</strong>, já com os recursos julgados</span><input id="adm-def" type="checkbox" class="switch" data-adm="definitivo" ${a.definitivo ? 'checked' : ''}></label>
     <button type="button" class="btn primary big" data-act="adm-read-gab">Ler gabarito</button>
   </form>`;
-}
-
-// Reduz a imagem no aparelho (até 1600 px, JPEG) antes de enviar.
-async function shrinkImage(file, max = 1600) {
-  const img = await new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file);
-    const im = new Image();
-    im.onload = () => { URL.revokeObjectURL(url); resolve(im); };
-    im.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Não foi possível abrir a imagem.')); };
-    im.src = url;
-  });
-  const scale = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
-  const cv = document.createElement('canvas');
-  cv.width = Math.round(img.naturalWidth * scale);
-  cv.height = Math.round(img.naturalHeight * scale);
-  const g = cv.getContext('2d');
-  g.fillStyle = '#FFFFFF';
-  g.fillRect(0, 0, cv.width, cv.height);
-  g.drawImage(img, 0, 0, cv.width, cv.height);
-  return new Promise((resolve) => cv.toBlob(resolve, 'image/jpeg', 0.86));
 }
 
 function admNumbers(gab) {

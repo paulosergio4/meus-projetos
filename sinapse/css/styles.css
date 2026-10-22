@@ -233,7 +233,7 @@ fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
 legend { font-weight: 600; font-size: 14px; padding: 0; margin-bottom: 10px; }
 .field { display: flex; flex-direction: column; gap: 8px; font-weight: 600; font-size: 14px; }
 .field small { font-weight: 400; }
-input[type="text"], input[type="date"], textarea, select {
+input[type="text"], input[type="date"], input[type="number"], input[type="search"], input[type="email"], textarea, select {
   font: 400 15px var(--font-body); color: var(--fg); background: var(--surface);
   border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; width: 100%;
 }

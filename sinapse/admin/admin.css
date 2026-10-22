@@ -1,0 +1,60 @@
+/* Painel de administração (computador) */
+.adm-body { min-height: 100vh; }
+.adm-root { display: grid; grid-template-columns: 248px 1fr; min-height: 100vh; }
+.adm-side { position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; gap: 22px; padding: 22px 16px; border-right: 1px solid var(--line); background: var(--surface); }
+.adm-brand { display: flex; align-items: center; gap: 12px; }
+.adm-brand .brand-logo { width: 40px; height: 40px; }
+.adm-brand span { display: flex; flex-direction: column; line-height: 1.15; }
+.adm-brand strong { font: 800 20px var(--font-display); }
+.adm-brand small { color: var(--muted); font-size: 12.5px; }
+.adm-brand.big .brand-logo { width: 64px; height: 64px; }
+.adm-brand.big strong { font-size: 28px; }
+.adm-nav { display: grid; gap: 4px; }
+.adm-nav button { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 0; border-radius: 12px; background: transparent; color: var(--muted); font: 600 14.5px var(--font-body); cursor: pointer; text-align: left; }
+.adm-nav button:hover { background: var(--surface-2); color: var(--fg); }
+.adm-nav button.on { background: var(--violet-soft); color: var(--violet-ink); }
+.adm-me { margin-top: auto; display: grid; gap: 10px; }
+.adm-link { display: flex; align-items: center; gap: 8px; color: var(--violet-ink); font-weight: 600; font-size: 14px; text-decoration: none; }
+.adm-main { padding: 32px clamp(20px, 4vw, 48px) 64px; max-width: 1180px; width: 100%; display: flex; flex-direction: column; gap: 18px; }
+.adm-head h1 { font: 800 28px var(--font-display); letter-spacing: -0.5px; }
+.adm-head p { max-width: 70ch; margin-top: 6px; }
+.adm-center { grid-column: 1 / -1; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+.adm-login { width: min(440px, 100%); align-items: stretch; padding: 32px; }
+.adm-grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.adm-grid-3 { display: grid; grid-template-columns: 1fr 1.6fr 0.6fr; gap: 14px; }
+.adm-actions { justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
+.adm-drop { display: flex; align-items: center; gap: 14px; padding: 16px; border: 1.5px dashed var(--line); border-radius: 16px; background: var(--surface-2); cursor: pointer; transition: border-color .15s, background .15s; }
+.adm-drop.has { border-style: solid; }
+.adm-drop.over, .adm-drop.target { border-color: var(--violet); background: var(--violet-soft); }
+.adm-drop.img { flex-direction: column; align-items: stretch; cursor: default; }
+.adm-drop.img img { width: 100%; max-height: 380px; object-fit: contain; border-radius: 10px; background: #fff; }
+.adm-drop-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 18px 8px; color: var(--muted); text-align: center; font-size: 14px; }
+.adm-drop.img .btn { align-self: center; }
+.adm-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 16px; align-items: start; }
+.adm-stem { white-space: pre-line; line-height: 1.55; }
+.adm-filters { display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap; }
+.adm-filters .field { min-width: 200px; }
+.adm-list { display: grid; gap: 8px; }
+.adm-row { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--fg); font: inherit; text-align: left; cursor: pointer; }
+.adm-row:hover { border-color: var(--violet); }
+.adm-row .tag { flex: none; }
+.adm-editor { border-color: var(--violet); }
+.adm-opt.right textarea { border-color: var(--good); }
+.adm-opt span { font-size: 13px; }
+.adm-table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+.adm-table th { text-align: left; color: var(--muted); font-weight: 600; font-size: 12.5px; text-transform: uppercase; letter-spacing: .5px; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+.adm-table td { padding: 12px 10px; border-bottom: 1px solid var(--line); }
+.adm-table tr:last-child td { border-bottom: 0; }
+.adm-admin { gap: 12px; padding: 6px 0; }
+.avatar.sm { width: 38px; height: 38px; font-size: 16px; }
+.gab-grid.wide { grid-template-columns: repeat(auto-fill, minmax(58px, 1fr)); }
+.adm-progress { max-width: 640px; }
+#add-admin input { min-width: 0; }
+@media (max-width: 860px) {
+  .adm-root { grid-template-columns: 1fr; }
+  .adm-side { position: static; height: auto; flex-direction: row; flex-wrap: wrap; align-items: center; }
+  .adm-nav { grid-auto-flow: column; overflow-x: auto; }
+  .adm-me { margin: 0; grid-auto-flow: column; align-items: center; }
+  .adm-grid-2, .adm-grid-3 { grid-template-columns: 1fr; }
+  .adm-cards { grid-template-columns: 1fr; }
+}

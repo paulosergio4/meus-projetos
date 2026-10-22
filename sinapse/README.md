@@ -103,3 +103,10 @@ tests/                  testes (node --test)
 3. Geração real de cards por IA a partir de PDF, via Edge Function.
 4. Importação de decks do Anki (`.apkg`).
 5. Cronograma reverso até a data da prova.
+
+## Painel de administração
+
+`sinapse/admin/` (https://paulosergio4.github.io/meus-projetos/sinapse/admin/): para usar no computador.
+Entra com a conta Google; só quem está na tabela `admins`. Importar prova com gabarito oficial,
+rascunhos com imagem (arrastar ou Ctrl+V), editar questões publicadas, provas e administradores.
+SQL necessário: `supabase/questoes.sql`, `supabase/imagens.sql`, `supabase/admin-painel.sql`.
