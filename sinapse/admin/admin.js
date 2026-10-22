@@ -669,6 +669,8 @@ async function loteJob(j) {
   } catch (e) { j.status = 'erro'; j.motivo = e.message.slice(0, 60); return; }
   const nums = [...new Set([...Object.keys(gab.respostas).map(Number), ...gab.anuladas])].sort((a, b) => a - b);
   if (nums.length < 5) { j.status = 'pulada'; j.motivo = 'Sem gabarito oficial'; return; }
+  // Gabarito lido errado (ex.: tipo de caderno trocado) vira um monte de "anuladas": melhor não importar.
+  if (gab.anuladas.length > Math.max(6, nums.length * 0.15)) { j.status = 'erro'; j.motivo = `Gabarito duvidoso (${gab.anuladas.length} anuladas) · importe pela tela "Importar uma prova"`; return; }
   if (/prelimin/i.test(gab.observacao || '') && !/definitiv/i.test(gab.observacao || '')) { j.status = 'pulada'; j.motivo = 'Gabarito preliminar'; return; }
 
   // Completar: acha esta prova no banco pelo texto e importa só os números que faltam.
