@@ -10,7 +10,7 @@ import { daysBetween } from './plan.js';
 import { GOOGLE_CLIENT_ID, EXIGIR_LOGIN } from './config.js';
 import { startSynapseFx } from './fx.js';
 import { biometricAvailable, biometricEnabled, enableBiometric, disableBiometric, unlockWithBiometric } from './biometric.js';
-import { startCardSubscription, cancelRenewal, startCheckout, sendReport, callGerarCards, callImportarProva, fetchPublishedQuestions, fetchBookCards, checkIsAdmin, adminQuestions, adminProvas, adminUpdateQuestion, adminDeleteQuestion, uploadQuestionImage, fetchSubscription, cloudEnabled, loadCloud, signInWithGoogle, currentCloudUser, userFromSession, signOutCloud, pullProgress, pushProgress, deleteCloudProgress, isOAuthReturn } from './cloud.js';
+import { startCardSubscription, cancelRenewal, startCheckout, sendReport, callGerarCards, callImportarProva, fetchPublishedQuestions, fetchBookCards, fetchPublishedCases, checkIsAdmin, adminQuestions, adminProvas, adminUpdateQuestion, adminDeleteQuestion, uploadQuestionImage, fetchSubscription, cloudEnabled, loadCloud, signInWithGoogle, currentCloudUser, userFromSession, signOutCloud, pullProgress, pushProgress, deleteCloudProgress, isOAuthReturn } from './cloud.js';
 
 function homeView() {
   if (!store.data.user) return 'login';
@@ -70,7 +70,7 @@ function animateCard(cls, ms, then) {
   setTimeout(() => { ui.animating = false; then(); }, ms);
 }
 
-const APP_VERSION = '0.20.1';
+const APP_VERSION = '0.21.0';
 const root = document.getElementById('app');
 
 // ---------- utilitários ----------
@@ -391,6 +391,18 @@ function applyBookCards(rows) {
 }
 (() => { try { const c = JSON.parse(localStorage.getItem(BOOK_KEY) || 'null'); if (c && c.rows) applyBookCards(c.rows); } catch (e) { /* sem cache */ } })();
 
+// Casos clínicos publicados no painel entram depois dos casos de exemplo.
+const CASES_KEY = 'sinapse:cases';
+const BUILTIN_CASES = CASES.length;
+function applyCases(rows) {
+  const extra = (rows || []).filter((r) => r.title && Array.isArray(r.stages) && r.stages.length).map((r) => ({
+    id: `c_${r.id}`, title: r.title, area: r.area, sub: r.sub, intro: r.intro, source: r.source,
+    stages: r.stages.filter((s) => Array.isArray(s.options) && s.options[s.answer] != null),
+  })).filter((c) => c.stages.length);
+  CASES.splice(BUILTIN_CASES, CASES.length - BUILTIN_CASES, ...extra);
+}
+(() => { try { const c = JSON.parse(localStorage.getItem(CASES_KEY) || 'null'); if (c && c.rows) applyCases(c.rows); } catch (e) { /* sem cache */ } })();
+
 (() => { try { const c = JSON.parse(localStorage.getItem(QBANK_KEY) || 'null'); if (c && c.rows) applyBank(c.rows); } catch (e) { /* sem cache */ } })();
 
 async function refreshBank() {
@@ -400,6 +412,12 @@ async function refreshBank() {
     applyBookCards(rows);
     try { localStorage.setItem(BOOK_KEY, JSON.stringify({ t: Date.now(), rows })); } catch (e) { /* sem espaço */ }
     if (['study', 'stats', 'home'].includes(ui.view)) render();
+  }).catch(() => {});
+  fetchPublishedCases().then((rows) => {
+    if (!rows) return;
+    applyCases(rows);
+    try { localStorage.setItem(CASES_KEY, JSON.stringify({ t: Date.now(), rows })); } catch (e) { /* sem espaço */ }
+    if (['questions', 'cases'].includes(ui.view)) render();
   }).catch(() => {});
   const rows = await fetchPublishedQuestions().catch(() => null);
   if (!rows) return;
@@ -1549,19 +1567,30 @@ function viewErrors() {
 
 // ---------- casos clínicos ----------
 function viewCases() {
+  const area = ui.caseArea || 'all';
+  const counts = {};
+  CASES.forEach((c) => { counts[c.area] = (counts[c.area] || 0) + 1; });
+  const areas = AREAS.filter((a) => counts[a.id]);
+  const list = CASES.filter((c) => area === 'all' || c.area === area)
+    // Os ainda não resolvidos primeiro.
+    .map((c, i) => ({ c, i, done: store.data.cases[c.id] ? 1 : 0 })).sort((a, b) => a.done - b.done || a.i - b.i).map((x) => x.c);
+  const limit = ui.caseLimit || 20;
   return `<div class="screen stack">
     <div class="row top"><button class="icon-btn" data-act="go" data-v="questions" aria-label="Voltar">${icon('back')}</button><h1 class="grow center-text h-sm">Casos clínicos</h1><span class="icon-spacer"></span></div>
     <p class="muted">O caso se revela em etapas. Em cada uma, você decide a conduta antes de ver o que acontece.</p>
-    ${CASES.map((c) => {
+    ${areas.length > 1 ? chipGroup('case-area', area, [['all', `Todas (${CASES.length})`], ...areas.map((a) => [a.id, `${a.short} (${counts[a.id]})`])]) : ''}
+    ${list.slice(0, limit).map((c) => {
       const best = store.data.cases[c.id];
       return `<article class="panel stack-sm">
-        <div class="row"><span class="tag violet">${esc(areaById(c.area).short)}</span><span class="muted small">${c.stages.length} etapas</span></div>
+        <div class="row wrap gap-sm"><span class="tag violet">${esc(areaById(c.area).short)}${c.sub ? ` · ${esc(c.sub)}` : ''}</span><span class="muted small">${c.stages.length} etapas</span></div>
         <h2>${esc(c.title)}</h2>
         <p class="muted small clamp-2">${esc(c.intro)}</p>
+        ${c.source ? `<p class="muted small">Baseado em ${esc(c.source)}</p>` : ''}
         <div class="row"><span class="small ${best ? 'good-ink strong' : 'muted'}">${best ? `Melhor resultado: ${best.best}/${best.total}` : 'Ainda não resolvido'}</span>
         <button class="btn primary" data-act="start-case" data-v="${c.id}">${best ? 'Refazer' : 'Começar'}</button></div>
       </article>`;
     }).join('')}
+    ${list.length > limit ? `<button class="btn ghost" data-act="case-more">Mostrar mais (${list.length - limit})</button>` : ''}
   </div>`;
 }
 
@@ -2247,6 +2276,8 @@ const actions = {
   },
 
   // casos clínicos
+  'case-area': (v) => { ui.caseArea = v; ui.caseLimit = 20; render(); },
+  'case-more': () => { ui.caseLimit = (ui.caseLimit || 20) + 20; render(); },
   'start-case': (v) => {
     const c = CASES.find((x) => x.id === v);
     ui.caseRun = { id: v, stage: 0, pick: null, confirmed: false, score: 0, hits: [], done: false, orders: c.stages.map(optionOrder) };

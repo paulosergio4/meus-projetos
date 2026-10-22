@@ -3,6 +3,7 @@
 //    para o administrador conferir antes de importar.
 // 2) action "questoes": recebe o texto da prova, uma faixa de números e o gabarito já conferido;
 //    a IA separa enunciado e alternativas, classifica e comenta; A RESPOSTA VEM SEMPRE DO GABARITO.
+// 5) action "casos": gera casos clínicos em etapas a partir de questões publicadas (rascunho).
 // Segredo: ANTHROPIC_API_KEY. Opcional: AI_MODEL.
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
@@ -260,6 +261,72 @@ Para cada questão, extraia o FATO MÉDICO de maior rendimento que ela cobra e e
         if (!q || !front || !back) continue;
         const { error: e2 } = await admin.from('questions').update({ fact: { front, back, v: 2 } }).eq('id', q.id);
         if (!e2) gravados += 1;
+      }
+      return json(200, { gravados });
+    }
+
+    // 5) action "casos": transforma questões longas já publicadas em casos clínicos em etapas.
+    //    Grava como rascunho em clinical_cases para o administrador revisar e publicar.
+    if (body.action === 'casos') {
+      const ids = (Array.isArray(body.ids) ? body.ids : []).map(String).slice(0, 3);
+      if (!ids.length) return json(400, { error: 'dados', message: 'Sem questões.' });
+      const { data: qs, error } = await admin.from('questions').select('id, prova, ano, numero, area, sub, stem, options, answer, explanation').in('id', ids);
+      if (error || !qs?.length) return json(400, { error: 'dados', message: 'Questões não encontradas.' });
+      const validas = qs.filter((q: any) => q.answer != null && q.options?.[q.answer]);
+      const lista = validas.map((q: any, i: number) =>
+        `### ${i + 1}\nÁrea: ${q.area} · ${q.sub}\nEnunciado: ${String(q.stem).slice(0, 3000)}\nAlternativas: ${q.options.map((o: string, k: number) => `${LETRAS[k]}) ${o}`).join(' | ')}\nResposta oficial: ${LETRAS[q.answer]}) ${q.options[q.answer]}\nComentário: ${String(q.explanation || '').slice(0, 1500)}`).join('\n\n');
+      const etapa = {
+        type: 'object',
+        properties: {
+          info: { type: 'string', description: 'Nova informação revelada nesta etapa (exame físico, resultado de exame, evolução). Vazio na primeira etapa se a introdução já basta.' },
+          pergunta: { type: 'string', description: 'Decisão que o aluno precisa tomar agora (próximo exame, diagnóstico, conduta, droga, via...).' },
+          alternativas: { type: 'array', items: { type: 'string' }, description: 'Exatamente 5 alternativas plausíveis, sem letras.' },
+          certa: { type: 'integer', description: 'Índice (0 a 4) da alternativa certa.' },
+          explicacao: { type: 'string', description: 'Por que a certa é a melhor e por que as principais erradas não são. 1 a 3 frases.' },
+        },
+        required: ['info', 'pergunta', 'alternativas', 'certa', 'explicacao'],
+      };
+      const tool = {
+        name: 'entregar_casos',
+        description: 'Um caso clínico em etapas para cada questão, na mesma ordem.',
+        input_schema: {
+          type: 'object',
+          properties: { casos: { type: 'array', items: { type: 'object', properties: {
+            n: { type: 'integer', description: 'Número da questão na lista (### n).' },
+            titulo: { type: 'string', description: 'Título curto e sem spoiler do diagnóstico (ex.: "Dor abdominal no idoso").' },
+            introducao: { type: 'string', description: 'Apresentação inicial do paciente: idade, sexo, queixa, tempo de evolução, antecedentes relevantes, sinais vitais se houver. 2 a 4 frases.' },
+            etapas: { type: 'array', items: etapa, description: '3 a 5 etapas em ordem cronológica de atendimento.' },
+          }, required: ['n', 'titulo', 'introducao', 'etapas'] } } },
+          required: ['casos'],
+        },
+      };
+      const { input } = await claude(apiKey,
+        `Você é professor de medicina e transforma questões de prova de residência em casos clínicos interativos em português do Brasil.
+Para cada questão, monte um caso que se revela em etapas, como um atendimento real: apresentação → exame/investigação → diagnóstico → conduta (adapte à questão).
+Regras:
+- A etapa final (ou a mais importante) deve cobrar exatamente o ponto da questão original, com a mesma resposta oficial.
+- Use os dados do enunciado. Você pode distribuí-los entre as etapas (ex.: o exame físico só aparece na etapa 2).
+- Etapas extras só podem cobrar condutas consagradas e consistentes com o enunciado e o comentário; nada controverso, nada de valores inventados que mudem a conduta.
+- Cada pergunta tem 5 alternativas plausíveis e uma só correta. Não use "todas/nenhuma das anteriores".
+- O título não pode entregar o diagnóstico.
+- Linguagem clara, frases curtas, sem citar "a questão", "a prova" ou letras.`,
+        [{ type: 'text', text: lista }, { type: 'text', text: 'Entregue um caso para cada questão pela ferramenta.' }], tool, 8000);
+      let gravados = 0;
+      for (const c of (input.casos || []) as any[]) {
+        const q = validas[Number(c.n) - 1];
+        if (!q) continue;
+        const stages = (Array.isArray(c.etapas) ? c.etapas : []).map((e: any) => ({
+          info: String(e.info || '').trim().slice(0, 800),
+          question: String(e.pergunta || '').trim().slice(0, 400),
+          options: (Array.isArray(e.alternativas) ? e.alternativas : []).map((o: any) => String(o).trim().slice(0, 300)).filter(Boolean).slice(0, 5),
+          answer: Number(e.certa),
+          explanation: String(e.explicacao || '').trim().slice(0, 900),
+        })).filter((e: any) => e.question && e.options.length >= 4 && Number.isInteger(e.answer) && e.answer >= 0 && e.answer < e.options.length);
+        const title = String(c.titulo || '').trim().slice(0, 120), intro = String(c.introducao || '').trim().slice(0, 1500);
+        if (stages.length < 2 || !title || !intro) continue;
+        const source = `${q.prova}${String(q.prova).includes(String(q.ano)) ? '' : ` ${q.ano}`} · Q${q.numero}`;
+        const { error: e2 } = await admin.from('clinical_cases').upsert({ question_id: q.id, area: q.area, sub: q.sub, title, intro, stages, source, status: 'rascunho', updated_at: new Date().toISOString() }, { onConflict: 'question_id' });
+        if (!e2) gravados += 1; else console.error('caso', e2.message);
       }
       return json(200, { gravados });
     }

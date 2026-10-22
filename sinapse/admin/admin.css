@@ -71,3 +71,9 @@ details.panel summary { cursor: pointer; }
 .adm-msg { font-style: italic; padding: 10px 14px; border-left: 3px solid var(--bad); background: var(--bad-soft); border-radius: 0 10px 10px 0; }
 .adm-tabs-sm { max-width: 460px; }
 .adm-grid-3.grant { grid-template-columns: 1.6fr 1fr 1fr; }
+
+/* casos clínicos */
+.adm-case-stage { border-left: 3px solid var(--line); padding-left: 12px; margin-top: 6px; }
+.adm-opts { margin: 0; padding-left: 0; list-style: none; display: grid; gap: 4px; }
+.adm-opts li { padding: 6px 10px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); font-size: 14px; }
+.adm-opts li.right { border-color: var(--good); font-weight: 600; }

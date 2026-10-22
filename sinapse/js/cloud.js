@@ -394,3 +394,53 @@ export async function cancelRenewal() {
     throw new Error(info.message || 'Não foi possível cancelar agora.');
   }
 }
+
+// ---------- casos clínicos ----------
+const CASE_FIELDS = 'id, question_id, area, sub, title, intro, stages, source, status, updated_at';
+
+// Casos publicados (para o app).
+export async function fetchPublishedCases() {
+  const c = await loadCloud();
+  if (!c) return null;
+  const all = [];
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await c.from('clinical_cases').select('id, area, sub, title, intro, stages, source').eq('status', 'publicado')
+      .order('created_at').range(from, from + 999);
+    if (error) return null;
+    all.push(...data);
+    if (data.length < 1000) break;
+  }
+  return all;
+}
+
+// Questões longas que ainda não viraram caso (só administradores).
+export async function adminCaseCandidates(n) {
+  const c = await loadCloud();
+  const { data, error } = await c.rpc('case_candidates', { n });
+  if (error) throw error;
+  return (data || []).map((r) => r.id);
+}
+
+export async function adminCases(status) {
+  const c = await loadCloud();
+  if (!c) return [];
+  const { data, error } = await c.from('clinical_cases').select(CASE_FIELDS).eq('status', status).order('updated_at', { ascending: false }).limit(300);
+  if (error) throw error;
+  return data;
+}
+
+export async function adminCaseCounts() {
+  const c = await loadCloud();
+  const out = {};
+  for (const s of ['rascunho', 'publicado', 'rejeitado']) {
+    const { count } = await c.from('clinical_cases').select('id', { count: 'exact', head: true }).eq('status', s);
+    out[s] = count || 0;
+  }
+  return out;
+}
+
+export async function adminUpdateCase(id, patch) {
+  const c = await loadCloud();
+  const { error } = await c.from('clinical_cases').update({ ...patch, updated_at: new Date().toISOString() }).eq('id', id);
+  if (error) throw error;
+}

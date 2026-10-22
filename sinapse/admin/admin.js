@@ -4,6 +4,7 @@ import {
   loadCloud, signInWithGoogle, signOutCloud, currentSessionUser, checkIsAdmin,
   callImportarProva, adminQuestions, adminProvas, adminUpdateQuestion, adminDeleteQuestion,
   uploadQuestionImage, adminList, adminAdd, adminRemove, adminSearchQuestions, callOrganizarPasta, adminReports, adminResolveReport, adminOpenReportsCount, adminSubscribers, adminGrant, adminRevoke, adminImageDrafts, adminQuestionsOfYear, adminCardsTodo,
+  adminCaseCandidates, adminCases, adminCaseCounts, adminUpdateCase,
 } from '../js/cloud.js';
 import { openPdf, figurasDoPdf, acharPdf } from './figuras.js';
 import { extractPdfText, shrinkImage, fileToB64 } from '../js/tools.js';
@@ -30,6 +31,7 @@ const ICONS = {
   key: '<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3M15 8l2 2"/>',
   flag: '<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>',
   folder: '<path d="M3 6a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+  case: '<path d="M9 4h6v3H9z"/><path d="M7 5H5v16h14V5h-2"/><path d="M9 12h6M12 9v6"/>',
   phone: '<rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M11 18.5h2"/>',
 };
 const icon = (n, s = 20) => `<svg aria-hidden="true" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[n] || ''}</svg>`;
@@ -58,6 +60,7 @@ const st = {
   pasteTarget: null,
   subs: null,
   reports: null, reportsTab: 'aberto', openReports: 0, repEdit: null,
+  casos: { tab: 'rascunho', rows: null, counts: null, n: 30, running: false, stop: false, done: 0, total: 0, gravados: 0, open: null },
   cards: { info: null, running: false, stop: false, done: 0, total: 0, gravados: 0 },
   fig: { running: false, stop: false, total: 0, ok: 0, falhou: 0, atual: '', fim: null },
   lote: { step: 'pick', files: null, fila: null, ignorados: [], jaImportadas: new Set(), running: false, stop: false, log: [], startedAt: 0, totals: { provas: 0, publicadas: 0, rascunhos: 0 } },
@@ -71,7 +74,7 @@ async function boot() {
   if (!st.user) { st.phase = 'login'; render(); return; }
   st.phase = (await checkIsAdmin()) ? 'ready' : 'denied';
   const v = (location.hash || '').slice(1);
-  if (['acessos', 'lote', 'importar', 'relatos', 'rascunhos', 'questoes', 'provas', 'admins'].includes(v)) st.view = v;
+  if (['acessos', 'lote', 'importar', 'relatos', 'rascunhos', 'casos', 'questoes', 'provas', 'admins'].includes(v)) st.view = v;
   render();
   if (st.phase === 'ready') adminOpenReportsCount().then((n) => { st.openReports = n; render(); });
 }
@@ -80,7 +83,7 @@ async function boot() {
 function render() {
   if (st.phase === 'loading') { root.innerHTML = '<div class="adm-center"><p class="muted">Carregando…</p></div>'; return; }
   if (st.phase === 'login' || st.phase === 'denied') { root.innerHTML = viewLogin(); return; }
-  const nav = [['lote', 'folder', 'Importar pasta'], ['importar', 'upload', 'Importar uma prova'], ['relatos', 'flag', 'Relatos'], ['rascunhos', 'drafts', 'Rascunhos'], ['questoes', 'list', 'Questões publicadas'], ['provas', 'book', 'Provas'], ['acessos', 'key', 'Acessos e assinantes'], ['admins', 'users', 'Administradores']];
+  const nav = [['lote', 'folder', 'Importar pasta'], ['importar', 'upload', 'Importar uma prova'], ['relatos', 'flag', 'Relatos'], ['rascunhos', 'drafts', 'Rascunhos'], ['casos', 'case', 'Casos clínicos'], ['questoes', 'list', 'Questões publicadas'], ['provas', 'book', 'Provas'], ['acessos', 'key', 'Acessos e assinantes'], ['admins', 'users', 'Administradores']];
   const m = st.user.user_metadata || {};
   root.innerHTML = `<aside class="adm-side">
       <div class="adm-brand">${LOGO}<span><strong>Sinapse</strong><small>Painel</small></span></div>
@@ -91,7 +94,7 @@ function render() {
         <button class="btn ghost" data-act="logout">${icon('out', 18)} Sair</button>
       </div>
     </aside>
-    <main class="adm-main">${({ acessos: viewAcessos, relatos: viewReports, lote: viewLote, importar: viewImport, rascunhos: viewDrafts, questoes: viewQuestions, provas: viewProvas, admins: viewAdmins })[st.view]()}</main>`;
+    <main class="adm-main">${({ acessos: viewAcessos, relatos: viewReports, lote: viewLote, importar: viewImport, rascunhos: viewDrafts, casos: viewCasos, questoes: viewQuestions, provas: viewProvas, admins: viewAdmins })[st.view]()}</main>`;
 }
 
 function viewLogin() {
@@ -248,6 +251,81 @@ function viewDrafts() {
         <button class="btn good-solid" data-act="publish" data-v="${q.id}" ${q.answer == null ? 'disabled' : ''}>${icon('check', 18)} Publicar</button>
       </div>
     </article>`).join('')}</div>`;
+}
+
+// ----- casos clínicos -----
+function viewCasos() {
+  const K = st.casos;
+  const h = head('Casos clínicos', 'A IA transforma questões longas já publicadas em casos em etapas (apresentação → investigação → diagnóstico → conduta). Confira e publique: só os publicados aparecem no app.');
+  if (!K.counts && !K.countsLoading) { K.countsLoading = true; adminCaseCounts().then((c) => { K.counts = c; }).catch(() => { K.counts = { rascunho: 0, publicado: 0, rejeitado: 0 }; }).finally(() => { K.countsLoading = false; render(); }); }
+  if (!K.rows && !K.loading) { K.loading = true; adminCases(K.tab).then((r) => { K.rows = r; }).catch(() => { K.rows = []; toast('Não foi possível carregar.'); }).finally(() => { K.loading = false; render(); }); }
+  let gen;
+  if (K.running) {
+    const pct = Math.round((K.done / Math.max(1, K.total)) * 100);
+    gen = `<section class="panel stack-sm adm-progress"><div class="row wrap gap-sm"><h2 class="grow">Gerando casos: ${K.done} de ${K.total}</h2><button class="btn ghost" data-act="cs-stop" ${K.stop ? 'disabled' : ''}>${K.stop ? 'Parando…' : 'Parar'}</button></div>
+      <span class="bar"><span class="fill violet" style="width:${pct}%"></span></span><p class="muted small">${K.gravados} casos prontos para revisar. Deixe esta aba aberta.</p></section>`;
+  } else {
+    gen = `<section class="panel stack-sm"><div class="row wrap gap-sm"><span class="stack-xs grow"><strong>Gerar novos casos</strong><span class="muted small">Escolhe questões de Clínica, Cirurgia, GO e Pediatria com enunciado longo e sem imagem, alternando as áreas. Cada caso fica em rascunho até você publicar.</span></span>
+      <span class="row gap-sm">${[10, 30, 60].map((n) => `<button type="button" class="chip ${K.n === n ? 'on' : ''}" data-act="cs-n" data-v="${n}">${n}</button>`).join('')}</span>
+      <button class="btn primary" data-act="cs-run">Gerar ${K.n} casos</button></div></section>`;
+  }
+  const c = K.counts || {};
+  const tabs = `<div class="segmented three adm-tabs-sm" role="group">${[['rascunho', 'Para revisar'], ['publicado', 'Publicados'], ['rejeitado', 'Rejeitados']].map(([v, l]) => `<button type="button" class="${K.tab === v ? 'on' : ''}" data-act="cs-tab" data-v="${v}">${l}${c[v] != null ? ` (${c[v]})` : ''}</button>`).join('')}</div>`;
+  let list;
+  if (!K.rows) list = '<p class="muted">Carregando…</p>';
+  else if (!K.rows.length) list = `<div class="panel note">${K.tab === 'rascunho' ? 'Nenhum caso para revisar. Gere alguns acima.' : 'Nada aqui.'}</div>`;
+  else list = `<div class="adm-cards">${K.rows.map(caseCard).join('')}</div>`;
+  return `${h}${gen}${tabs}${list}`;
+}
+
+function caseCard(k) {
+  const K = st.casos;
+  const open = K.open === k.id;
+  const stages = (k.stages || []).map((s, i) => `<div class="stack-xs adm-case-stage">
+      <strong class="small">Etapa ${i + 1}</strong>
+      ${s.info ? `<p class="small">${esc(s.info)}</p>` : ''}
+      <p><strong>${esc(s.question)}</strong></p>
+      <ol class="adm-opts">${(s.options || []).map((o, j) => `<li class="${j === s.answer ? 'right' : ''}">${LETTERS[j]}) ${esc(o)}${j === s.answer ? ' ✓' : ''}</li>`).join('')}</ol>
+      ${s.explanation ? `<p class="muted small">${esc(s.explanation)}</p>` : ''}
+    </div>`).join('');
+  const btns = k.status === 'rascunho'
+    ? `<button class="btn ghost bad-ink" data-act="cs-set" data-v="${k.id}|rejeitado">Rejeitar</button><button class="btn good-solid" data-act="cs-set" data-v="${k.id}|publicado">${icon('check', 18)} Publicar</button>`
+    : k.status === 'publicado'
+      ? `<button class="btn ghost" data-act="cs-set" data-v="${k.id}|rascunho">Tirar do app</button>`
+      : `<button class="btn ghost" data-act="cs-set" data-v="${k.id}|rascunho">Voltar para revisão</button>`;
+  return `<article class="panel stack-sm">
+    <div class="row wrap gap-sm"><span class="tag">${esc(k.source || '')}</span><span class="tag violet">${esc(areaName(k.area))}${k.sub ? ` · ${esc(k.sub)}` : ''}</span><span class="tag">${(k.stages || []).length} etapas</span></div>
+    <h3>${esc(k.title)}</h3>
+    <p>${esc(k.intro)}</p>
+    ${open ? stages : `<button class="btn ghost" data-act="cs-open" data-v="${k.id}">Ver as ${(k.stages || []).length} etapas</button>`}
+    <div class="row adm-actions">${btns}</div>
+  </article>`;
+}
+
+async function casosRun() {
+  const K = st.casos;
+  if (K.running) return;
+  let ids;
+  try { ids = await adminCaseCandidates(K.n); } catch (e) { toast('Não foi possível escolher as questões.'); return; }
+  if (!ids.length) { toast('Não há mais questões longas sem caso.'); return; }
+  Object.assign(K, { running: true, stop: false, done: 0, total: ids.length, gravados: 0 });
+  render();
+  const lotes = [];
+  for (let i = 0; i < ids.length; i += 3) lotes.push(ids.slice(i, i + 3));
+  let erro = '';
+  const worker = async () => {
+    while (lotes.length && !K.stop) {
+      const lote = lotes.shift();
+      let r = null;
+      for (let t = 0; t < 2 && !r; t += 1) { try { r = await callImportarProva({ action: 'casos', ids: lote }); } catch (e) { erro = e.message; if (e.code === 'sem_chave') { K.stop = true; break; } } }
+      K.done += lote.length; K.gravados += r ? r.gravados : 0;
+      render();
+    }
+  };
+  await Promise.all([worker(), worker(), worker()]);
+  K.running = false; K.stop = false; K.rows = null; K.counts = null;
+  toast(K.gravados ? `${K.gravados} casos prontos para revisar.` : (erro || 'Nenhum caso gerado.'));
+  render();
 }
 
 // ----- flashcards do deck oficial -----
@@ -759,6 +837,19 @@ const actions = {
   },
   'lote-run': () => { if (!st.lote.running) loteRun(); },
   'fig-stop': () => { st.fig.stop = true; render(); },
+  'cs-n': (v) => { st.casos.n = Number(v); render(); },
+  'cs-run': () => casosRun(),
+  'cs-stop': () => { st.casos.stop = true; render(); },
+  'cs-tab': (v) => { Object.assign(st.casos, { tab: v, rows: null, open: null }); render(); },
+  'cs-open': (id) => { st.casos.open = id; render(); },
+  'cs-set': async (v) => {
+    const [id, status] = v.split('|');
+    try { await adminUpdateCase(id, { status }); } catch (e) { toast('Não foi possível salvar.'); return; }
+    st.casos.rows = st.casos.rows.filter((k) => k.id !== id);
+    st.casos.counts = null;
+    toast(status === 'publicado' ? 'Caso publicado. Já aparece no app.' : status === 'rejeitado' ? 'Caso rejeitado.' : 'Caso voltou para revisão.');
+    render();
+  },
   'cards-run': () => cardsRun(),
   'cards-stop': () => { st.cards.stop = true; render(); },
   'lote-complete': () => {
@@ -773,7 +864,7 @@ const actions = {
     try { await signInWithGoogle(APP_URL); } catch (e) { toast(e.message); }
   },
   logout: async () => { await signOutCloud().catch(() => {}); st.user = null; st.phase = 'login'; render(); },
-  view: (v) => { st.view = v; st.confirm = null; if (v === 'acessos') st.subs = null; if (v === 'relatos') { st.reports = null; st.repEdit = null; } history.replaceState(null, '', `#${v}`); if (v === 'rascunhos') st.drafts = null; if (v === 'provas') st.provas = null; if (v === 'admins') st.admins = null; render(); window.scrollTo(0, 0); },
+  view: (v) => { st.view = v; st.confirm = null; if (v === 'acessos') st.subs = null; if (v === 'relatos') { st.reports = null; st.repEdit = null; } history.replaceState(null, '', `#${v}`); if (v === 'rascunhos') st.drafts = null; if (v === 'casos') { st.casos.rows = null; st.casos.counts = null; } if (v === 'provas') st.provas = null; if (v === 'admins') st.admins = null; render(); window.scrollTo(0, 0); },
   'imp-read': async () => {
     const s = st.imp;
     if (!s.banca.trim() || !s.prova.trim() || !/^\d{4}$/.test(String(s.ano))) { toast('Preencha banca, nome da prova e ano.'); return; }
@@ -986,7 +1077,7 @@ document.addEventListener('paste', (e) => {
   setImage(st.pasteTarget, item.getAsFile());
 });
 
-window.addEventListener('beforeunload', (e) => { if (st.lote.running || st.fig.running || st.cards.running || st.imp.step === 'importing') { e.preventDefault(); e.returnValue = ''; } });
+window.addEventListener('beforeunload', (e) => { if (st.lote.running || st.fig.running || st.cards.running || st.casos.running || st.imp.step === 'importing') { e.preventDefault(); e.returnValue = ''; } });
 
 render();
 boot();
