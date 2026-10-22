@@ -63,6 +63,8 @@ async function claude(apiKey: string, system: string, content: unknown[], tool: 
   }
   const out = await resp.json();
   const t = (out.content || []).find((b: { type: string }) => b.type === 'tool_use');
+  const u = out.usage || {};
+  console.log('uso', JSON.stringify({ in: u.input_tokens, out: u.output_tokens, cache_escrita: u.cache_creation_input_tokens, cache_leitura: u.cache_read_input_tokens }));
   return { input: t?.input ?? {}, truncated: out.stop_reason === 'max_tokens' };
 }
 
@@ -172,7 +174,8 @@ Deno.serve(async (req) => {
 - Classifique em uma área e um subtema EXATAMENTE como escritos nesta lista (use o id da área; não invente subtemas):
 ${LISTA_AREAS}`;
       const content = [
-        { type: 'text', text: `TEXTO DA PROVA (${prova}):\n${texto.slice(0, 400_000)}` },
+        // Cache: o texto da prova é igual em todos os lotes; a partir do 2º lote a releitura custa 10%.
+        { type: 'text', text: `TEXTO DA PROVA (${prova}):\n${texto.slice(0, 400_000)}`, cache_control: { type: 'ephemeral' } },
         { type: 'text', text: `Separe as questões de número ${de} a ${ate}. Gabarito oficial dessas questões: ${oficiais}. Para as anuladas ou sem gabarito, deixe o comentário vazio. Entregue pela ferramenta.` },
       ];
       const { input, truncated } = await claude(apiKey, system, content, TOOL_QUESTOES, 16000);

@@ -474,17 +474,19 @@ async function loteJob(j) {
   const chunks = [];
   for (let i = 0; i < nums.length; i += 10) chunks.push(nums.slice(i, i + 10));
   let falhas = 0;
-  const worker = async () => {
-    while (chunks.length && !L.stop) {
-      const c = chunks.shift();
-      const body = { action: 'questoes', banca: j.banca, prova: j.prova, ano: j.ano, de: c[0], ate: c[c.length - 1], texto: text, respostas: gab.respostas, anuladas: gab.anuladas };
-      let r = null;
-      for (let t = 0; t < 2 && !r; t += 1) { try { r = await callImportarProva(body); } catch (e) { if (t === 1) falhas += 1; } }
-      if (r) { j.pub += r.publicadas; j.ras += r.rascunhos.length; L.totals.publicadas += r.publicadas; L.totals.rascunhos += r.rascunhos.length; }
-      j.done += c.length;
-      render();
-    }
+  const runChunk = async () => {
+    const c = chunks.shift();
+    const body = { action: 'questoes', banca: j.banca, prova: j.prova, ano: j.ano, de: c[0], ate: c[c.length - 1], texto: text, respostas: gab.respostas, anuladas: gab.anuladas };
+    let r = null;
+    for (let t = 0; t < 2 && !r; t += 1) { try { r = await callImportarProva(body); } catch (e) { if (t === 1) falhas += 1; } }
+    if (r) { j.pub += r.publicadas; j.ras += r.rascunhos.length; L.totals.publicadas += r.publicadas; L.totals.rascunhos += r.rascunhos.length; }
+    j.done += c.length;
+    render();
   };
+  const worker1 = async () => { if (chunks.length && !L.stop) await runChunk(); };
+  const worker = async () => { while (chunks.length && !L.stop) await runChunk(); };
+  // O 1º lote vai sozinho para a IA guardar a prova no cache; os outros aproveitam em paralelo.
+  await worker1();
   await Promise.all([worker(), worker(), worker()]);
   if (L.stop && chunks.length) { j.status = 'fila'; return; }
   j.status = falhas && !j.pub ? 'erro' : 'ok';

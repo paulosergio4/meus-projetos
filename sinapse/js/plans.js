@@ -12,12 +12,12 @@ export const PLANS = [
   },
   {
     id: 'pro', name: 'Pro', tagline: 'Para estudar todo dia', highlight: true,
-    monthly: 24.9, yearly: 249,
+    monthly: 29.9, yearly: 239,
     features: ['Cards novos ilimitados', 'Cards próprios ilimitados', '300 cards gerados por IA por mês', 'Questões comentadas ilimitadas', '2 simulados por mês', 'Cronograma completo até a prova'],
   },
   {
     id: 'residencia', name: 'Residência', tagline: 'Reta final para a prova',
-    monthly: 49.9, yearly: 499,
+    monthly: 49.9, yearly: 399,
     features: ['Tudo do Pro', '1.000 cards gerados por IA por mês', 'Simulados ilimitados', 'Caderno de erros', 'Casos clínicos', 'Prioridade em novidades'],
   },
 ];

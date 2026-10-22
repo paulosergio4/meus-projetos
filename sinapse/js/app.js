@@ -65,7 +65,7 @@ function animateCard(cls, ms, then) {
   setTimeout(() => { ui.animating = false; then(); }, ms);
 }
 
-const APP_VERSION = '0.13.1';
+const APP_VERSION = '0.13.2';
 const root = document.getElementById('app');
 
 // ---------- utilitários ----------
@@ -675,7 +675,7 @@ function viewPlanos() {
     ${on && cur.trial ? `<div class="panel note"><strong>Teste grátis.</strong> Você está usando o Residência por ${TRIAL_DAYS} dias. Depois volta ao Grátis sem perder nada.</div>` : ''}
     <div class="segmented" role="group" aria-label="Período">
       <button type="button" class="${yearly ? '' : 'on'}" data-act="plan-period" data-v="m" aria-pressed="${!yearly}">Mensal</button>
-      <button type="button" class="${yearly ? 'on' : ''}" data-act="plan-period" data-v="a" aria-pressed="${yearly}">Anual · 2 meses grátis</button>
+      <button type="button" class="${yearly ? 'on' : ''}" data-act="plan-period" data-v="a" aria-pressed="${yearly}">Anual · 4 meses grátis</button>
     </div>
     ${PLANS.map((pl) => {
       const mine = on && !cur.trial && cur.id === pl.id;
