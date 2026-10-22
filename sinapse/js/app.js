@@ -10,7 +10,7 @@ import { daysBetween } from './plan.js';
 import { GOOGLE_CLIENT_ID, EXIGIR_LOGIN } from './config.js';
 import { startSynapseFx } from './fx.js';
 import { biometricAvailable, biometricEnabled, enableBiometric, disableBiometric, unlockWithBiometric } from './biometric.js';
-import { startCardSubscription, cancelRenewal, startCheckout, sendReport, callGerarCards, callImportarProva, fetchPublishedQuestions, checkIsAdmin, adminQuestions, adminProvas, adminUpdateQuestion, adminDeleteQuestion, uploadQuestionImage, fetchSubscription, cloudEnabled, loadCloud, signInWithGoogle, currentCloudUser, userFromSession, signOutCloud, pullProgress, pushProgress, deleteCloudProgress, isOAuthReturn } from './cloud.js';
+import { startCardSubscription, cancelRenewal, startCheckout, sendReport, callGerarCards, callImportarProva, fetchPublishedQuestions, fetchBookCards, checkIsAdmin, adminQuestions, adminProvas, adminUpdateQuestion, adminDeleteQuestion, uploadQuestionImage, fetchSubscription, cloudEnabled, loadCloud, signInWithGoogle, currentCloudUser, userFromSession, signOutCloud, pullProgress, pushProgress, deleteCloudProgress, isOAuthReturn } from './cloud.js';
 
 function homeView() {
   if (!store.data.user) return 'login';
@@ -66,7 +66,7 @@ function animateCard(cls, ms, then) {
   setTimeout(() => { ui.animating = false; then(); }, ms);
 }
 
-const APP_VERSION = '0.17.1';
+const APP_VERSION = '0.18.0';
 const root = document.getElementById('app');
 
 // ---------- utilitários ----------
@@ -363,16 +363,40 @@ function applyBank(rows) {
   // Cards antigos (antes da revisão) só entram se fizerem sentido sem a questão ao lado.
   const dependeDaQuestao = /alternativa|op[cç](ão|ões)|assinale|abaixo|acima|figura|imagem|tabela|gr[aá]fico|ilustra|\bletra\b/i;
   const limpa = (t) => String(t).replace(/\s*\((?:alternativa|gabarito|letra|resposta|op[cç][aã]o)?\s*[A-E]\)/gi, '').trim();
-  store.deckCards = usable.filter((r) => r.fact && r.fact.front && r.fact.back && (r.fact.v === 2 || !dependeDaQuestao.test(`${r.fact.front} ${limpa(r.fact.back)}`))).map((r) => ({
+  bankDeck = usable.filter((r) => r.fact && r.fact.front && r.fact.back && (r.fact.v === 2 || !dependeDaQuestao.test(`${r.fact.front} ${limpa(r.fact.back)}`))).map((r) => ({
     id: `d_${r.id}`, qref: `b_${r.id}`, deck: true, type: 'basic', area: r.area, sub: r.sub,
     front: String(r.fact.front), back: r.fact.v === 2 ? String(r.fact.back) : limpa(r.fact.back), extra: `Da questão ${rowToQuestion(r).source}`,
-  })).sort((a, b) => mixKey(a.id) - mixKey(b.id));
+  }));
+  rebuildDeck();
 }
+
+// Deck oficial = cards das questões + cards dos livros, misturados sempre na mesma ordem.
+let bankDeck = [];
+let bookDeck = [];
+function rebuildDeck() {
+  store.deckCards = bankDeck.concat(bookDeck).sort((a, b) => mixKey(a.id) - mixKey(b.id));
+}
+
+const BOOK_KEY = 'sinapse:bookcards';
+function applyBookCards(rows) {
+  bookDeck = (rows || []).filter((r) => r.front && r.back).map((r) => ({
+    id: `l_${r.id}`, deck: true, type: 'basic', area: r.area, sub: r.sub,
+    front: String(r.front), back: String(r.back), extra: `${r.source}${r.capitulo ? ` · ${r.capitulo}` : ''}`,
+  }));
+  rebuildDeck();
+}
+(() => { try { const c = JSON.parse(localStorage.getItem(BOOK_KEY) || 'null'); if (c && c.rows) applyBookCards(c.rows); } catch (e) { /* sem cache */ } })();
 
 (() => { try { const c = JSON.parse(localStorage.getItem(QBANK_KEY) || 'null'); if (c && c.rows) applyBank(c.rows); } catch (e) { /* sem cache */ } })();
 
 async function refreshBank() {
   if (!cloudUser()) return;
+  fetchBookCards().then((rows) => {
+    if (!rows) return;
+    applyBookCards(rows);
+    try { localStorage.setItem(BOOK_KEY, JSON.stringify({ t: Date.now(), rows })); } catch (e) { /* sem espaço */ }
+    if (['study', 'stats', 'home'].includes(ui.view)) render();
+  }).catch(() => {});
   const rows = await fetchPublishedQuestions().catch(() => null);
   if (!rows) return;
   applyBank(rows);
@@ -920,13 +944,13 @@ function viewHome() {
       </div>
       ${queue.length
         ? `<button class="btn primary big" data-act="start-all">${icon('play', 18)} ${done ? 'Continuar revisão' : 'Começar revisão'}</button>`
-        : '<p class="done-note">Tudo revisado por hoje. Que tal algumas questões? Para testar o agendamento, avance um dia em Ajustes.</p>'}
+        : `<p class="done-note">Tudo revisado por hoje.${store.data.settings.onlyCards ? '' : ' Que tal algumas questões?'} Para testar o agendamento, avance um dia em Ajustes.</p>`}
     </section>
 
     <section class="panel stack-sm" aria-label="Plano de hoje">
       <div class="row"><h2>Plano de hoje</h2><button class="link-btn" data-act="go" data-v="plan">Cronograma ${icon('next', 16)}</button></div>
       ${goalRow('Revisões', done, total, queue.length ? 'start-all' : '', 'Revisar')}
-      ${goalRow('Questões', Math.min(qDone, qGoal), qGoal, 'start-daily-q', 'Resolver questões')}
+      ${store.data.settings.onlyCards ? '' : goalRow('Questões', Math.min(qDone, qGoal), qGoal, 'start-daily-q', 'Resolver questões')}
       ${plan && plan.phase === 'final' ? '<p class="muted small">Reta final: sem cards novos. Foque em revisões, questões e simulados.</p>' : ''}
     </section>
 
@@ -1788,12 +1812,16 @@ function viewSettings() {
         <span class="stack-xs grow"><strong>Digitar a resposta nas lacunas</strong><span class="muted small">O app confere o que você escreveu, aceita sinônimos e pequenos erros de digitação, e sugere a nota.</span></span>
         <input type="checkbox" id="set-type" class="switch" data-set="typeAnswers" ${s.typeAnswers ? 'checked' : ''}>
       </label>
+      <label class="switch-row" for="set-only">
+        <span class="stack-xs grow"><strong>Só flashcards</strong><span class="muted small">Esconde questões, simulados e a meta de questões. Fica só a revisão de cards.</span></span>
+        <input type="checkbox" id="set-only" class="switch" data-set="onlyCards" ${s.onlyCards ? 'checked' : ''}>
+      </label>
       <label class="field" for="set-new">Cards novos por dia
         <select id="set-new" data-set="newPerDay">${newOpts.map(([v, l]) => `<option value="${v}" ${v === curNew ? 'selected' : ''}>${l}</option>`).join('')}</select>
       </label>
-      <label class="field" for="set-q">Meta de questões por dia
+      ${s.onlyCards ? '' : `<label class="field" for="set-q">Meta de questões por dia
         <select id="set-q" data-set="questionsPerDay">${[5, 10, 20, 30].map((v) => `<option value="${v}" ${v === s.questionsPerDay ? 'selected' : ''}>${v}</option>`).join('')}</select>
-      </label>
+      </label>`}
     </section>
     <section class="panel stack-sm">
       <h2>Seu perfil</h2>
@@ -1844,7 +1872,8 @@ function appbar() {
 
 function nav() {
   const current = TAB_OF[ui.view];
-  const items = [['home', 'Início', 'home'], ['study', 'Estudar', 'cards'], ['questions', 'Questões', 'quiz'], ['stats', 'Desempenho', 'chart'], ['settings', 'Ajustes', 'gear']];
+  const items = [['home', 'Início', 'home'], ['study', 'Estudar', 'cards'], ['questions', 'Questões', 'quiz'], ['stats', 'Desempenho', 'chart'], ['settings', 'Ajustes', 'gear']]
+    .filter(([v]) => !(v === 'questions' && store.data.settings.onlyCards));
   return `<nav class="tabbar" aria-label="Navegação principal">${items.map(([v, label, ic]) =>
     `<button class="${current === v ? 'on' : ''}" data-act="go" data-v="${v}" ${current === v ? 'aria-current="page"' : ''}>${icon(ic, 22)}<span>${label}</span></button>`).join('')}</nav>`;
 }
@@ -2412,6 +2441,7 @@ root.addEventListener('change', async (e) => {
   if (!el) return;
   const key = el.dataset.set;
   if (key === 'typeAnswers') store.setSetting('typeAnswers', el.checked);
+  if (key === 'onlyCards') { store.setSetting('onlyCards', el.checked); render(); }
   if (key === 'questionsPerDay') store.setSetting('questionsPerDay', Number(el.value));
   if (key === 'newPerDay') {
     if (el.value === 'auto') store.setSetting('newPerDayAuto', true);

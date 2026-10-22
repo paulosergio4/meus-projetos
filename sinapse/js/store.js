@@ -9,6 +9,7 @@ const STORAGE_KEY = 'sinapse:v1';
 
 export const DEFAULT_SETTINGS = {
   typeAnswers: true,    // digitar a resposta nas lacunas
+  onlyCards: false,     // modo só flashcards (esconde questões)
   newPerDayAuto: true,  // cards novos por dia calculados pelo cronograma
   newPerDay: 15,
   questionsPerDay: 10,

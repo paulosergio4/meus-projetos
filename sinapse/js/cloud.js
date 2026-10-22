@@ -134,6 +134,21 @@ export async function fetchPublishedQuestions() {
   return all;
 }
 
+// Flashcards oficiais vindos de livros (deck_cards publicados), todas as páginas.
+export async function fetchBookCards() {
+  const c = await loadCloud();
+  if (!c) return null;
+  const all = [];
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await c.from('deck_cards').select('id, area, sub, front, back, source, capitulo').eq('status', 'publicado')
+      .order('id').range(from, from + 999);
+    if (error) return null;
+    all.push(...data);
+    if (data.length < 1000) break;
+  }
+  return all;
+}
+
 export async function checkIsAdmin() {
   const c = await loadCloud();
   if (!c) return false;
