@@ -188,6 +188,7 @@ function ecgSvg(ask, reveal) {
 }
 
 function typeLabel(c) {
+  if (c.origin && store.questionById(c.origin)) return 'Questão';
   return { basic: 'Frente e verso', cloze: 'Lacuna', occlusion: 'Oclusão de imagem' }[c.type];
 }
 
@@ -195,7 +196,20 @@ function typingOn(card) {
   return card.type === 'cloze' && store.data.settings.typeAnswers && ui.session && !ui.session.quick;
 }
 
+// Card do caderno de erros: mostra a questão original inteira (o resumo sozinho perde o contexto).
+function errorCardBody(c, q, reveal) {
+  return `<p class="label">Questão que você errou${q.source ? ` · ${esc(q.source)}` : ''}</p>
+    <p class="q-stem-card">${esc(q.stem)}</p>
+    ${q.image ? `<img class="q-img" src="${esc(q.image)}" alt="Imagem da questão" loading="lazy">` : ''}
+    <ol class="q-card-opts">${q.options.map((o, i) => `<li class="${reveal && i === q.answer ? 'right' : ''}"><span class="letter">${LETTERS[i]}</span><span>${esc(o)}</span>${reveal && i === q.answer ? icon('check', 16) : ''}</li>`).join('')}</ol>
+    ${reveal ? `<hr><p class="label">Resposta: ${LETTERS[q.answer]}</p>
+      ${q.explanation ? `<p class="extra">${esc(q.explanation)}</p>` : ''}
+      ${!q.explanation && c.front && c.back ? `<p class="extra"><strong>Para lembrar:</strong> ${esc(c.front)} ${esc(c.back)}</p>` : ''}` : ''}`;
+}
+
 function cardBody(c, reveal) {
+  const q = c.origin ? store.questionById(c.origin) : null;
+  if (q && Array.isArray(q.options) && q.answer != null) return errorCardBody(c, q, reveal);
   if (c.type === 'cloze') {
     if (!reveal && typingOn(c)) {
       return `<p class="label">Digite a resposta</p>
@@ -1120,7 +1134,7 @@ function viewIAResult(ia) {
 
 
 // ---------- questões ----------
-const LETTERS = ['A', 'B', 'C', 'D', 'E'];
+const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 const SECONDS_PER_QUESTION = 180; // ritmo típico das provas de residência
 
 function chipGroup(act, current, items) {
