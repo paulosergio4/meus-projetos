@@ -66,7 +66,7 @@ function animateCard(cls, ms, then) {
   setTimeout(() => { ui.animating = false; then(); }, ms);
 }
 
-const APP_VERSION = '0.18.0';
+const APP_VERSION = '0.18.1';
 const root = document.getElementById('app');
 
 // ---------- utilitários ----------
@@ -1813,15 +1813,15 @@ function viewSettings() {
         <input type="checkbox" id="set-type" class="switch" data-set="typeAnswers" ${s.typeAnswers ? 'checked' : ''}>
       </label>
       <label class="switch-row" for="set-only">
-        <span class="stack-xs grow"><strong>Só flashcards</strong><span class="muted small">Esconde questões, simulados e a meta de questões. Fica só a revisão de cards.</span></span>
+        <span class="stack-xs grow"><strong>Só flashcards</strong><span class="muted small">Esconde a aba Questões e a meta de questões do Início. Fica só a revisão de cards.</span></span>
         <input type="checkbox" id="set-only" class="switch" data-set="onlyCards" ${s.onlyCards ? 'checked' : ''}>
       </label>
       <label class="field" for="set-new">Cards novos por dia
         <select id="set-new" data-set="newPerDay">${newOpts.map(([v, l]) => `<option value="${v}" ${v === curNew ? 'selected' : ''}>${l}</option>`).join('')}</select>
       </label>
-      ${s.onlyCards ? '' : `<label class="field" for="set-q">Meta de questões por dia
+      <label class="field" for="set-q">Meta de questões por dia
         <select id="set-q" data-set="questionsPerDay">${[5, 10, 20, 30].map((v) => `<option value="${v}" ${v === s.questionsPerDay ? 'selected' : ''}>${v}</option>`).join('')}</select>
-      </label>`}
+      </label>
     </section>
     <section class="panel stack-sm">
       <h2>Seu perfil</h2>
