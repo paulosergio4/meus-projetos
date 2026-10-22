@@ -27,3 +27,6 @@ export const GOOGLE_CLIENT_ID = '';
 // basta trocar para true aqui e em supabase/functions/gerar-cards (COBRANCA_ATIVA) e
 // ligar o pagamento (ver docs/PLANOS.md).
 export const COBRANCA_ATIVA = true;
+
+// E-mail de contato do app (suporte, pagamentos, privacidade).
+export const CONTATO_EMAIL = 'sinapseflahcard@gmail.com';

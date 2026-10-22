@@ -65,7 +65,7 @@ function animateCard(cls, ms, then) {
   setTimeout(() => { ui.animating = false; then(); }, ms);
 }
 
-const APP_VERSION = '0.15.0';
+const APP_VERSION = '0.15.1';
 const root = document.getElementById('app');
 
 // ---------- utilitários ----------
@@ -1770,6 +1770,7 @@ function viewSettings() {
       <p class="muted small">Sinapse · protótipo ${APP_VERSION} · algoritmo FSRS-4.5. O app se atualiza sozinho ao abrir; se algo parecer antigo, busque a atualização.</p>
       <button class="btn ghost" data-act="force-update">Buscar atualização</button>
       <a class="link-btn" href="termos.html" target="_blank" rel="noopener">Termos de Uso e Política de Privacidade ${icon('next', 16)}</a>
+      <a class="link-btn" href="mailto:sinapseflahcard@gmail.com?subject=Sinapse%20-%20ajuda">Fale com a gente: sinapseflahcard@gmail.com ${icon('next', 16)}</a>
       <a class="link-btn" href="baixar/" target="_blank" rel="noopener">Instalar em outro aparelho ${icon('next', 16)}</a>
     </section>
   </div>`;
