@@ -186,3 +186,14 @@ export async function callImportarProva(body) {
   }
   return data;
 }
+
+// Envia a imagem de uma questão (já reduzida no aparelho) e devolve o endereço público.
+export async function uploadQuestionImage(questionId, blob) {
+  const c = await loadCloud();
+  if (!c) throw new Error('Sem conexão com o servidor.');
+  const path = `${questionId}.jpg`;
+  const { error } = await c.storage.from('questoes').upload(path, blob, { upsert: true, contentType: 'image/jpeg', cacheControl: '31536000' });
+  if (error) throw error;
+  const { data } = c.storage.from('questoes').getPublicUrl(path);
+  return `${data.publicUrl}?v=${Date.now()}`;
+}

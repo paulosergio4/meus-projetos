@@ -9,7 +9,7 @@ import { daysBetween } from './plan.js';
 import { GOOGLE_CLIENT_ID, EXIGIR_LOGIN } from './config.js';
 import { startSynapseFx } from './fx.js';
 import { biometricAvailable, biometricEnabled, enableBiometric, disableBiometric, unlockWithBiometric } from './biometric.js';
-import { callGerarCards, callImportarProva, fetchPublishedQuestions, checkIsAdmin, adminQuestions, adminProvas, adminUpdateQuestion, adminDeleteQuestion, fetchSubscription, cloudEnabled, loadCloud, signInWithGoogle, currentCloudUser, userFromSession, signOutCloud, pullProgress, pushProgress, deleteCloudProgress, isOAuthReturn } from './cloud.js';
+import { callGerarCards, callImportarProva, fetchPublishedQuestions, checkIsAdmin, adminQuestions, adminProvas, adminUpdateQuestion, adminDeleteQuestion, uploadQuestionImage, fetchSubscription, cloudEnabled, loadCloud, signInWithGoogle, currentCloudUser, userFromSession, signOutCloud, pullProgress, pushProgress, deleteCloudProgress, isOAuthReturn } from './cloud.js';
 
 function homeView() {
   if (!store.data.user) return 'login';
@@ -64,7 +64,7 @@ function animateCard(cls, ms, then) {
   setTimeout(() => { ui.animating = false; then(); }, ms);
 }
 
-const APP_VERSION = '0.12.1';
+const APP_VERSION = '0.12.2';
 const root = document.getElementById('app');
 
 // ---------- utilitários ----------
@@ -476,6 +476,26 @@ function admImport(a) {
   </form>`;
 }
 
+// Reduz a imagem no aparelho (até 1600 px, JPEG) antes de enviar.
+async function shrinkImage(file, max = 1600) {
+  const img = await new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const im = new Image();
+    im.onload = () => { URL.revokeObjectURL(url); resolve(im); };
+    im.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Não foi possível abrir a imagem.')); };
+    im.src = url;
+  });
+  const scale = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+  const cv = document.createElement('canvas');
+  cv.width = Math.round(img.naturalWidth * scale);
+  cv.height = Math.round(img.naturalHeight * scale);
+  const g = cv.getContext('2d');
+  g.fillStyle = '#FFFFFF';
+  g.fillRect(0, 0, cv.width, cv.height);
+  g.drawImage(img, 0, 0, cv.width, cv.height);
+  return new Promise((resolve) => cv.toBlob(resolve, 'image/jpeg', 0.86));
+}
+
 function admNumbers(gab) {
   const set = new Set([...Object.keys(gab.respostas).map(Number), ...gab.anuladas]);
   return [...set].sort((x, y) => x - y);
@@ -487,12 +507,15 @@ function admRascunhos(a) {
   return a.rascunhos.map((q) => `<article class="panel stack-sm">
     <div class="row wrap gap-sm"><span class="tag">${esc(q.prova)} · Q${q.numero}</span><span class="tag ${q.needs_image ? 'amber' : 'bad'}">${q.needs_image ? 'Precisa da imagem' : q.answer == null ? 'Sem gabarito' : 'Rascunho'}</span></div>
     <p class="clamp-3">${esc(q.stem)}</p>
+    ${q.image_url ? `<img class="q-img" src="${esc(q.image_url)}" alt="Imagem da questão ${q.numero}">` : ''}
+    ${q.needs_image ? `<label class="btn ghost" for="adm-img-${q.id}">${icon('spark', 18)} ${q.image_url ? 'Trocar imagem' : 'Adicionar imagem'}
+      <input id="adm-img-${q.id}" type="file" accept="image/*" class="visually-hidden" data-adm-img="${q.id}"></label>` : ''}
     <ol class="adm-opts">${q.options.map((o, i) => `<li class="${i === q.answer ? 'right' : ''}">${esc(o)}</li>`).join('')}</ol>
     <div class="grid-2">
       <button class="btn ghost bad-ink" data-act="adm-del" data-v="${q.id}">${ui.admConfirmDel === q.id ? 'Toque de novo para apagar' : 'Apagar'}</button>
       <button class="btn good-solid" data-act="adm-publish" data-v="${q.id}" ${q.answer == null ? 'disabled' : ''}>Publicar</button>
     </div>
-    ${q.needs_image ? '<p class="muted small">Publique só se a questão der para responder sem a imagem. O envio de imagens entra junto com as fotos nos cards.</p>' : ''}
+    ${q.needs_image && !q.image_url ? '<p class="muted small">Dica: abra o PDF da prova, tire um print só da figura e escolha esse print aqui.</p>' : ''}
   </article>`).join('');
 }
 
@@ -2242,6 +2265,26 @@ root.addEventListener('input', (e) => {
 });
 
 root.addEventListener('change', async (e) => {
+  if (e.target.matches('[data-adm-img]')) {
+    const f = e.target.files && e.target.files[0];
+    const id = e.target.dataset.admImg;
+    if (!f) return;
+    if (!/^image\//.test(f.type)) { toast('Escolha uma imagem.'); return; }
+    toast('Enviando a imagem…');
+    try {
+      const blob = await shrinkImage(f);
+      const url = await uploadQuestionImage(id, blob);
+      await adminUpdateQuestion(id, { image_url: url });
+      const a = admState();
+      const q = (a.rascunhos || []).find((x) => x.id === id);
+      if (q) q.image_url = url;
+      toast('Imagem adicionada. Confira e toque em Publicar.');
+      render();
+    } catch (err) {
+      toast('Não foi possível enviar. Confira se o SQL das imagens foi rodado no Supabase.');
+    }
+    return;
+  }
   if (e.target.matches('[data-adm="definitivo"]')) { admState().definitivo = e.target.checked; return; }
   if (e.target.matches('[data-adm-file]')) {
     const f = e.target.files && e.target.files[0];
