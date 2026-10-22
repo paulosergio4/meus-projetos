@@ -65,7 +65,7 @@ function animateCard(cls, ms, then) {
   setTimeout(() => { ui.animating = false; then(); }, ms);
 }
 
-const APP_VERSION = '0.14.0';
+const APP_VERSION = '0.15.0';
 const root = document.getElementById('app');
 
 // ---------- utilitários ----------

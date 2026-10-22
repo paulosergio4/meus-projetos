@@ -7,7 +7,7 @@ import { createClient } from 'jsr:@supabase/supabase-js@2';
 
 const LIMITES: Record<string, number> = { gratis: 10, pro: 300, residencia: 1000, teste: 1000 };
 // false = fase de testes: todo mundo tem o limite do Residência. Igual a COBRANCA_ATIVA em js/config.js.
-const COBRANCA_ATIVA = false;
+const COBRANCA_ATIVA = true;
 const TESTE_GRATIS_DIAS = 7;
 const MAX_PDF_B64 = 14_000_000; // ~10 MB de PDF
 const MAX_TEXTO = 120_000;      // caracteres

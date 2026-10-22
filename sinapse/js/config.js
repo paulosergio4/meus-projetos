@@ -26,4 +26,4 @@ export const GOOGLE_CLIENT_ID = '';
 // 1.000 cards de IA por mês) e a tela de planos mostra "em breve". Para começar a cobrar,
 // basta trocar para true aqui e em supabase/functions/gerar-cards (COBRANCA_ATIVA) e
 // ligar o pagamento (ver docs/PLANOS.md).
-export const COBRANCA_ATIVA = false;
+export const COBRANCA_ATIVA = true;
