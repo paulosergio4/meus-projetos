@@ -1298,7 +1298,7 @@ function simPlan() {
     const open = areas.filter((a) => quota[a] < byArea[a].length);
     if (!open.length) break;
     const each = Math.max(1, Math.floor(left / open.length));
-    for (const a of shuffle(open)) { if (!left) break; const add = Math.min(each, byArea[a].length - quota[a], left); quota[a] += add; left -= add; }
+    for (const a of open) { if (!left) break; const add = Math.min(each, byArea[a].length - quota[a], left); quota[a] += add; left -= add; }
   }
   const ids = shuffle(areas.flatMap((a) => shuffle(byArea[a]).slice(0, quota[a])));
   return { ids, split: areas.filter((a) => quota[a]).map((a) => [a, quota[a]]) };
