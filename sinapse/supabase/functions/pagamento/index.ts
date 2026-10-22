@@ -31,6 +31,20 @@ Deno.serve(async (req) => {
 
   let body: Record<string, unknown>;
   try { body = await req.json(); } catch { return json(400, { error: 'corpo', message: 'Pedido inválido.' }); }
+  // Diagnóstico (só administradores): quais meios de pagamento a conta do Mercado Pago aceita.
+  if (body.action === 'metodos') {
+    const admin = createClient(url, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+    const { data: isAdmin } = await admin.from('admins').select('user_id').eq('user_id', who.user.id).maybeSingle();
+    if (!isAdmin) return json(403, { error: 'admin' });
+    const r = await fetch('https://api.mercadopago.com/v1/payment_methods', { headers: { Authorization: `Bearer ${token}` } });
+    const lista = r.ok ? await r.json() : [];
+    const me = await fetch('https://api.mercadopago.com/users/me', { headers: { Authorization: `Bearer ${token}` } });
+    const conta = me.ok ? await me.json() : {};
+    return json(200, {
+      metodos: (Array.isArray(lista) ? lista : []).map((m: any) => `${m.id}:${m.payment_type_id}:${m.status}`),
+      conta: { site: conta.site_id, tipo: conta.user_type, status: conta.status?.site_status, email_igual: conta.email === who.user.email },
+    });
+  }
   const plan = String(body.plan || '');
   const period = String(body.period || '');
   const preco = PRECOS[plan]?.[period];
