@@ -1,0 +1,703 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sinapse · Questões, flashcards e casos para residência e Revalida</title>
+<meta name="description" content="Questões de provas oficiais com comentário, flashcards com repetição espaçada e casos clínicos em etapas. Para residência médica e Revalida.">
+<meta name="theme-color" content="#0A1120">
+<link rel="icon" href="../icons/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:ital,wght@0,600;0,700;0,800;1,800&display=swap">
+<style>
+:root {
+  --navy: #0A1120; --navy-2: #121B2D; --navy-3: #1A2640; --line-dk: #243250;
+  --blue: #3D8BFF; --blue-strong: #2563EB; --blue-ink: #9EC3FF;
+  --orange: #FF9F43; --orange-ink: #FFBE7A; --orange-deep: #9A4A00;
+  --green: #2DD4A7; --red: #FF6B7A;
+  --paper: #F3F6FB; --paper-2: #E8EEF8; --line: #D9E2F0;
+  --ink: #0E1626; --ink-2: #44506A;
+  --t1: #BFD8FF; --t2: #FFD3A8; --t3: #A8F0DC; --t4: #FFC2CA; --t5: #D6CCFF; --t6: #FFE79A; --t7: #B9E6FF; --t8: #E3D3C3;
+  --display: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --body: 'Inter', system-ui, sans-serif;
+  --r: 28px;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 16px/1.55 var(--body); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+a { color: inherit; }
+img, svg { display: block; }
+button { font: inherit; color: inherit; cursor: pointer; }
+.wrap { width: min(1180px, 100% - 32px); margin-inline: auto; }
+.display { font-family: var(--display); font-weight: 800; letter-spacing: -0.035em; line-height: 1.04; text-transform: uppercase; margin: 0; }
+.muted { color: var(--ink-2); }
+:focus-visible { outline: 3px solid var(--orange); outline-offset: 3px; border-radius: 8px; }
+
+/* faixa do topo */
+.strip { background: var(--orange); color: #1B0F00; font: 700 13px/1 var(--display); letter-spacing: .04em; text-transform: uppercase; text-align: center; padding: 12px 16px; }
+.strip a { text-decoration: none; border-bottom: 2px solid currentColor; }
+
+/* cabeçalho + hero */
+.hero { background: radial-gradient(1200px 600px at 50% 110%, #1D3A75 0%, transparent 60%), radial-gradient(700px 400px at 85% 10%, rgba(255,159,67,.14), transparent 60%), var(--navy); color: #F2F5FC; position: relative; overflow: hidden; }
+.top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 22px 0; }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font: 800 22px/1 var(--display); letter-spacing: -0.02em; }
+.brand svg { width: 38px; height: 38px; }
+.pill-nav { display: flex; gap: 4px; padding: 6px; border: 1px solid var(--line-dk); border-radius: 999px; background: rgba(18,27,45,.6); backdrop-filter: blur(8px); }
+.pill-nav a { text-decoration: none; padding: 9px 16px; border-radius: 999px; font-size: 14px; font-weight: 600; color: #C9D3E8; }
+.pill-nav a:hover { background: var(--navy-3); color: #fff; }
+.pill-nav a.hot { background: var(--orange); color: #1B0F00; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; border: 0; border-radius: 999px; padding: 15px 26px; font: 700 15px/1 var(--display); text-decoration: none; transition: transform .15s ease, box-shadow .15s ease; white-space: nowrap; }
+.btn:hover { transform: translateY(-2px); }
+.btn svg { width: 16px; height: 16px; }
+.btn.light { background: #fff; color: var(--ink); }
+.btn.orange { background: var(--orange); color: #1B0F00; box-shadow: 0 10px 30px rgba(255,159,67,.35); }
+.btn.blue { background: var(--blue-strong); color: #fff; }
+.btn.dark { background: var(--ink); color: #fff; }
+.btn.big { padding: 20px 34px; font-size: 16px; }
+
+.hero-body { text-align: center; padding: 34px 0 70px; position: relative; }
+.hero-kicker { font: 800 clamp(26px, 4vw, 44px)/1.1 var(--display); letter-spacing: -0.03em; color: var(--orange); margin: 0; }
+.hero-sub { margin: 14px auto 0; max-width: 560px; color: #C9D3E8; font-size: 17px; }
+.hero-stage { position: relative; margin: 40px auto 0; max-width: 1120px; min-height: 380px; display: grid; place-items: center; }
+.hero-word { font: 800 clamp(52px, 10.5vw, 134px)/0.95 var(--display); letter-spacing: -0.055em; text-transform: uppercase; margin: 0; position: relative; z-index: 1; }
+.hero-word span { display: block; }
+.hero-word .w2 { font-size: .42em; letter-spacing: -0.02em; color: #C9D3E8; margin: .18em 0 .1em; }
+.hero-word .w3 { color: var(--orange); font-style: italic; }
+.rotator { display: inline-block; position: relative; }
+.float { position: absolute; z-index: 2; background: var(--navy-2); border: 1px solid var(--line-dk); border-radius: 22px; padding: 18px; box-shadow: 0 30px 60px rgba(0,0,0,.45); text-align: left; width: 230px; }
+.float.f1 { left: -10px; top: 150px; transform: rotate(-9deg); animation: bob 6s ease-in-out infinite; }
+.float.f2 { right: -10px; top: 190px; transform: rotate(7deg); animation: bob 6s ease-in-out -3s infinite; }
+@keyframes bob { 50% { translate: 0 -12px; } }
+.float .lbl { font: 700 13px/1 var(--display); color: var(--blue-ink); display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+.float .opt { height: 34px; border-radius: 10px; border: 1px solid var(--line-dk); margin-top: 8px; display: flex; align-items: center; gap: 10px; padding: 0 10px; }
+.float .opt i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #4A5A80; flex: none; }
+.float .opt b { height: 6px; border-radius: 3px; background: #2E3D60; flex: 1; }
+.float .opt.ok { background: rgba(45,212,167,.16); border-color: var(--green); }
+.float .opt.ok i { border-color: var(--green); background: var(--green); }
+.float .card-q { font: 600 14px/1.35 var(--body); color: #E7ECF7; }
+.float .rates { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 14px; }
+.float .rates span { font: 700 11px/1 var(--display); text-align: center; padding: 9px 0; border-radius: 9px; background: var(--navy-3); color: #C9D3E8; }
+.float .rates span:nth-child(3) { background: var(--blue-strong); color: #fff; }
+.hero-cta { margin-top: 40px; display: grid; justify-items: center; gap: 12px; }
+.hero-cta small { color: #9AA6C2; font-size: 13px; }
+
+/* letreiro */
+.marquee { background: var(--ink); color: #fff; overflow: hidden; border-block: 1px solid #000; }
+.marquee-track { display: flex; width: max-content; animation: slide 38s linear infinite; }
+.marquee span { font: 800 22px/1 var(--display); letter-spacing: -0.01em; text-transform: uppercase; padding: 22px 0; display: flex; align-items: center; white-space: nowrap; }
+.marquee span::after { content: '✳'; color: var(--orange); margin: 0 28px; }
+@keyframes slide { to { transform: translateX(-50%); } }
+
+/* números */
+.stats { display: grid; grid-template-columns: 1.1fr repeat(3, .9fr) 1.3fr; padding: 64px 0; align-items: center; }
+.stats > div { padding: 0 24px; border-left: 1px solid var(--line); }
+.stats > div:first-child { border: 0; padding-left: 0; }
+.stats strong { white-space: nowrap; display: block; font: 800 clamp(34px, 4vw, 48px)/1 var(--display); letter-spacing: -0.04em; color: var(--blue-strong); }
+.stats small { color: var(--ink-2); font-size: 13px; }
+
+/* ferramentas */
+.tools { background: var(--navy); color: #F2F5FC; border-radius: 40px; padding: 80px 28px 40px; margin-inline: 16px; }
+.sec-head { display: flex; justify-content: space-between; align-items: end; gap: 32px; margin-bottom: 40px; }
+.sec-head .display { font-size: clamp(42px, 6.4vw, 82px); }
+.sec-head p { max-width: 320px; margin: 0; }
+.tools .sec-head .display { color: #5A6B92; }
+.tools .sec-head .display em { color: #fff; font-style: normal; }
+.tools .sec-head p { color: #C9D3E8; }
+.acc { display: flex; gap: 8px; height: 520px; }
+.tab { position: relative; flex: 0 0 58px; border-radius: 26px; border: 0; padding: 0; overflow: hidden; color: var(--ink); transition: flex-basis .5s cubic-bezier(.2,.8,.2,1); text-align: left; }
+.tab.on { flex: 1 1 auto; cursor: default; }
+.tab .spine { position: absolute; inset: 22px 0 22px 0; display: flex; flex-direction: column; align-items: center; justify-content: space-between; transition: opacity .25s; }
+.tab .spine em { writing-mode: vertical-rl; font: 800 22px/1 var(--display); font-style: normal; letter-spacing: -0.01em; }
+.tab .spine small { font: 600 13px/1 var(--body); }
+.tab .spine svg { width: 24px; height: 24px; }
+.tab.on .spine { opacity: 0; pointer-events: none; }
+.tab .pane { position: absolute; inset: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding: 34px; opacity: 0; transition: opacity .3s .15s; pointer-events: none; min-width: 640px; }
+.tab.on .pane { opacity: 1; pointer-events: auto; }
+.pane h3 { font: 800 clamp(30px, 3.2vw, 42px)/1.02 var(--display); letter-spacing: -0.035em; margin: 18px 0 14px; }
+.pane p { margin: 0 0 18px; color: #2A3550; max-width: 360px; }
+.pane ul { list-style: none; padding: 0; margin: 0 0 24px; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.pane li { background: rgba(255,255,255,.55); border-radius: 999px; padding: 6px 14px 6px 10px; font-size: 14px; font-weight: 500; display: flex; gap: 6px; align-items: center; }
+.pane li::before { content: '✓'; font-weight: 800; }
+.pane .num { font: 600 13px/1 var(--body); position: absolute; left: 34px; bottom: 26px; }
+.pane .go { font: 700 15px/1 var(--display); text-decoration: none; border-bottom: 2px solid currentColor; padding-bottom: 8px; display: inline-flex; gap: 10px; }
+.pane .tag-ico { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 14px; background: rgba(255,255,255,.6); }
+.pane .tag-ico svg { width: 22px; height: 22px; }
+.tools-foot { text-align: center; color: #8592B0; font-size: 13px; margin-top: 22px; }
+
+/* mini telas do app */
+.screen { align-self: center; background: var(--navy); color: #E7ECF7; border-radius: 22px; padding: 18px; box-shadow: 0 24px 50px rgba(10,17,32,.35); font-size: 13px; }
+.screen .bar { display: flex; gap: 6px; margin-bottom: 14px; }
+.screen .bar i { width: 9px; height: 9px; border-radius: 50%; background: #2E3D60; }
+.screen .chip { display: inline-block; padding: 5px 11px; border-radius: 999px; background: var(--navy-3); margin: 0 4px 6px 0; font-weight: 600; color: #C9D3E8; font-size: 12px; }
+.screen .chip.on { background: var(--orange); color: #1B0F00; }
+.screen .row { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-radius: 12px; background: var(--navy-2); margin-top: 8px; }
+.screen .row b { font-weight: 600; }
+.screen .meter { height: 7px; border-radius: 4px; background: var(--navy-3); overflow: hidden; margin-top: 6px; }
+.screen .meter i { display: block; height: 100%; background: var(--blue); border-radius: 4px; }
+.screen .big { font: 700 15px/1.4 var(--body); margin: 6px 0 12px; }
+.screen .ans { background: var(--navy-2); border-radius: 12px; padding: 12px; color: #C9D3E8; }
+.screen .opt2 { padding: 9px 12px; border-radius: 10px; border: 1px solid var(--line-dk); margin-top: 7px; }
+.screen .opt2.ok { border-color: var(--green); background: rgba(45,212,167,.14); }
+.screen .opt2.no { border-color: var(--red); background: rgba(255,107,122,.12); }
+.screen .steps { display: flex; gap: 5px; margin-bottom: 12px; }
+.screen .steps i { flex: 1; height: 5px; border-radius: 3px; background: var(--navy-3); }
+.screen .steps i.d { background: var(--green); }
+.screen .steps i.c { background: var(--blue); }
+.screen .bars { display: flex; align-items: end; gap: 8px; height: 110px; margin-top: 10px; }
+.screen .bars i { flex: 1; background: var(--blue); border-radius: 6px 6px 2px 2px; }
+.screen .bars i:nth-child(odd) { background: #2F5FB8; }
+.screen .rates { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; margin-top: 12px; }
+.screen .rates span { text-align: center; padding: 9px 0; border-radius: 9px; background: var(--navy-3); font-weight: 700; font-size: 11px; }
+.screen .rates span:nth-child(3) { background: var(--blue-strong); }
+
+/* para qual prova */
+.sec { padding: 110px 0; }
+.sec .sec-head .display { color: #9AA6C2; }
+.sec .sec-head .display em { color: var(--ink); font-style: normal; }
+.goals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.goal { border: 0; border-radius: var(--r); padding: 26px; min-height: 330px; display: flex; flex-direction: column; text-align: left; transition: transform .25s ease, box-shadow .25s ease; position: relative; }
+.goal:nth-child(1) { background: var(--t1); transform: rotate(-1.5deg); }
+.goal:nth-child(2) { background: var(--t2); transform: rotate(1deg); }
+.goal:nth-child(3) { background: var(--t3); transform: rotate(-.8deg); }
+.goal:hover { transform: rotate(0) translateY(-6px); }
+.goal.on { outline: 3px solid var(--ink); box-shadow: 8px 8px 0 var(--ink); }
+.goal .head { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; }
+.goal svg.ico { width: 72px; height: 72px; margin: 38px 0 auto; }
+.goal h3 { font: 800 38px/1 var(--display); letter-spacing: -0.04em; margin: 24px 0 8px; }
+.goal p { margin: 0; font-size: 14px; color: #2A3550; }
+
+/* experimente */
+.try-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+.try-tabs button { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 11px 20px; font-weight: 600; font-size: 14px; }
+.try-tabs button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+.try { background: #fff; border: 1px solid var(--line); border-radius: var(--r); padding: clamp(20px, 4vw, 44px); display: grid; grid-template-columns: 1.4fr 1fr; gap: 36px; }
+.try .meta { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.try .meta span { font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: 999px; background: var(--paper-2); }
+.try .meta span:first-child { background: #DCE8FF; color: var(--blue-strong); }
+.try .stem { font-size: 17px; line-height: 1.6; margin: 0 0 18px; }
+.try .opts { display: grid; gap: 10px; }
+.try .opts button { display: flex; gap: 14px; align-items: flex-start; text-align: left; border: 1.5px solid var(--line); background: var(--paper); border-radius: 16px; padding: 14px 16px; font-size: 15px; line-height: 1.45; transition: border-color .15s, background .15s; }
+.try .opts button:hover:not(:disabled) { border-color: var(--blue); }
+.try .opts button b { font: 800 14px/1 var(--display); width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: #fff; border: 1.5px solid var(--line); flex: none; }
+.try .opts button.ok { border-color: var(--green); background: #E3FAF3; }
+.try .opts button.ok b { background: var(--green); border-color: var(--green); color: #fff; }
+.try .opts button.no { border-color: var(--red); background: #FFEDEF; }
+.try .opts button.no b { background: var(--red); border-color: var(--red); color: #fff; }
+.try .opts button:disabled { cursor: default; }
+.try aside { background: var(--paper); border-radius: 22px; padding: 26px; align-self: start; position: sticky; top: 20px; }
+.try aside h4 { font: 800 24px/1.1 var(--display); letter-spacing: -0.03em; margin: 12px 0 10px; }
+.try aside p { margin: 0 0 14px; font-size: 15px; color: var(--ink-2); }
+.verdict { font: 800 14px/1 var(--display); text-transform: uppercase; letter-spacing: .04em; }
+.verdict.ok { color: #0F8F6C; } .verdict.no { color: #D0384A; }
+.flash { margin-top: 16px; perspective: 900px; }
+.flash-in { position: relative; min-height: 150px; transition: transform .6s cubic-bezier(.2,.8,.2,1); transform-style: preserve-3d; cursor: pointer; }
+.flash.flip .flash-in { transform: rotateY(180deg); }
+.flash-face { position: absolute; inset: 0; backface-visibility: hidden; border-radius: 18px; padding: 18px; background: var(--navy); color: #E7ECF7; font-size: 14px; line-height: 1.45; display: flex; flex-direction: column; justify-content: space-between; }
+.flash-face.back { transform: rotateY(180deg); background: var(--blue-strong); color: #fff; }
+.flash-face small { opacity: .7; font-size: 12px; }
+
+/* loop de estudo */
+.loop { background: var(--paper-2); }
+.loop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center; }
+.loop .display { font-size: clamp(52px, 7vw, 92px); color: var(--blue-strong); }
+.loop .display span { display: block; }
+.loop .display span:nth-child(2) { color: #5C8FE6; }
+.loop .display span:nth-child(3) { color: var(--orange-deep); }
+.loop-steps { margin-top: 32px; border-top: 1px solid var(--line); }
+.loop-steps button { width: 100%; display: flex; gap: 16px; align-items: center; border: 0; border-bottom: 1px solid var(--line); background: none; padding: 18px 12px; text-align: left; font-weight: 600; color: var(--ink-2); }
+.loop-steps button i { font: 700 12px/1 var(--display); font-style: normal; width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid var(--line); display: grid; place-items: center; flex: none; }
+.loop-steps button.on { background: #fff; color: var(--ink); border-radius: 14px; }
+.loop-steps button.on i { background: var(--blue-strong); color: #fff; border-color: var(--blue-strong); }
+.loop-card { background: #fff; border: 1px solid var(--line); border-radius: var(--r); padding: 34px; min-height: 340px; }
+.loop-card h4 { font: 800 30px/1.1 var(--display); letter-spacing: -0.03em; margin: 18px 0 12px; }
+.loop-card p { color: var(--ink-2); margin: 0 0 20px; }
+.ivals { display: flex; gap: 8px; flex-wrap: wrap; }
+.ivals span { padding: 8px 14px; border-radius: 12px; background: var(--paper); font-weight: 700; font-family: var(--display); font-size: 14px; }
+.ivals span:last-child { background: var(--orange); color: #1B0F00; }
+
+/* planos */
+.plans { background: var(--navy); color: #F2F5FC; border-radius: 40px; padding: 80px 28px; margin: 0 16px; }
+.plans .sec-head .display { color: #5A6B92; }
+.plans .sec-head .display em { color: #fff; font-style: normal; }
+.plans .sec-head p { color: #C9D3E8; }
+.badge { display: inline-block; background: var(--orange); color: #1B0F00; font: 800 12px/1 var(--display); text-transform: uppercase; letter-spacing: .04em; padding: 9px 14px; border-radius: 999px; margin-bottom: 20px; }
+.period { display: inline-flex; background: var(--navy-2); border: 1px solid var(--line-dk); border-radius: 999px; padding: 5px; margin-bottom: 28px; }
+.period button { border: 0; background: none; padding: 10px 20px; border-radius: 999px; font-weight: 600; font-size: 14px; color: #C9D3E8; }
+.period button.on { background: #fff; color: var(--ink); }
+.period button em { font-style: normal; color: var(--orange); font-size: 12px; margin-left: 4px; }
+.period button.on em { color: var(--orange-deep); }
+.plan-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; align-items: start; }
+.plan { background: var(--paper); color: var(--ink); border-radius: 26px; padding: 28px; position: relative; display: flex; flex-direction: column; min-height: 100%; }
+.plan.hl { background: var(--orange); transform: translateY(-10px); }
+.plan .ribbon { position: absolute; top: -14px; left: 50%; translate: -50% 0; background: var(--ink); color: var(--orange); font: 800 11px/1 var(--display); text-transform: uppercase; letter-spacing: .05em; padding: 9px 14px; border-radius: 999px; white-space: nowrap; }
+.plan small.kind { font-size: 13px; color: var(--ink-2); }
+.plan.hl small.kind { color: #4A2600; }
+.plan h3 { font: 800 34px/1 var(--display); letter-spacing: -0.04em; margin: 8px 0 4px; }
+.plan .tl { font-size: 14px; margin: 0 0 18px; padding-bottom: 18px; border-bottom: 1px solid rgba(14,22,38,.12); }
+.plan .price { display: flex; align-items: baseline; gap: 4px; }
+.plan .price span { font-weight: 600; }
+.plan .price strong { font: 800 52px/1 var(--display); letter-spacing: -0.05em; }
+.plan .price-note { font-size: 13px; color: var(--ink-2); margin: 6px 0 18px; min-height: 20px; }
+.plan.hl .price-note { color: #4A2600; }
+.plan ul { list-style: none; margin: 0 0 24px; padding: 0; display: grid; gap: 10px; font-size: 14px; }
+.plan li { display: flex; gap: 10px; }
+.plan li::before { content: '✓'; font-weight: 800; color: var(--blue-strong); }
+.plan.hl li::before { color: var(--ink); }
+.plan .btn { margin-top: auto; justify-content: space-between; }
+.plan-note { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-top: 30px; color: #9AA6C2; font-size: 13px; }
+
+/* celular */
+.mobile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+.phone-wrap { position: relative; display: grid; place-items: center; min-height: 600px; }
+.phone-wrap::before { content: ''; position: absolute; width: 400px; height: 400px; border-radius: 50%; background: var(--t2); }
+.phone { position: relative; width: 290px; height: 590px; border-radius: 46px; background: #05080F; padding: 12px; box-shadow: 18px 18px 0 rgba(14,22,38,.12); transform: rotate(-4deg); }
+.phone .scr { width: 100%; height: 100%; border-radius: 36px; background: var(--navy); overflow: hidden; padding: 44px 18px 18px; color: #E7ECF7; display: flex; flex-direction: column; gap: 12px; }
+.phone .notch { position: absolute; top: 22px; left: 50%; translate: -50% 0; width: 90px; height: 24px; border-radius: 14px; background: #05080F; }
+.phone h5 { font: 800 22px/1.1 var(--display); letter-spacing: -0.03em; margin: 0; }
+.phone .streak { display: flex; gap: 6px; }
+.phone .streak i { flex: 1; height: 38px; border-radius: 10px; background: var(--navy-3); }
+.phone .streak i.d { background: var(--orange); }
+.phone .tile { background: var(--navy-2); border-radius: 18px; padding: 14px; }
+.phone .tile b { font: 800 28px/1 var(--display); display: block; }
+.phone .tile small { color: #9AA6C2; font-size: 12px; }
+.phone .cta { margin-top: auto; background: var(--blue-strong); color: #fff; border-radius: 16px; padding: 15px; text-align: center; font: 700 14px/1 var(--display); }
+.sticker { position: absolute; bottom: 60px; right: 4%; background: var(--t3); border: 2px solid var(--ink); box-shadow: 5px 5px 0 var(--ink); font: 800 15px/1 var(--display); text-transform: uppercase; padding: 14px 18px; transform: rotate(8deg); }
+.install { display: grid; gap: 12px; margin-top: 28px; max-width: 420px; }
+.install div { display: flex; gap: 14px; align-items: center; border: 1px solid var(--line); background: #fff; border-radius: 16px; padding: 14px 16px; font-size: 14px; }
+.install svg { width: 28px; height: 28px; flex: none; }
+.install b { display: block; font-family: var(--display); }
+
+/* dúvidas */
+.faq-grid { display: grid; grid-template-columns: 1fr 1.3fr; gap: 60px; }
+.faq-grid .display { font-size: clamp(46px, 6vw, 78px); color: var(--ink-2); }
+details { border-bottom: 1px solid var(--line); }
+summary { list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 22px 0; font-weight: 600; cursor: pointer; }
+summary::-webkit-details-marker { display: none; }
+summary::after { content: '+'; width: 30px; height: 30px; border-radius: 50%; background: var(--paper-2); display: grid; place-items: center; font-size: 18px; flex: none; transition: transform .2s; }
+details[open] summary { color: var(--blue-strong); }
+details[open] summary::after { content: '–'; background: #DCE8FF; }
+details p { margin: 0 0 22px; color: var(--ink-2); }
+
+/* final */
+.final { background: var(--ink); color: #fff; border-radius: 40px 40px 0 0; padding: 90px 0 36px; margin-top: 40px; }
+.final-top { display: flex; justify-content: space-between; align-items: end; gap: 40px; flex-wrap: wrap; }
+.final .display { font-size: clamp(48px, 7.4vw, 100px); color: var(--orange); }
+.final-top p { color: #C9D3E8; margin: 0 0 18px; }
+.foot-links { display: flex; gap: 26px; flex-wrap: wrap; margin: 70px 0 26px; font-weight: 600; font-size: 14px; }
+.foot-links a { text-decoration: none; color: #DDE4F2; }
+.foot-bottom { border-top: 1px solid #243250; padding-top: 24px; display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; font-size: 13px; color: #8592B0; }
+.foot-bottom a { color: #DDE4F2; text-decoration: none; margin-left: 20px; }
+
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity .7s ease, transform .7s ease; }
+.reveal.in { opacity: 1; transform: none; }
+
+/* responsivo */
+@media (max-width: 980px) {
+  .pill-nav { display: none; }
+  .float { display: none; }
+  .stats { grid-template-columns: repeat(2, 1fr); gap: 28px 0; }
+  .stats > div:first-child { grid-column: 1 / -1; }
+  .stats > div:nth-child(2) { border: 0; padding-left: 0; }
+  .stats > div:nth-child(4) { border: 0; padding-left: 0; }
+  .sec-head { flex-direction: column; align-items: flex-start; }
+  .acc { flex-direction: column; height: auto; }
+  .tab { flex: none; min-height: 64px; }
+  .tab .spine { inset: 0 22px; flex-direction: row; }
+  .tab .spine em { writing-mode: horizontal-tb; font-size: 19px; margin-right: auto; margin-left: 14px; }
+  .tab .spine small { order: 3; margin-left: 12px; }
+  .tab .pane { position: relative; min-width: 0; grid-template-columns: 1fr; display: none; padding: 26px 22px 54px; }
+  .tab.on .pane { display: grid; }
+  .pane .num { left: 22px; }
+  .goals, .plan-grid { grid-template-columns: 1fr; }
+  .plan-grid { gap: 30px; }
+  .hero-word { line-height: 1.02; }
+  .goal { min-height: 0; }
+  .goal svg.ico { margin: 20px 0 0; width: 56px; height: 56px; }
+  .plan.hl { transform: none; }
+  .try { grid-template-columns: 1fr; }
+  .try aside { position: static; }
+  .loop-grid, .mobile-grid, .faq-grid { grid-template-columns: 1fr; gap: 36px; }
+  .phone-wrap { min-height: 520px; }
+  .phone-wrap::before { width: 320px; height: 320px; }
+  .phone { transform: rotate(-3deg) scale(.88); }
+  .tools, .plans { margin-inline: 8px; padding: 56px 18px 28px; border-radius: 30px; }
+  .sec { padding: 76px 0; }
+}
+@media (max-width: 520px) {
+  .top .btn { padding: 12px 18px; }
+  .hero-stage { min-height: 0; }
+  .stats > div { padding: 0 14px; }
+  .sticker { right: 0; bottom: 30px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .reveal { opacity: 1; transform: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="strip">Fase de testes ✳ todos os recursos liberados de graça ✳ <a href="../">entre com sua conta Google</a></div>
+
+<header class="hero">
+  <div class="wrap top">
+    <a class="brand" href="#" aria-label="Sinapse, início">
+      <svg viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="120" fill="#121B2D"/><path d="M96 296 H176 L208 232 L256 360 L304 152 L336 296 H416" fill="none" stroke="#3D8BFF" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/><circle cx="416" cy="296" r="30" fill="#FF9F43"/></svg>
+      Sinapse
+    </a>
+    <nav class="pill-nav" aria-label="Seções">
+      <a href="#ferramentas">Como funciona</a>
+      <a href="#experimente">Experimente</a>
+      <a href="#planos" class="hot">Grátis nos testes</a>
+      <a href="#duvidas">Dúvidas</a>
+    </nav>
+    <a class="btn light" href="../">Entrar <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a>
+  </div>
+
+  <div class="wrap hero-body">
+    <p class="hero-kicker">Estude o que cai.<br>Lembre no dia da prova.</p>
+    <p class="hero-sub">Questões de provas oficiais com comentário, flashcards que voltam na hora certa e casos clínicos em etapas. Tudo num app só, no celular.</p>
+
+    <div class="hero-stage">
+      <div class="float f1" aria-hidden="true">
+        <div class="lbl"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg> Resolva</div>
+        <div class="opt"><i></i><b></b></div>
+        <div class="opt ok"><i></i><b></b></div>
+        <div class="opt"><i></i><b></b></div>
+        <div class="opt"><i></i><b></b></div>
+      </div>
+      <h1 class="hero-word"><span>Questões</span><span class="w2">que viram</span><span class="w3">memória.</span></h1>
+      <div class="float f2" aria-hidden="true">
+        <div class="lbl" style="color:var(--orange-ink)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><rect x="3" y="5" width="14" height="14" rx="3"/><path d="M7 3h11a3 3 0 0 1 3 3v11"/></svg> Revise</div>
+        <p class="card-q">Sobrevivente de LLA tratada com antracíclicos: o que rastrear?</p>
+        <div class="rates"><span>Errei</span><span>Difícil</span><span>Bom</span><span>Fácil</span></div>
+      </div>
+    </div>
+
+    <div class="hero-cta">
+      <a class="btn orange big" href="../">Começar grátis <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a>
+      <small>Entra com o Google, sem cartão. Funciona no celular e no computador.</small>
+    </div>
+  </div>
+</header>
+
+<div class="marquee" aria-hidden="true">
+  <div class="marquee-track">
+    <span>4.164 questões</span><span>ENARE</span><span>Revalida</span><span>USP</span><span>UNIFESP</span><span>UNICAMP</span><span>PSU-MG</span><span>Repetição espaçada</span><span>Casos clínicos</span>
+    <span>4.164 questões</span><span>ENARE</span><span>Revalida</span><span>USP</span><span>UNIFESP</span><span>UNICAMP</span><span>PSU-MG</span><span>Repetição espaçada</span><span>Casos clínicos</span>
+  </div>
+</div>
+
+<section class="wrap stats" aria-label="Números">
+  <div><p class="muted" style="margin:0">Provas de verdade.<br><strong style="font:700 16px/1.4 var(--body);color:var(--ink)">Comentadas e prontas para revisar.</strong></p></div>
+  <div><strong data-count="4164">4.164</strong><small>questões comentadas</small></div>
+  <div><strong data-count="5300" data-plus>5.300+</strong><small>flashcards prontos</small></div>
+  <div><strong data-count="68">68</strong><small>provas oficiais</small></div>
+  <div><strong>2011–2026</strong><small>anos de prova no banco</small></div>
+</section>
+
+<section class="tools" id="ferramentas">
+  <div class="wrap" style="width:100%">
+    <div class="sec-head">
+      <h2 class="display">Um app.<br><em>Todo o ciclo.</em></h2>
+      <p>Você resolve, entende o erro e o app traz de volta na hora certa. Toque numa ferramenta para ver como ela funciona.</p>
+    </div>
+    <div class="acc" id="acc"></div>
+    <p class="tools-foot">Telas ilustrativas do app.</p>
+  </div>
+</section>
+
+<section class="sec" id="momento">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2 class="display">Qual é a<br><em>sua prova?</em></h2>
+      <p class="muted">Escolha o seu objetivo e resolva uma questão de verdade logo abaixo.</p>
+    </div>
+    <div class="goals" id="goals"></div>
+  </div>
+</section>
+
+<section class="sec" id="experimente" style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2 class="display">Teste<br><em>agora.</em></h2>
+      <p class="muted">Questões reais do banco do Sinapse. Responda e veja o comentário e o card que nasce dela.</p>
+    </div>
+    <div class="try-tabs" id="try-tabs" role="tablist"></div>
+    <div class="try" id="try"></div>
+  </div>
+</section>
+
+<section class="sec loop">
+  <div class="wrap loop-grid">
+    <div>
+      <h2 class="display"><span>Resolver.</span><span>Entender.</span><span>Lembrar.</span></h2>
+      <p class="muted" style="max-width:420px;margin-top:22px">Ler resumo não fixa. O que fixa é lembrar na hora em que você está quase esquecendo. O Sinapse calcula essa hora para cada card.</p>
+      <div class="loop-steps" id="loop-steps"></div>
+    </div>
+    <div class="loop-card" id="loop-card" aria-live="polite"></div>
+  </div>
+</section>
+
+<section class="sec" style="padding-bottom:70px">
+  <div class="plans" id="planos">
+    <div class="wrap" style="width:100%">
+      <span class="badge">Fase de testes · tudo liberado</span>
+      <div class="sec-head">
+        <h2 class="display">Um plano para<br><em>cada fase.</em></h2>
+        <p>Durante os testes, todo mundo usa tudo de graça. Estes são os preços previstos para depois.</p>
+      </div>
+      <div class="period" role="group" aria-label="Período">
+        <button type="button" class="on" data-period="m">Mensal</button>
+        <button type="button" data-period="a">Anual <em>−33%</em></button>
+      </div>
+      <div class="plan-grid" id="plan-grid"></div>
+      <div class="plan-note"><span>✓ 7 dias do plano Residência ao criar a conta</span><span>A revisão do que você já estudou nunca é bloqueada, em nenhum plano.</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" style="padding-top:40px">
+  <div class="wrap mobile-grid">
+    <div class="phone-wrap" aria-hidden="true">
+      <div class="phone"><span class="notch"></span>
+        <div class="scr">
+          <small style="color:#9AA6C2">Boa tarde</small>
+          <h5>Hoje: 34 cards e 20 questões</h5>
+          <div class="streak"><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i><i></i><i></i></div>
+          <div class="tile"><b>87%</b><small>de retenção nos últimos 30 dias</small></div>
+          <div class="tile"><b>112</b><small>dias até a prova</small><div class="meter" style="height:7px;border-radius:4px;background:#1A2640;margin-top:10px;overflow:hidden"><i style="display:block;height:100%;width:62%;background:#3D8BFF"></i></div></div>
+          <div class="cta">Revisar agora</div>
+        </div>
+      </div>
+      <div class="sticker">No ônibus. No plantão.</div>
+    </div>
+    <div>
+      <h2 class="display" style="font-size:clamp(46px,6vw,78px);color:var(--ink-2)">Cabe no<br>intervalo.</h2>
+      <p class="muted" style="max-width:420px;margin-top:20px">Dez minutos entre um paciente e outro já dão uma revisão. O app funciona sem internet e sincroniza quando a conexão volta.</p>
+      <div class="install">
+        <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M11 18.5h2"/></svg><span><b>Android</b>Abra no Chrome e toque em “Instalar app”.</span></div>
+        <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg><span><b>iPhone</b>No Safari, toque em Compartilhar e “Adicionar à Tela de Início”.</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="duvidas" style="padding-top:20px">
+  <div class="wrap faq-grid">
+    <h2 class="display">Ficou<br>com dúvida?</h2>
+    <div id="faq"></div>
+  </div>
+</section>
+
+<footer class="final">
+  <div class="wrap">
+    <div class="final-top">
+      <h2 class="display">A próxima revisão<br>começa agora.</h2>
+      <div><p>Tudo liberado durante a fase de testes.</p><a class="btn orange big" href="../">Começar grátis <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a></div>
+    </div>
+    <nav class="foot-links" aria-label="Rodapé">
+      <a href="#ferramentas">Ferramentas</a><a href="#experimente">Experimente</a><a href="#planos">Planos</a><a href="#duvidas">Dúvidas</a><a href="../">Abrir o app</a>
+    </nav>
+    <div class="foot-bottom">
+      <span>© 2026 Sinapse · Pompéu, MG</span>
+      <span><a href="../termos.html">Termos e privacidade</a></span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const $ = (s, r = document) => r.querySelector(s);
+  const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const ICON = {
+    list: '<path d="M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/>',
+    cards: '<rect x="3" y="5" width="14" height="14" rx="3"/><path d="M7 3h11a3 3 0 0 1 3 3v11"/>',
+    shuffle: '<path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/>',
+    clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    steth: '<path d="M6 3v6a5 5 0 0 0 10 0V3"/><path d="M11 14v2a5 5 0 0 0 10 0v-2"/><circle cx="21" cy="12" r="2"/>',
+    book: '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/>',
+    cal: '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+    spark: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/>',
+    chart: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+    arrow: '<path d="M7 17L17 7M9 7h8v8"/>',
+  };
+  const ico = (n, w = 24) => `<svg width="${w}" height="${w}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICON[n]}</svg>`;
+
+  // ---------- ferramentas ----------
+  const TOOLS = [
+    { k: 'Questões', i: 'list', c: 'var(--t1)', h: 'Prova de verdade, comentada.', p: 'ENARE, Revalida, USP, UNIFESP, UNICAMP e PSU-MG. Filtre por área e tema e entenda por que cada alternativa está certa ou errada.', b: ['Filtro por área e tema', 'Comentário em cada questão', 'Gabarito oficial'],
+      s: `<span class="chip on">Todas</span><span class="chip">Clínica</span><span class="chip">Cirurgia</span><span class="chip">GO</span><span class="chip">Pediatria</span><span class="chip">Preventiva</span>
+        <div class="row"><b>Cardiologia</b><span>412</span></div><div class="row"><b>Infecções na gestação</b><span>186</span></div><div class="row"><b>Neonatologia</b><span>203</span></div><div class="row"><b>Epidemiologia</b><span>175</span></div>` },
+    { k: 'Flashcards', i: 'cards', c: 'var(--t2)', h: 'O card volta quando você ia esquecer.', p: 'Cada questão vira um card. O algoritmo FSRS calcula o melhor dia para revisar cada um, a partir de como você respondeu.', b: ['Mais de 5.300 cards prontos', 'Repetição espaçada FSRS', 'Gire o card com o dedo'],
+      s: `<p class="big">Gestante com VDRL 1:4 sem tratamento prévio: tratamento de escolha?</p><div class="ans">Penicilina G benzatina 2,4 milhões UI IM, semanal, por 3 semanas.</div><div class="rates"><span>Errei<br>1 min</span><span>Difícil<br>2 d</span><span>Bom<br>6 d</span><span>Fácil<br>14 d</span></div>` },
+    { k: 'Sessão livre', i: 'shuffle', c: 'var(--t3)', h: 'Escolha a área e a quantidade.', p: 'Até 100 cards por vez, das seis grandes áreas. Os que você nunca viu vêm primeiro; os já respondidos vão para o fim.', b: ['Seis grandes áreas', 'De 10 a 100 cards', 'Novos primeiro'],
+      s: `<p style="margin:0 0 8px;font-weight:600">Área</p><span class="chip">Todas</span><span class="chip on">Clínica</span><span class="chip">Cirurgia</span><span class="chip">GO</span><span class="chip">Pediatria</span><span class="chip">Preventiva</span><p style="margin:12px 0 8px;font-weight:600">Quantidade</p><span class="chip">10</span><span class="chip">20</span><span class="chip on">50</span><span class="chip">100</span><div class="row" style="background:var(--blue-strong);justify-content:center;margin-top:14px"><b>Começar 50 cards</b></div>` },
+    { k: 'Simulados', i: 'clock', c: 'var(--t4)', h: 'Prova cronometrada, do seu jeito.', p: 'Escolha a banca, a área e quantas questões. O app divide as questões entre as áreas para o simulado ficar parecido com a prova.', b: ['Filtro por banca', 'Divisão automática por área', 'Cronômetro e resultado'],
+      s: `<div class="row"><b>Banca</b><span class="chip on" style="margin:0">ENARE</span></div><div class="row"><b>Quantidade</b><span>100 questões · 300 min</span></div><p style="margin:12px 0 4px;color:#9AA6C2">Divididas por área</p><div class="row"><b>Clínica</b><span>20</span></div><div class="row"><b>Cirurgia</b><span>20</span></div><div class="row"><b>GO</b><span>20</span></div><div class="row"><b>Pediatria · Preventiva</b><span>20 · 20</span></div>` },
+    { k: 'Casos clínicos', i: 'steth', c: 'var(--t5)', h: 'Decida a conduta, etapa por etapa.', p: 'O caso se revela aos poucos: apresentação, exames, diagnóstico e conduta. Em cada etapa você decide antes de ver o que acontece.', b: ['Casos de 3 a 5 etapas', 'Baseados em questões reais', 'Revisados por médica'],
+      s: `<div class="steps"><i class="d"></i><i class="d"></i><i class="c"></i><i></i></div><p style="margin:0;color:#9AA6C2">Nova informação</p><p class="big" style="margin-top:4px">Troponina elevada e supra de ST em V1–V4.</p><p style="margin:0 0 4px;font-weight:600">Qual a conduta agora?</p><div class="opt2">Teste ergométrico</div><div class="opt2 ok">Angioplastia primária</div><div class="opt2">Alta com AAS</div>` },
+    { k: 'Caderno de erros', i: 'book', c: 'var(--t6)', h: 'Seus erros viram revisão.', p: 'Errou no treino ou no simulado? A questão vai para o caderno e o card dela entra na sua fila de revisão.', b: ['Questão original inteira', 'Card criado automaticamente', 'Reforço só dos erros'],
+      s: `<div class="row"><b>Sífilis na gestação</b><span style="color:var(--red)">errou 2x</span></div><div class="row"><b>APLV no lactente</b><span style="color:var(--red)">errou 1x</span></div><div class="row"><b>Antracíclicos</b><span style="color:var(--red)">errou 1x</span></div><div class="row" style="background:var(--blue-strong);justify-content:center;margin-top:14px"><b>Reforçar 3 erros</b></div>` },
+    { k: 'Cronograma', i: 'cal', c: 'var(--t7)', h: 'Contagem até o dia da prova.', p: 'Diga a data da prova e quanto tempo tem por dia. O app distribui cards e questões até lá e mostra se você está no ritmo.', b: ['Meta diária de cards e questões', 'Dias até a prova', 'Sequência de estudo'],
+      s: `<div class="row"><b>PSU-MG 2027</b><span>112 dias</span></div><p style="margin:12px 0 4px">Cards de hoje <b style="float:right">34/40</b></p><div class="meter"><i style="width:85%"></i></div><p style="margin:12px 0 4px">Questões de hoje <b style="float:right">12/20</b></p><div class="meter"><i style="width:60%;background:var(--orange)"></i></div>` },
+    { k: 'IA cria cards', i: 'spark', c: 'var(--t8)', h: 'Seu resumo vira cards.', p: 'Cole um texto ou envie o PDF da aula. A IA separa os fatos que importam e escreve cards curtos, prontos para revisar.', b: ['Texto, PDF ou foto', 'Você revisa antes de salvar', 'Entra na repetição espaçada'],
+      s: `<div class="ans" style="font-style:italic">“A pré-eclâmpsia é definida por PA ≥ 140×90 após 20 semanas com proteinúria ou lesão de órgão-alvo…”</div><p style="margin:12px 0 4px;color:#9AA6C2">3 cards criados</p><div class="row"><b>Pré-eclâmpsia: a partir de quantas semanas?</b></div><div class="row"><b>Critério pressórico?</b></div>` },
+    { k: 'Desempenho', i: 'chart', c: '#C9DBFF', h: 'Saiba onde está o buraco.', p: 'Acerto por área e por tema, retenção dos cards e evolução semana a semana. Você vê onde estudar mais.', b: ['Acerto por área', 'Retenção dos cards', 'Evolução no tempo'],
+      s: `<p style="margin:0;color:#9AA6C2">Acerto por área</p><div class="bars"><i style="height:78%"></i><i style="height:64%"></i><i style="height:71%"></i><i style="height:52%"></i><i style="height:83%"></i><i style="height:60%"></i></div><p style="margin:8px 0 0;display:flex;justify-content:space-between;color:#9AA6C2;font-size:11px"><span>Clín</span><span>Cir</span><span>GO</span><span>Ped</span><span>Prev</span><span>Bás</span></p>` },
+  ];
+  let toolOn = 0;
+  const acc = $('#acc');
+  acc.innerHTML = TOOLS.map((t, i) => `<div class="tab" role="button" tabindex="0" aria-expanded="false" data-i="${i}" style="background:${t.c}">
+      <span class="spine" aria-hidden="true">${ico(t.i)}<em>${t.k}</em><small>${String(i + 1).padStart(2, '0')}</small></span>
+      <div class="pane">
+        <div><span class="tag-ico">${ico(t.i)}</span><h3>${t.h}</h3><p>${t.p}</p><ul>${t.b.map((x) => `<li>${x}</li>`).join('')}</ul><a class="go" href="../">Usar no app ${ico('arrow', 16)}</a></div>
+        <div class="screen" aria-hidden="true"><div class="bar"><i></i><i></i><i></i></div>${t.s}</div>
+      </div>
+    </div>`).join('');
+  const setTool = (i) => {
+    toolOn = i;
+    acc.querySelectorAll('.tab').forEach((el, j) => { el.classList.toggle('on', j === i); el.setAttribute('aria-expanded', j === i); el.setAttribute('aria-label', TOOLS[j].k); });
+  };
+  acc.addEventListener('click', (e) => { const t = e.target.closest('.tab'); if (t && !t.classList.contains('on')) setTool(Number(t.dataset.i)); });
+  acc.addEventListener('keydown', (e) => { const t = e.target.closest('.tab'); if (t && (e.key === 'Enter' || e.key === ' ') && e.target === t) { e.preventDefault(); setTool(Number(t.dataset.i)); } });
+  setTool(0);
+
+  // ---------- questões de exemplo ----------
+  const QS = [
+    { goal: 'residencia', label: 'Residência', src: 'USP 2026 · R+ Pediatria · Q37', area: 'Pediatria · Hematologia e oncologia',
+      stem: 'Adolescente do sexo feminino, 15 anos de idade, curada de leucemia linfoide aguda, tratada aos 5 anos de idade, com quimioterapia contendo antracíclicos. É importante o seguimento periódico para rastreio de',
+      opts: ['diabetes.', 'cardiopatia dilatada.', 'insuficiência renal.', 'hipotireoidismo.'], ans: 1,
+      exp: 'Antracíclicos, como doxorrubicina e daunorrubicina, são cardiotóxicos de forma dose-dependente e podem causar cardiomiopatia dilatada tardia, mesmo anos após o tratamento. Por isso, sobreviventes devem ter seguimento cardiológico periódico com ecocardiograma.',
+      card: ['Sobrevivente de LLA tratada com antracíclicos: qual a principal complicação tardia a rastrear?', 'Cardiotoxicidade (cardiomiopatia dilatada), com ecocardiograma periódico.'] },
+    { goal: 'revalida', label: 'Revalida', src: 'Revalida 2022.2 · Q25', area: 'GO · Infecções genitais e ISTs',
+      stem: 'Durante o pré-natal de uma primigesta com 18 semanas, o médico da unidade básica de saúde teve acesso ao resultado do VDRL, com titulação de 1:4. A paciente não recordava ter sido diagnosticada com sífilis nem ter feito tratamento contra essa doença. Com base nesse resultado de exame VDRL durante o pré-natal e nos dados da entrevista clínica, assinale a opção correta.',
+      opts: ['Considerando o título baixo de VDRL, o médico pode esperar para fazer exames seriados mensais de VDRL antes de instituir tratamento.', 'Caso a paciente tenha alergia à penicilina, deve-se seguir com a gestação sem tratamento até o momento do parto, quando se deve instituir tratamento com eritromicina.', 'Após o tratamento com penicilina, a paciente deve repetir o VDRL no último trimestre, realizando novo tratamento caso o resultado seja positivo, independentemente da titulação.', 'O tratamento de escolha deve ser feito com penicilina G benzatina, 2,4 milhões de unidades, IM, semanalmente, durante 3 semanas.'], ans: 3,
+      exp: 'Sífilis na gestação com VDRL reagente e sem tratamento prévio documentado deve ser tratada imediatamente, independentemente da titulação. O esquema de escolha é penicilina G benzatina 2,4 milhões UI IM, semanal, por três doses. Esperar exames seriados atrasa o tratamento e aumenta o risco de transmissão vertical; na alergia à penicilina, a conduta é a dessensibilização.',
+      card: ['Gestante com VDRL 1:4 sem tratamento prévio: tratamento de escolha?', 'Penicilina G benzatina 2,4 milhões UI IM, semanal, por 3 semanas.'] },
+    { goal: 'rplus', label: 'R+ Pediatria', src: 'USP 2026 · R+ Pediatria · Q36', area: 'Pediatria · Alergia alimentar',
+      stem: 'Menino, 8 meses de vida, mostra-se irritado, choro intenso, regurgitações após a introdução de fórmula infantil à base de proteína do leite de vaca, que ocorreu aos 6 meses de vida. Há 2 semanas, apresentou piora dos sintomas referidos e passou a recusar as mamadas e baixo ganho ponderal. Assinale a alternativa correta.',
+      opts: ['Doença do refluxo gastroesofágico através dos exames cintilografia e US de abdome.', 'A alergia à proteína do leite de vaca é uma possibilidade diagnóstica e o exame IgE específico para leite de vaca deve ser solicitado para confirmar o diagnóstico.', 'Realizar a prova de exclusão, se a criança apresentar melhora clínica e voltar a ganhar peso, fica confirmado o diagnóstico de alergia alimentar e deve-se manter a fórmula de aminoácidos livres por 1 ano.', 'Doença do refluxo gastroesofágico associado à alergia a proteína do leite de vaca pode ser a causa do desconforto. Para confirmá-la, deve ser realizado a prova de exclusão da proteína do leite e seus derivados por 2 a 4 semanas, seguido sempre pelo teste de provocação oral, mesmo que a criança apresente melhora clínica à dieta de exclusão.'], ans: 3,
+      exp: 'O quadro sugere alergia à proteína do leite de vaca, possivelmente associada a refluxo, com sintomas não mediados por IgE. A conduta é a dieta de exclusão por 2 a 4 semanas seguida de teste de provocação oral para confirmar. IgE específica não confirma as formas não mediadas por IgE, e a melhora isolada não fecha o diagnóstico.',
+      card: ['Lactente com sintomas após fórmula de leite de vaca: como confirmar APLV?', 'Exclusão por 2 a 4 semanas e teste de provocação oral para confirmar.'] },
+  ];
+  const GOALS = [
+    { id: 'residencia', h: 'Residência', p: 'ENARE, USP, UNIFESP, UNICAMP e PSU-MG, com simulado por banca.', i: '<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5"/><path d="M22 9v6"/>' },
+    { id: 'revalida', h: 'Revalida', p: 'Provas do INEP de 2011 a 2026, com as respostas do gabarito definitivo.', i: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>' },
+    { id: 'rplus', h: 'R+ e ciclo básico', p: 'Questões de acesso direto e cards de anatomia para firmar a base.', i: '<path d="M12 4v16M4 12h16"/>' },
+  ];
+  let qi = 0; const picks = {};
+  const goalsEl = $('#goals');
+  const renderGoals = () => {
+    goalsEl.innerHTML = GOALS.map((g, i) => `<button type="button" class="goal ${QS[qi].goal === g.id ? 'on' : ''}" data-g="${i}" aria-pressed="${QS[qi].goal === g.id}">
+      <span class="head"><span>${QS[qi].goal === g.id ? 'Selecionado' : 'Experimentar'}</span>${QS[qi].goal === g.id ? '✓' : ico('arrow', 18)}</span>
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${g.i}</svg>
+      <h3>${g.h}</h3><p>${g.p}</p></button>`).join('');
+  };
+  goalsEl.addEventListener('click', (e) => { const b = e.target.closest('.goal'); if (!b) return; qi = Number(b.dataset.g); renderAll(); $('#experimente').scrollIntoView({ behavior: 'smooth' }); });
+
+  const tryEl = $('#try'), tabsEl = $('#try-tabs');
+  const renderTry = () => {
+    tabsEl.innerHTML = QS.map((q, i) => `<button type="button" role="tab" aria-selected="${i === qi}" class="${i === qi ? 'on' : ''}" data-q="${i}">${q.label}</button>`).join('');
+    const q = QS[qi], pick = picks[qi], done = pick != null, ok = pick === q.ans;
+    tryEl.innerHTML = `<div>
+        <div class="meta"><span>${esc(q.area)}</span><span>${esc(q.src)}</span></div>
+        <p class="stem">${esc(q.stem)}</p>
+        <div class="opts">${q.opts.map((o, i) => `<button type="button" data-o="${i}" ${done ? 'disabled' : ''} class="${done && i === q.ans ? 'ok' : done && i === pick ? 'no' : ''}"><b>${'ABCDE'[i]}</b><span>${esc(o)}</span></button>`).join('')}</div>
+      </div>
+      <aside aria-live="polite">${done
+        ? `<span class="verdict ${ok ? 'ok' : 'no'}">${ok ? '✓ Acertou' : `✗ Resposta: ${'ABCDE'[q.ans]}`}</span>
+           <h4>Por quê</h4><p>${esc(q.exp)}</p>
+           <p style="margin:0;font-weight:600;color:var(--ink)">O card que nasce dela${ok ? '' : ' vai para o seu caderno de erros'}:</p>
+           <div class="flash" id="flash"><div class="flash-in" role="button" tabindex="0" aria-label="Virar o card"><div class="flash-face"><span>${esc(q.card[0])}</span><small>Toque para virar</small></div><div class="flash-face back"><span>${esc(q.card[1])}</span><small>Volta em 6 dias se você acertar</small></div></div></div>`
+        : `<span class="tag-ico" style="width:42px;height:42px;display:grid;place-items:center;border-radius:14px;background:#DCE8FF;color:var(--blue-strong)">${ico('list', 22)}</span>
+           <h4>Escolha uma alternativa.</h4><p>Depois de responder, você vê o comentário e o flashcard que o app cria a partir desta questão.</p>
+           <a class="btn dark" href="../" style="width:100%;justify-content:space-between">Ver as 4.164 questões ${ico('arrow', 16)}</a>`}</aside>`;
+  };
+  tabsEl.addEventListener('click', (e) => { const b = e.target.closest('[data-q]'); if (b) { qi = Number(b.dataset.q); renderAll(); } });
+  tryEl.addEventListener('click', (e) => {
+    const o = e.target.closest('[data-o]');
+    if (o && picks[qi] == null) { picks[qi] = Number(o.dataset.o); renderTry(); return; }
+    const f = e.target.closest('.flash-in'); if (f) f.parentElement.classList.toggle('flip');
+  });
+  tryEl.addEventListener('keydown', (e) => { const f = e.target.closest('.flash-in'); if (f && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); f.parentElement.classList.toggle('flip'); } });
+  const renderAll = () => { renderGoals(); renderTry(); };
+  renderAll();
+
+  // ---------- ciclo ----------
+  const LOOP = [
+    { t: 'Resolva com direção', h: 'Comece pelo que cai.', p: 'Treine por área e tema com questões das bancas que você vai prestar. O app mostra quantas existem de cada assunto.', v: ['Clínica', 'Cirurgia', 'GO', 'Pediatria', 'Preventiva'] },
+    { t: 'Entenda cada resposta', h: 'O erro vira aprendizado.', p: 'Cada questão tem comentário explicando a certa e as erradas. Errou? Ela vai para o caderno de erros e vira card.', v: ['Comentário', 'Caderno de erros', 'Card automático'] },
+    { t: 'Volte na hora certa', h: 'Intervalos que crescem.', p: 'Cada vez que você lembra, o próximo intervalo aumenta. Assim você revisa menos vezes e lembra por mais tempo.', v: ['1 dia', '3 dias', '8 dias', '21 dias', '2 meses'] },
+  ];
+  let li = 0;
+  const renderLoop = () => {
+    $('#loop-steps').innerHTML = LOOP.map((s, i) => `<button type="button" class="${i === li ? 'on' : ''}" data-l="${i}" aria-pressed="${i === li}"><i>0${i + 1}</i>${s.t}</button>`).join('');
+    const s = LOOP[li];
+    $('#loop-card').innerHTML = `<span class="tag-ico" style="width:42px;height:42px;display:grid;place-items:center;border-radius:14px;background:#DCE8FF;color:var(--blue-strong)">${ico(['list', 'book', 'cards'][li], 22)}</span><h4>${s.h}</h4><p>${s.p}</p><div class="ivals">${s.v.map((x) => `<span>${x}</span>`).join('')}</div>`;
+  };
+  $('#loop-steps').addEventListener('click', (e) => { const b = e.target.closest('[data-l]'); if (b) { li = Number(b.dataset.l); renderLoop(); } });
+  renderLoop();
+
+  // ---------- planos ----------
+  const PLANS = [
+    { n: 'Grátis', tl: 'Para começar a revisar', m: 0, y: 0, f: ['Revisão espaçada e decks prontos', '10 cards novos por dia', '5 questões comentadas por dia', '1 simulado por mês', '10 cards de IA por mês'] },
+    { n: 'Pro', tl: 'Para estudar todo dia', m: 29.9, y: 239, hl: true, f: ['Cards novos ilimitados', 'Questões comentadas ilimitadas', '2 simulados por mês', '300 cards de IA por mês', 'Cronograma completo'] },
+    { n: 'Residência', tl: 'Reta final para a prova', m: 59.9, y: 479, f: ['Tudo do Pro', 'Simulados ilimitados', 'Caderno de erros', 'Casos clínicos', '1.000 cards de IA por mês'] },
+  ];
+  let period = 'm';
+  const brl = (v) => v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const renderPlans = () => {
+    $('#plan-grid').innerHTML = PLANS.map((p) => {
+      const mensal = period === 'm' ? p.m : p.y / 12;
+      const [int, cents] = brl(mensal).split(',');
+      return `<article class="plan ${p.hl ? 'hl' : ''}">${p.hl ? '<span class="ribbon">Recomendado</span>' : ''}
+        <small class="kind">Plano</small><h3>${p.n}</h3><p class="tl">${p.tl}</p>
+        <div class="price"><span>R$</span><strong>${int}</strong><span>,${cents}/mês</span></div>
+        <p class="price-note">${p.m === 0 ? 'Para sempre' : period === 'a' ? `R$ ${brl(p.y)} por ano` : 'Cobrança mensal'}</p>
+        <ul>${p.f.map((x) => `<li>${x}</li>`).join('')}</ul>
+        <a class="btn ${p.hl ? 'dark' : 'blue'}" href="../">Usar grátis nos testes ${ico('arrow', 16)}</a></article>`;
+    }).join('');
+    document.querySelectorAll('[data-period]').forEach((b) => { b.classList.toggle('on', b.dataset.period === period); b.setAttribute('aria-pressed', b.dataset.period === period); });
+  };
+  document.querySelector('.period').addEventListener('click', (e) => { const b = e.target.closest('[data-period]'); if (b) { period = b.dataset.period; renderPlans(); } });
+  renderPlans();
+
+  // ---------- dúvidas ----------
+  const FAQ = [
+    ['É de graça mesmo?', 'Durante a fase de testes, sim: todos os recursos estão liberados. Depois, o plano Grátis continua existindo, e quem quiser mais assina o Pro ou o Residência.'],
+    ['Para quem é o Sinapse?', 'Para quem vai prestar residência médica (ENARE, USP, UNIFESP, UNICAMP, PSU-MG e outras), Revalida, ou quer firmar o ciclo básico durante a faculdade.'],
+    ['De onde vêm as questões?', 'De provas oficiais já aplicadas. A resposta de cada questão é a do gabarito oficial definitivo da banca, nunca uma opinião.'],
+    ['Os comentários são revisados?', 'Os comentários são escritos com ajuda de IA a partir do gabarito oficial e estão sendo revisados por uma médica. Quando uma questão ainda não foi revisada, o app avisa.'],
+    ['Como funcionam os flashcards?', 'Você vê a pergunta, tenta lembrar, vira o card e diz se foi fácil ou difícil. O algoritmo FSRS usa essa resposta para decidir quando o card volta.'],
+    ['Preciso instalar alguma coisa?', 'Não. O Sinapse abre no navegador. Se quiser, adicione à tela inicial do celular para usar como app, inclusive sem internet.'],
+    ['Meu progresso fica salvo?', 'Sim. Você entra com a conta Google e o progresso sincroniza entre celular e computador.'],
+    ['Achei um erro numa questão. E agora?', 'Dentro do app, toque em “Reportar erro nesta questão”. A gente corrige e publica de novo.'],
+  ];
+  $('#faq').innerHTML = FAQ.map(([q, a], i) => `<details ${i === 0 ? 'open' : ''}><summary>${q}</summary><p>${a}</p></details>`).join('');
+
+  // ---------- aparecer ao rolar ----------
+  const els = document.querySelectorAll('.sec-head, .stats > div, .goal, .try, .loop-card, .plan, .phone-wrap, .faq-grid > *');
+  els.forEach((el) => el.classList.add('reveal'));
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver((ents) => ents.forEach((en) => { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } }), { threshold: 0.12 });
+    els.forEach((el) => io.observe(el));
+  } else els.forEach((el) => el.classList.add('in'));
+
+  // contadores
+  const counters = document.querySelectorAll('[data-count]');
+  const cio = 'IntersectionObserver' in window && new IntersectionObserver((ents) => ents.forEach((en) => {
+    if (!en.isIntersecting) return;
+    const el = en.target, end = Number(el.dataset.count), plus = el.hasAttribute('data-plus');
+    cio.unobserve(el);
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const t0 = performance.now();
+    const step = (t) => { const k = Math.min(1, (t - t0) / 1200); el.textContent = Math.round(end * (1 - Math.pow(1 - k, 3))).toLocaleString('pt-BR') + (plus ? '+' : ''); if (k < 1) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  }), { threshold: 0.6 });
+  if (cio) counters.forEach((c) => cio.observe(c));
+})();
+</script>
+</body>
+</html>
