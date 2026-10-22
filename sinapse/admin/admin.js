@@ -418,8 +418,8 @@ function viewLote() {
   const L = st.lote;
   const h = head('Importar pasta inteira', 'Escolha a pasta das provas baixada do Drive. A IA junta cada prova ao seu gabarito oficial, importa tudo sozinha e deixa em rascunho as questões que precisam de imagem.');
   if (L.step === 'pick') {
-    return `${h}<label class="adm-drop big-drop" for="lote-dir">
-        <span class="adm-drop-empty">${icon('folder', 36)}<strong>Escolher a pasta</strong><span>No Drive: botão direito na pasta → Fazer download. Descompacte e escolha a pasta aqui.</span></span>
+    return `${h}<label class="adm-drop big-drop" for="lote-dir" data-drop="lote">
+        <span class="adm-drop-empty">${icon('folder', 36)}<strong>Arraste a pasta aqui ou clique para escolher</strong><span>No Drive: botão direito na pasta → Fazer download. Descompacte e arraste a pasta (ou várias) para este quadro.</span></span>
         <input id="lote-dir" type="file" webkitdirectory directory multiple class="visually-hidden" data-lote-dir="1">
       </label>
       <div class="panel note"><strong>Regras automáticas:</strong> só provas objetivas; a resposta vem do gabarito oficial (arquivo separado ou no fim do PDF); prova sem gabarito ou com gabarito preliminar fica de fora; anuladas não entram; prova já importada é pulada.</div>`;
@@ -447,7 +447,7 @@ function viewLote() {
 async function loteOrganize(fileList) {
   const L = st.lote;
   const files = new Map();
-  for (const f of fileList) if (/\.pdf$/i.test(f.name)) files.set(f.webkitRelativePath || f.name, f);
+  for (const f of fileList) if (/\.pdf$/i.test(f.name)) files.set(f._path || f.webkitRelativePath || f.name, f);
   if (!files.size) { toast('Nenhum PDF nessa pasta.'); return; }
   L.files = files;
   L.step = 'organizing';
@@ -741,11 +741,39 @@ root.addEventListener('dragover', (e) => {
   z.classList.add('over');
 });
 root.addEventListener('dragleave', (e) => { const z = e.target.closest('[data-drop], [data-drop-img]'); if (z) z.classList.remove('over'); });
-root.addEventListener('drop', (e) => {
+// Lê pastas soltas (com subpastas) e devolve todos os arquivos, com o caminho em f._path.
+async function filesFromDrop(dt) {
+  const entries = [...(dt.items || [])].map((i) => i.webkitGetAsEntry && i.webkitGetAsEntry()).filter(Boolean);
+  if (!entries.length) return [...(dt.files || [])];
+  const out = [];
+  const readAll = (dir) => new Promise((res) => {
+    const reader = dir.createReader();
+    const all = [];
+    const next = () => reader.readEntries((batch) => { if (!batch.length) res(all); else { all.push(...batch); next(); } }, () => res(all));
+    next();
+  });
+  const walk = async (entry) => {
+    if (entry.isFile) {
+      const f = await new Promise((res) => entry.file(res, () => res(null)));
+      if (f) { f._path = entry.fullPath.replace(/^\//, ''); out.push(f); }
+    } else if (entry.isDirectory) {
+      for (const child of await readAll(entry)) await walk(child);
+    }
+  };
+  for (const en of entries) await walk(en);
+  return out;
+}
+
+// Soltar fora de um quadro não deixa o Chrome abrir o arquivo/pasta no lugar do painel.
+window.addEventListener('dragover', (e) => e.preventDefault());
+window.addEventListener('drop', (e) => e.preventDefault());
+
+root.addEventListener('drop', async (e) => {
   const z = e.target.closest('[data-drop], [data-drop-img]');
   if (!z) return;
   e.preventDefault();
   z.classList.remove('over');
+  if (z.dataset.drop === 'lote') { loteOrganize(await filesFromDrop(e.dataTransfer)); return; }
   const f = e.dataTransfer.files && e.dataTransfer.files[0];
   if (z.dataset.drop) setFile(z.dataset.drop, f);
   else setImage(z.dataset.dropImg, f);
