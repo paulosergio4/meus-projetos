@@ -807,3 +807,8 @@ body.splashing .login *, body.splashing .lock * { animation-play-state: paused !
 .q-card-opts li.right svg { color: var(--good-ink); flex: none; margin-top: 3px; }
 /* Barra de notas fixa embaixo: fundo para o texto do card não aparecer entre os botões */
 .review .actions { z-index: 2; padding-top: 14px; margin-top: -14px; background: linear-gradient(to bottom, transparent, var(--bg) 14px); border-radius: 0 0 18px 18px; }
+
+/* Relatar erro */
+.chip.wide { width: 100%; text-align: left; border-radius: 14px; padding: 10px 14px; }
+.report-link { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; color: var(--muted); margin-top: 2px; }
+.sheet .field { text-align: left; }

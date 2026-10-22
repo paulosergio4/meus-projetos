@@ -248,3 +248,33 @@ export async function callOrganizarPasta(arquivos) {
   }
   return data;
 }
+
+// ---------- relatos de erro ----------
+export async function sendReport({ questionId = null, ref = null, refText = null, reason, message }) {
+  const c = await loadCloud();
+  if (!c) throw new Error('Sem conexão com o servidor.');
+  const { error } = await c.from('question_reports').insert({ question_id: questionId, ref, ref_text: refText ? String(refText).slice(0, 600) : null, reason, message: message ? String(message).slice(0, 1000) : null });
+  if (error) throw error;
+}
+
+export async function adminReports(status = 'aberto') {
+  const c = await loadCloud();
+  const { data, error } = await c.from('question_reports')
+    .select(`id, reason, message, ref, ref_text, status, created_at, question_id, questions (${Q_FIELDS})`)
+    .eq('status', status).order('created_at', { ascending: false }).limit(300);
+  if (error) throw error;
+  return data || [];
+}
+
+export async function adminResolveReport(id, status) {
+  const c = await loadCloud();
+  const { data: s } = await c.auth.getSession();
+  const { error } = await c.from('question_reports').update({ status, resolved_at: new Date().toISOString(), resolved_by: s.session ? s.session.user.id : null }).eq('id', id);
+  if (error) throw error;
+}
+
+export async function adminOpenReportsCount() {
+  const c = await loadCloud();
+  const { count, error } = await c.from('question_reports').select('id', { count: 'exact', head: true }).eq('status', 'aberto');
+  return error ? 0 : count || 0;
+}

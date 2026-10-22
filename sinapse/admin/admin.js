@@ -3,7 +3,7 @@
 import {
   loadCloud, signInWithGoogle, signOutCloud, currentSessionUser, checkIsAdmin,
   callImportarProva, adminQuestions, adminProvas, adminUpdateQuestion, adminDeleteQuestion,
-  uploadQuestionImage, adminList, adminAdd, adminRemove, adminSearchQuestions, callOrganizarPasta,
+  uploadQuestionImage, adminList, adminAdd, adminRemove, adminSearchQuestions, callOrganizarPasta, adminReports, adminResolveReport, adminOpenReportsCount,
 } from '../js/cloud.js';
 import { extractPdfText, shrinkImage, fileToB64 } from '../js/tools.js';
 import { AREAS } from '../js/data.js';
@@ -26,6 +26,7 @@ const ICONS = {
   image: '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/>',
   check: '<path d="M5 12.5l4.5 4.5L19 7"/>',
   trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
+  flag: '<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>',
   folder: '<path d="M3 6a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
   phone: '<rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M11 18.5h2"/>',
 };
@@ -53,6 +54,7 @@ const st = {
   admins: null,
   confirm: null,
   pasteTarget: null,
+  reports: null, reportsTab: 'aberto', openReports: 0, repEdit: null,
   lote: { step: 'pick', files: null, fila: null, ignorados: [], jaImportadas: new Set(), running: false, stop: false, log: [], startedAt: 0, totals: { provas: 0, publicadas: 0, rascunhos: 0 } },
 };
 
@@ -64,26 +66,27 @@ async function boot() {
   if (!st.user) { st.phase = 'login'; render(); return; }
   st.phase = (await checkIsAdmin()) ? 'ready' : 'denied';
   const v = (location.hash || '').slice(1);
-  if (['lote', 'importar', 'rascunhos', 'questoes', 'provas', 'admins'].includes(v)) st.view = v;
+  if (['lote', 'importar', 'relatos', 'rascunhos', 'questoes', 'provas', 'admins'].includes(v)) st.view = v;
   render();
+  if (st.phase === 'ready') adminOpenReportsCount().then((n) => { st.openReports = n; render(); });
 }
 
 // ---------- telas ----------
 function render() {
   if (st.phase === 'loading') { root.innerHTML = '<div class="adm-center"><p class="muted">Carregando…</p></div>'; return; }
   if (st.phase === 'login' || st.phase === 'denied') { root.innerHTML = viewLogin(); return; }
-  const nav = [['lote', 'folder', 'Importar pasta'], ['importar', 'upload', 'Importar uma prova'], ['rascunhos', 'drafts', 'Rascunhos'], ['questoes', 'list', 'Questões publicadas'], ['provas', 'book', 'Provas'], ['admins', 'users', 'Administradores']];
+  const nav = [['lote', 'folder', 'Importar pasta'], ['importar', 'upload', 'Importar uma prova'], ['relatos', 'flag', 'Relatos'], ['rascunhos', 'drafts', 'Rascunhos'], ['questoes', 'list', 'Questões publicadas'], ['provas', 'book', 'Provas'], ['admins', 'users', 'Administradores']];
   const m = st.user.user_metadata || {};
   root.innerHTML = `<aside class="adm-side">
       <div class="adm-brand">${LOGO}<span><strong>Sinapse</strong><small>Painel</small></span></div>
-      <nav class="adm-nav">${nav.map(([v, ic, l]) => `<button class="${st.view === v ? 'on' : ''}" data-act="view" data-v="${v}">${icon(ic)} ${l}</button>`).join('')}</nav>
+      <nav class="adm-nav">${nav.map(([v, ic, l]) => `<button class="${st.view === v ? 'on' : ''}" data-act="view" data-v="${v}">${icon(ic)} ${l}${v === 'relatos' && st.openReports ? `<span class="adm-badge">${st.openReports}</span>` : ''}</button>`).join('')}</nav>
       <div class="adm-me">
         <a class="adm-link" href="${APP_URL}" target="_blank" rel="noopener">${icon('phone', 18)} Abrir o app</a>
         <span class="muted small">${esc(m.full_name || m.name || '')}<br>${esc(st.user.email)}</span>
         <button class="btn ghost" data-act="logout">${icon('out', 18)} Sair</button>
       </div>
     </aside>
-    <main class="adm-main">${({ lote: viewLote, importar: viewImport, rascunhos: viewDrafts, questoes: viewQuestions, provas: viewProvas, admins: viewAdmins })[st.view]()}</main>`;
+    <main class="adm-main">${({ relatos: viewReports, lote: viewLote, importar: viewImport, rascunhos: viewDrafts, questoes: viewQuestions, provas: viewProvas, admins: viewAdmins })[st.view]()}</main>`;
 }
 
 function viewLogin() {
@@ -346,6 +349,30 @@ function viewAdmins() {
     </form>`;
 }
 
+// ----- relatos de erro -----
+const REASON_LABEL = { gabarito: 'Gabarito errado', enunciado: 'Enunciado/alternativas', comentario: 'Comentário', imagem: 'Imagem', outro: 'Outro' };
+
+function viewReports() {
+  const h = head('Relatos de erro', 'O que os alunos reportaram nas questões e nos cards. Corrija a questão aqui mesmo e marque como resolvido.');
+  const tabs = `<div class="segmented three adm-tabs-sm" role="group">${[['aberto', 'Abertos'], ['resolvido', 'Resolvidos'], ['descartado', 'Descartados']].map(([v, l]) => `<button type="button" class="${st.reportsTab === v ? 'on' : ''}" data-act="rep-tab" data-v="${v}">${l}</button>`).join('')}</div>`;
+  if (!st.reports) { load('reports', () => adminReports(st.reportsTab)); return `${h}${tabs}<p class="muted">Carregando…</p>`; }
+  if (!st.reports.length) return `${h}${tabs}<div class="panel note">${st.reportsTab === 'aberto' ? 'Nenhum relato aberto.' : 'Nada por aqui.'}</div>`;
+  return `${h}${tabs}<div class="adm-list">${st.reports.map((r) => {
+    const q = r.questions;
+    const editing = st.repEdit === r.id && st.q.edit;
+    return `<article class="panel stack-sm">
+      <div class="row wrap gap-sm"><span class="tag bad">${REASON_LABEL[r.reason] || r.reason}</span>${q ? `<span class="tag">${esc(q.prova)} ${q.ano} · Q${q.numero}</span>` : `<span class="tag">${esc(r.ref || 'Card')}</span>`}<span class="grow"></span><span class="muted small">${new Date(r.created_at).toLocaleString('pt-BR')}</span></div>
+      ${r.message ? `<p class="adm-msg">“${esc(r.message)}”</p>` : '<p class="muted small">Sem descrição.</p>'}
+      ${editing ? editor(st.q.edit) : q ? `${questionBlock(q)}${q.explanation ? `<p class="muted small"><strong>Comentário:</strong> ${esc(q.explanation)}</p>` : ''}` : r.ref_text ? `<p class="adm-stem">${esc(r.ref_text)}</p>` : ''}
+      ${st.reportsTab === 'aberto' && !editing ? `<div class="row adm-actions">
+        ${q ? `<button class="btn ghost" data-act="rep-edit" data-v="${r.id}">Corrigir questão</button>` : ''}
+        <button class="btn ghost" data-act="rep-set" data-v="${r.id}|descartado">Descartar</button>
+        <button class="btn good-solid" data-act="rep-set" data-v="${r.id}|resolvido">${icon('check', 18)} Resolvido</button>
+      </div>` : ''}
+    </article>`;
+  }).join('')}</div>`;
+}
+
 // ----- importar pasta inteira -----
 const LOTE_KEY = 'sinapse:lote';
 const loteSaved = () => { try { return JSON.parse(localStorage.getItem(LOTE_KEY) || '{}'); } catch (e) { return {}; } };
@@ -488,6 +515,22 @@ async function loteRun() {
 
 // ---------- eventos ----------
 const actions = {
+  'rep-tab': (v) => { st.reportsTab = v; st.reports = null; st.repEdit = null; st.q.edit = null; render(); },
+  'rep-edit': (id) => {
+    const r = st.reports.find((x) => x.id === id);
+    st.repEdit = id;
+    st.q.open = null;
+    st.q.edit = JSON.parse(JSON.stringify(r.questions));
+    render();
+  },
+  'rep-set': async (v) => {
+    const [id, status] = v.split('|');
+    try { await adminResolveReport(id, status); } catch (e) { toast('Não foi possível atualizar.'); return; }
+    st.reports = st.reports.filter((r) => r.id !== id);
+    st.openReports = Math.max(0, st.openReports - 1);
+    toast(status === 'resolvido' ? 'Relato resolvido.' : 'Relato descartado.');
+    render();
+  },
   'lote-run': () => { if (!st.lote.running) loteRun(); },
   'lote-stop': () => { st.lote.stop = true; render(); },
   'lote-reset': () => { Object.assign(st.lote, { step: 'pick', files: null, fila: null, ignorados: [] }); render(); },
@@ -496,7 +539,7 @@ const actions = {
     try { await signInWithGoogle(APP_URL); } catch (e) { toast(e.message); }
   },
   logout: async () => { await signOutCloud().catch(() => {}); st.user = null; st.phase = 'login'; render(); },
-  view: (v) => { st.view = v; st.confirm = null; history.replaceState(null, '', `#${v}`); if (v === 'rascunhos') st.drafts = null; if (v === 'provas') st.provas = null; if (v === 'admins') st.admins = null; render(); window.scrollTo(0, 0); },
+  view: (v) => { st.view = v; st.confirm = null; if (v === 'relatos') { st.reports = null; st.repEdit = null; } history.replaceState(null, '', `#${v}`); if (v === 'rascunhos') st.drafts = null; if (v === 'provas') st.provas = null; if (v === 'admins') st.admins = null; render(); window.scrollTo(0, 0); },
   'imp-read': async () => {
     const s = st.imp;
     if (!s.banca.trim() || !s.prova.trim() || !/^\d{4}$/.test(String(s.ano))) { toast('Preencha banca, nome da prova e ano.'); return; }
@@ -538,7 +581,7 @@ const actions = {
     render();
   },
   'q-open': (id) => { const r = st.q.rows.find((x) => x.id === id); st.q.open = id; st.q.edit = JSON.parse(JSON.stringify(r)); render(); },
-  'q-close': () => { st.q.open = null; st.q.edit = null; render(); },
+  'q-close': () => { st.q.open = null; st.q.edit = null; st.repEdit = null; render(); },
   'q-page': (v) => { st.q.page = Math.max(0, Number(v)); st.q.rows = null; render(); },
   'q-save': async () => {
     const e = st.q.edit;
@@ -546,8 +589,10 @@ const actions = {
     if (!e.stem.trim() || options.some((o) => !o)) { toast('Enunciado e alternativas não podem ficar vazios.'); return; }
     const patch = { area: e.area, sub: e.sub, stem: e.stem.trim(), options, answer: Number(e.answer), explanation: (e.explanation || '').trim() || null, explanation_ai: e.explanation_ai !== false };
     try { await adminUpdateQuestion(e.id, patch); } catch (err) { toast('Não foi possível salvar.'); return; }
-    const i = st.q.rows.findIndex((x) => x.id === e.id);
+    const i = (st.q.rows || []).findIndex((x) => x.id === e.id);
     if (i >= 0) st.q.rows[i] = { ...st.q.rows[i], ...patch };
+    for (const r of st.reports || []) if (r.questions && r.questions.id === e.id) r.questions = { ...r.questions, ...patch };
+    st.repEdit = null;
     st.q.open = null;
     st.q.edit = null;
     toast('Questão salva. No app, aparece na próxima abertura.');
@@ -556,8 +601,9 @@ const actions = {
   'q-draft': async () => {
     const e = st.q.edit;
     try { await adminUpdateQuestion(e.id, { status: 'rascunho' }); } catch (err) { toast('Não foi possível mudar.'); return; }
-    st.q.rows = st.q.rows.filter((x) => x.id !== e.id);
-    st.q.count -= 1;
+    st.q.rows = (st.q.rows || []).filter((x) => x.id !== e.id);
+    st.q.count = Math.max(0, st.q.count - 1);
+    st.repEdit = null;
     st.q.open = null;
     st.q.edit = null;
     st.drafts = null;

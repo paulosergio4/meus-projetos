@@ -10,7 +10,7 @@ import { daysBetween } from './plan.js';
 import { GOOGLE_CLIENT_ID, EXIGIR_LOGIN } from './config.js';
 import { startSynapseFx } from './fx.js';
 import { biometricAvailable, biometricEnabled, enableBiometric, disableBiometric, unlockWithBiometric } from './biometric.js';
-import { callGerarCards, callImportarProva, fetchPublishedQuestions, checkIsAdmin, adminQuestions, adminProvas, adminUpdateQuestion, adminDeleteQuestion, uploadQuestionImage, fetchSubscription, cloudEnabled, loadCloud, signInWithGoogle, currentCloudUser, userFromSession, signOutCloud, pullProgress, pushProgress, deleteCloudProgress, isOAuthReturn } from './cloud.js';
+import { sendReport, callGerarCards, callImportarProva, fetchPublishedQuestions, checkIsAdmin, adminQuestions, adminProvas, adminUpdateQuestion, adminDeleteQuestion, uploadQuestionImage, fetchSubscription, cloudEnabled, loadCloud, signInWithGoogle, currentCloudUser, userFromSession, signOutCloud, pullProgress, pushProgress, deleteCloudProgress, isOAuthReturn } from './cloud.js';
 
 function homeView() {
   if (!store.data.user) return 'login';
@@ -65,7 +65,7 @@ function animateCard(cls, ms, then) {
   setTimeout(() => { ui.animating = false; then(); }, ms);
 }
 
-const APP_VERSION = '0.13.0';
+const APP_VERSION = '0.13.1';
 const root = document.getElementById('app');
 
 // ---------- utilitários ----------
@@ -601,6 +601,40 @@ function gateFor(act, v) {
 function paywall(feature) {
   ui.paywall = feature;
   render();
+}
+
+// ---------- relatar erro ----------
+const REPORT_REASONS = [['gabarito', 'Gabarito errado'], ['enunciado', 'Erro no enunciado ou nas alternativas'], ['comentario', 'Comentário errado ou incompleto'], ['imagem', 'Falta imagem ou está ruim'], ['outro', 'Outro']];
+
+function openReport(ctx) {
+  ui.report = { ...ctx, reason: null, sending: false };
+  render();
+}
+
+function reportSheet() {
+  const r = ui.report;
+  return `<div class="sheet-backdrop" role="dialog" aria-modal="true" aria-labelledby="rp-title">
+    <form class="sheet stack" id="report-form" novalidate>
+      <h2 id="rp-title" class="center-text">Reportar erro</h2>
+      <p class="muted small center-text">${esc(r.label || '')}</p>
+      <div class="stack-xs">${REPORT_REASONS.map(([v, l]) => `<button type="button" class="chip wide ${r.reason === v ? 'on' : ''}" data-act="report-reason" data-v="${v}" aria-pressed="${r.reason === v}">${l}</button>`).join('')}</div>
+      <label class="field" for="rp-msg">O que está errado? (opcional)<textarea id="rp-msg" rows="3" maxlength="1000" placeholder="Ex.: o gabarito oficial diz B, mas o app marcou C."></textarea></label>
+      <div class="grid-2"><button type="button" class="btn ghost" data-act="report-close">Cancelar</button><button type="submit" class="btn primary" ${r.reason && !r.sending ? '' : 'disabled'}>${r.sending ? 'Enviando…' : 'Enviar'}</button></div>
+    </form>
+  </div>`;
+}
+
+function reportContextForQuestion(id) {
+  const q = store.questionById(id);
+  if (!q) return null;
+  const bank = id.startsWith('b_');
+  return { questionId: bank ? id.slice(2) : null, ref: bank ? null : `questao:${id}`, refText: bank ? null : q.stem, label: q.source || 'Questão de exemplo' };
+}
+
+function reportContextForCard(card) {
+  if (card.origin && card.origin.startsWith('b_') && store.questionById(card.origin)) return reportContextForQuestion(card.origin);
+  const text = card.type === 'cloze' ? card.text : card.type === 'occlusion' ? `Oclusão ECG região ${card.ask}` : `${card.front} → ${card.back}`;
+  return { questionId: null, ref: `card:${card.id}`, refText: text, label: `Card · ${card.sub || ''}` };
 }
 
 function paywallSheet() {
@@ -1230,6 +1264,7 @@ function viewQuiz() {
     footer = `<div class="panel stack-sm feedback ${ok ? 'good' : 'bad'}">
         <p class="verdict ${ok ? 'good' : 'bad'}">${icon(ok ? 'check' : 'x', 18)} ${ok ? 'Resposta correta' : `Resposta correta: ${letterOf(z.orders[id], q.answer)}`}</p>
         ${commentHtml(q)}
+        <button class="link-btn small report-link" data-act="report-q" data-v="${id}">${icon('flag', 14)} Reportar erro nesta questão</button>
         ${!ok && z.created[id] ? `<p class="muted small">${icon('book', 16)} A questão foi para o caderno de erros e virou um card de revisão.</p>` : ''}
       </div>
       <button class="btn primary big" data-act="q-next">${z.idx < z.ids.length - 1 ? 'Próxima questão' : 'Ver resultado'}</button>`;
@@ -1325,6 +1360,7 @@ function viewQuizReview() {
     <div class="panel stack-sm feedback ${ok ? 'good' : 'bad'}">
       <p class="verdict ${ok ? 'good' : 'bad'}">${icon(ok ? 'check' : 'x', 18)} ${ok ? 'Você acertou' : pick == null ? `Sem resposta. Correta: ${letterOf(z.orders[id], q.answer)}` : `Você marcou ${letterOf(z.orders[id], pick)}. Correta: ${letterOf(z.orders[id], q.answer)}`}</p>
       ${commentHtml(q)}
+      <button class="link-btn small report-link" data-act="report-q" data-v="${id}">${icon('flag', 14)} Reportar erro nesta questão</button>
     </div>
     <div class="grid-2">
       <button class="btn ghost big" data-act="q-review" data-v="${z.reviewIdx - 1}" ${z.reviewIdx === 0 ? 'disabled' : ''}>${icon('back', 18)} Anterior</button>
@@ -1773,7 +1809,7 @@ function render() {
   const showNav = !FULLSCREEN.includes(ui.view) || (ui.view === 'quiz' && ui.quiz && ui.quiz.finished);
   const showBar = ui.view !== 'login' && ui.view !== 'lock';
   const offer = ui.bioOffer && store.data.user && !['login', 'lock'].includes(ui.view);
-  root.innerHTML = (showBar ? appbar() : '') + views[ui.view]() + (showNav ? nav() : '') + (offer ? bioOfferSheet() : '') + (ui.paywall ? paywallSheet() : '');
+  root.innerHTML = (showBar ? appbar() : '') + views[ui.view]() + (showNav ? nav() : '') + (offer ? bioOfferSheet() : '') + (ui.paywall ? paywallSheet() : '') + (ui.report ? reportSheet() : '');
   document.body.classList.toggle('has-bar', showBar);
   document.body.classList.toggle('has-nav', showNav);
   document.body.classList.toggle('on-login', ui.view === 'login');
@@ -1914,7 +1950,20 @@ const actions = {
   grade: (v) => grade(Number(v)),
   practice: (v) => practiceAnswer(v === '1'),
   'end-session': () => { ui.session = null; go('home'); },
-  report: () => toast('Obrigado. O erro foi anotado para revisão.'),
+  report: () => {
+    const card = ui.session && store.cardById(ui.session.queue[0]);
+    if (card) openReport(reportContextForCard(card));
+  },
+  'report-q': (id) => { const c = reportContextForQuestion(id); if (c) openReport(c); },
+  'report-reason': (v) => {
+    const msg = document.getElementById('rp-msg');
+    ui.report.message = msg ? msg.value : '';
+    ui.report.reason = v;
+    render();
+    const m2 = document.getElementById('rp-msg');
+    if (m2) m2.value = ui.report.message || '';
+  },
+  'report-close': () => { ui.report = null; render(); },
   'create-type': (v) => { ui.createType = v; render(); },
   'ia-mode': (v) => { iaState().mode = v; render(); },
   'ia-count': (v) => { iaState().count = Number(v); render(); },
@@ -2301,7 +2350,7 @@ root.addEventListener('change', async (e) => {
   toast('Ajuste salvo.');
 });
 
-root.addEventListener('submit', (e) => {
+root.addEventListener('submit', async (e) => {
   e.preventDefault();
   if (e.target.id === 'type-form') { if (!ui.animating) checkTyped(); return; }
   const f = new FormData(e.target);
@@ -2316,6 +2365,25 @@ root.addEventListener('submit', (e) => {
     store.save();
     toast(wasNew ? 'Tudo pronto. Bons estudos!' : 'Perfil salvo.');
     go(wasNew ? 'home' : 'settings');
+  }
+  if (e.target.id === 'report-form') {
+    e.preventDefault();
+    const r = ui.report;
+    if (!r || !r.reason || r.sending) return;
+    r.message = (document.getElementById('rp-msg') || {}).value || '';
+    r.sending = true;
+    render();
+    try {
+      await sendReport({ questionId: r.questionId, ref: r.ref, refText: r.refText, reason: r.reason, message: r.message.trim() });
+      ui.report = null;
+      render();
+      toast('Obrigado! A equipe médica vai revisar.');
+    } catch (err) {
+      r.sending = false;
+      render();
+      toast('Não foi possível enviar agora. Tente de novo.');
+    }
+    return;
   }
   if (e.target.id === 'create') {
     if (!allowed('cardsProprios')) { paywall('cardsProprios'); return; }
