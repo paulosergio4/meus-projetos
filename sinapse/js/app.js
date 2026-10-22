@@ -70,7 +70,7 @@ function animateCard(cls, ms, then) {
   setTimeout(() => { ui.animating = false; then(); }, ms);
 }
 
-const APP_VERSION = '0.21.0';
+const APP_VERSION = '0.21.1';
 const root = document.getElementById('app');
 
 // ---------- utilitários ----------
@@ -1379,8 +1379,7 @@ function optionList(q, pick, showResult, act, order) {
 
 function questionHeader(q) {
   const a = areaById(q.area);
-  return `<div class="row gap-sm wrap"><span class="tag violet">${esc(a ? a.short : 'Geral')} · ${esc(q.sub)}</span><span class="tag">${q.source ? esc(q.source) : 'Questão de exemplo'}</span></div>
-    ${q.image ? `<img class="q-img" src="${esc(q.image)}" alt="Imagem da questão" loading="lazy">` : ''}`;
+  return `<div class="row gap-sm wrap"><span class="tag violet">${esc(a ? a.short : 'Geral')} · ${esc(q.sub)}</span><span class="tag">${q.source ? esc(q.source) : 'Questão de exemplo'}</span></div>`;
 }
 
 function commentHtml(q) {
@@ -1431,6 +1430,7 @@ function viewQuiz() {
     <p class="eyebrow">${esc(z.title)}${sim ? ` · questão ${z.idx + 1} de ${z.ids.length}` : ''}</p>
     ${questionHeader(q)}
     <p class="stem">${esc(q.stem)}</p>
+    ${q.image ? `<img class="q-img" src="${esc(q.image)}" alt="Imagem da questão" loading="lazy">` : ''}
     ${optionList(q, pick, confirmed, 'q-pick', z.orders[id])}
     <div class="stack-sm">${footer}</div>
   </div>`;
@@ -1508,6 +1508,7 @@ function viewQuizReview() {
     <div class="row top"><button class="icon-btn" data-act="q-review-back" aria-label="Voltar ao resultado">${icon('back')}</button><p class="grow center-text strong">Questão ${z.reviewIdx + 1} de ${z.ids.length}</p><span class="icon-spacer"></span></div>
     ${questionHeader(q)}
     <p class="stem">${esc(q.stem)}</p>
+    ${q.image ? `<img class="q-img" src="${esc(q.image)}" alt="Imagem da questão" loading="lazy">` : ''}
     ${optionList(q, pick, true, 'noop', z.orders[id])}
     <div class="panel stack-sm feedback ${ok ? 'good' : 'bad'}">
       <p class="verdict ${ok ? 'good' : 'bad'}">${icon(ok ? 'check' : 'x', 18)} ${ok ? 'Você acertou' : pick == null ? `Sem resposta. Correta: ${letterOf(z.orders[id], q.answer)}` : `Você marcou ${letterOf(z.orders[id], pick)}. Correta: ${letterOf(z.orders[id], q.answer)}`}</p>
