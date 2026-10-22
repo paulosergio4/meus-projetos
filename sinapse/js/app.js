@@ -68,7 +68,7 @@ function animateCard(cls, ms, then) {
   setTimeout(() => { ui.animating = false; then(); }, ms);
 }
 
-const APP_VERSION = '0.19.0';
+const APP_VERSION = '0.19.1';
 const root = document.getElementById('app');
 
 // ---------- utilitários ----------
@@ -1064,7 +1064,7 @@ function viewReview() {
       ${ui.revealed ? `<div class="row card-tools"><button class="btn ghost small" data-act="report">${icon('flag', 16)} Reportar erro</button></div>` : ''}
     </article>
     <div class="actions">${actions}</div>
-    <p class="hint">${ui.revealed && !s.practice ? 'Atalhos: 1 De novo · 2 Difícil · 3 Bom · 4 Fácil · P pular' : 'Atalhos: espaço mostra a resposta · P pula o card'}</p>
+    <p class="hint">${ui.revealed && !s.practice ? 'Deslize o card para virar · Atalhos: 1 De novo · 2 Difícil · 3 Bom · 4 Fácil · P pular' : 'Deslize o card para o lado para virar · Atalhos: espaço mostra a resposta · P pula o card'}</p>
   </div>`;
 }
 
@@ -1960,6 +1960,38 @@ function flipToAnswer(prepare) {
     render();
   });
 }
+
+// Deslizar o card para a direita ou esquerda vira o card (frente <-> verso).
+function flipBack() {
+  animateCard('flip-out', 160, () => {
+    ui.revealed = false;
+    ui.typed = null;
+    ui.cardAnim = 'flip-in';
+    render();
+  });
+}
+let swipeStart = null;
+root.addEventListener('touchstart', (e) => {
+  if (ui.view !== 'review' || e.touches.length !== 1 || !e.target.closest('.flash')) { swipeStart = null; return; }
+  if (e.target.closest('input, textarea, button')) { swipeStart = null; return; }
+  swipeStart = { x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now() };
+}, { passive: true });
+root.addEventListener('touchend', (e) => {
+  if (!swipeStart || ui.view !== 'review' || ui.animating) { swipeStart = null; return; }
+  const t = e.changedTouches[0];
+  const dx = t.clientX - swipeStart.x;
+  const dy = t.clientY - swipeStart.y;
+  const fast = Date.now() - swipeStart.t < 800;
+  swipeStart = null;
+  if (!fast || Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+  const s = ui.session;
+  if (!s || !s.queue.length) return;
+  if (!ui.revealed) {
+    const card = store.cardById(s.queue[0]);
+    if (typingOn(card)) { if (navigator.vibrate) navigator.vibrate(10); actions['dont-know'](); return; }
+    flipToAnswer(() => {});
+  } else flipBack();
+}, { passive: true });
 
 function grade(g) {
   animateCard(g === 1 ? 'leave-left' : 'leave-right', 230, () => {
