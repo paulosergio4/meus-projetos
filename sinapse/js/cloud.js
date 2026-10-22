@@ -278,3 +278,35 @@ export async function adminOpenReportsCount() {
   const { count, error } = await c.from('question_reports').select('id', { count: 'exact', head: true }).eq('status', 'aberto');
   return error ? 0 : count || 0;
 }
+
+// ---------- pagamento e acessos ----------
+export async function startCheckout(plan, period) {
+  const c = await loadCloud();
+  if (!c) throw new Error('Sem conexão com o servidor.');
+  const { data, error } = await c.functions.invoke('pagamento', { body: { plan, period } });
+  if (error) {
+    let info = {};
+    try { info = await error.context.json(); } catch (e) { /* sem corpo */ }
+    throw new Error(info.message || 'Não foi possível abrir o pagamento.');
+  }
+  return data.url;
+}
+
+export async function adminSubscribers() {
+  const c = await loadCloud();
+  const { data, error } = await c.rpc('admin_subscribers');
+  if (error) throw new Error(error.message);
+  return data || [];
+}
+
+export async function adminGrant(email, plan, until, note) {
+  const c = await loadCloud();
+  const { error } = await c.rpc('admin_grant', { p_email: email, p_plan: plan, p_until: until, p_note: note || '' });
+  if (error) throw new Error(error.message);
+}
+
+export async function adminRevoke(userId) {
+  const c = await loadCloud();
+  const { error } = await c.rpc('admin_revoke', { p_user: userId });
+  if (error) throw new Error(error.message);
+}

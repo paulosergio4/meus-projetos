@@ -10,7 +10,7 @@ import { daysBetween } from './plan.js';
 import { GOOGLE_CLIENT_ID, EXIGIR_LOGIN } from './config.js';
 import { startSynapseFx } from './fx.js';
 import { biometricAvailable, biometricEnabled, enableBiometric, disableBiometric, unlockWithBiometric } from './biometric.js';
-import { sendReport, callGerarCards, callImportarProva, fetchPublishedQuestions, checkIsAdmin, adminQuestions, adminProvas, adminUpdateQuestion, adminDeleteQuestion, uploadQuestionImage, fetchSubscription, cloudEnabled, loadCloud, signInWithGoogle, currentCloudUser, userFromSession, signOutCloud, pullProgress, pushProgress, deleteCloudProgress, isOAuthReturn } from './cloud.js';
+import { startCheckout, sendReport, callGerarCards, callImportarProva, fetchPublishedQuestions, checkIsAdmin, adminQuestions, adminProvas, adminUpdateQuestion, adminDeleteQuestion, uploadQuestionImage, fetchSubscription, cloudEnabled, loadCloud, signInWithGoogle, currentCloudUser, userFromSession, signOutCloud, pullProgress, pushProgress, deleteCloudProgress, isOAuthReturn } from './cloud.js';
 
 function homeView() {
   if (!store.data.user) return 'login';
@@ -65,7 +65,7 @@ function animateCard(cls, ms, then) {
   setTimeout(() => { ui.animating = false; then(); }, ms);
 }
 
-const APP_VERSION = '0.13.3';
+const APP_VERSION = '0.14.0';
 const root = document.getElementById('app');
 
 // ---------- utilitários ----------
@@ -2169,9 +2169,18 @@ const actions = {
   'paywall-plans': () => { ui.paywall = null; go('planos'); },
   'paywall-close': () => { ui.paywall = null; render(); },
   'plan-period': (v) => { ui.planYearly = v === 'a'; render(); },
-  subscribe: () => {
-    // O pagamento entra quando a cobrança for ligada (Mercado Pago ou Stripe, ver docs/PLANOS.md).
-    toast('As assinaturas começam em breve. Por enquanto, tudo está liberado.');
+  subscribe: async (plan) => {
+    if (!cobrancaAtiva()) { toast('As assinaturas começam em breve. Por enquanto, tudo está liberado.'); return; }
+    if (ui.checkingOut) return;
+    ui.checkingOut = true;
+    toast('Abrindo o pagamento…');
+    try {
+      const url = await startCheckout(plan, ui.planYearly ? 'anual' : 'mensal');
+      location.href = url; // página do Mercado Pago (Pix ou cartão); depois volta para o app
+    } catch (e) {
+      toast(e.message);
+    }
+    ui.checkingOut = false;
   },
   // Login pela biometria: funciona quando este aparelho já entrou com o Google e ativou a digital.
   'bio-login': async () => {
@@ -2442,6 +2451,26 @@ applyPalette();
 applyLimits();
 render();
 bootCloud();
+
+// Volta do Mercado Pago: confere o plano algumas vezes (a confirmação chega em segundos).
+(function paymentReturn() {
+  const st = new URLSearchParams(location.search).get('pagamento');
+  if (!st) return;
+  history.replaceState(null, '', location.pathname);
+  if (st === 'falhou') { setTimeout(() => toast('O pagamento não foi concluído. Você pode tentar de novo em Ajustes → Planos.'), 2600); return; }
+  if (st === 'pendente') { setTimeout(() => toast('Pagamento em análise. Se foi Pix, o plano libera assim que o banco confirmar.'), 2600); }
+  else setTimeout(() => toast('Pagamento aprovado! Liberando seu plano…'), 2600);
+  let tries = 0;
+  const check = async () => {
+    tries += 1;
+    const before = currentPlan().id;
+    await refreshPlan();
+    const after = currentPlan();
+    if (after.id !== 'gratis' && !after.trial && (after.id !== before || tries > 1)) { toast(`Plano ${planById(after.id).name} ativo. Bons estudos!`); render(); return; }
+    if (tries < 8) setTimeout(check, 4000);
+  };
+  setTimeout(check, 3500);
+})();
 
 // Abertura: a tela de entrada fica por cerca de 2 s e depois se desfaz, revelando o app.
 (function endSplash() {

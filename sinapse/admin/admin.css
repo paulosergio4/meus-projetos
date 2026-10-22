@@ -70,3 +70,4 @@ details.panel summary { cursor: pointer; }
 .adm-badge { margin-left: auto; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px; background: var(--bad); color: #fff; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; }
 .adm-msg { font-style: italic; padding: 10px 14px; border-left: 3px solid var(--bad); background: var(--bad-soft); border-radius: 0 10px 10px 0; }
 .adm-tabs-sm { max-width: 460px; }
+.adm-grid-3.grant { grid-template-columns: 1.6fr 1fr 1fr; }

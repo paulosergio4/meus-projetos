@@ -3,7 +3,7 @@
 import {
   loadCloud, signInWithGoogle, signOutCloud, currentSessionUser, checkIsAdmin,
   callImportarProva, adminQuestions, adminProvas, adminUpdateQuestion, adminDeleteQuestion,
-  uploadQuestionImage, adminList, adminAdd, adminRemove, adminSearchQuestions, callOrganizarPasta, adminReports, adminResolveReport, adminOpenReportsCount,
+  uploadQuestionImage, adminList, adminAdd, adminRemove, adminSearchQuestions, callOrganizarPasta, adminReports, adminResolveReport, adminOpenReportsCount, adminSubscribers, adminGrant, adminRevoke,
 } from '../js/cloud.js';
 import { extractPdfText, shrinkImage, fileToB64 } from '../js/tools.js';
 import { AREAS } from '../js/data.js';
@@ -26,6 +26,7 @@ const ICONS = {
   image: '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/>',
   check: '<path d="M5 12.5l4.5 4.5L19 7"/>',
   trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
+  key: '<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3M15 8l2 2"/>',
   flag: '<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>',
   folder: '<path d="M3 6a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
   phone: '<rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M11 18.5h2"/>',
@@ -54,6 +55,7 @@ const st = {
   admins: null,
   confirm: null,
   pasteTarget: null,
+  subs: null,
   reports: null, reportsTab: 'aberto', openReports: 0, repEdit: null,
   lote: { step: 'pick', files: null, fila: null, ignorados: [], jaImportadas: new Set(), running: false, stop: false, log: [], startedAt: 0, totals: { provas: 0, publicadas: 0, rascunhos: 0 } },
 };
@@ -66,7 +68,7 @@ async function boot() {
   if (!st.user) { st.phase = 'login'; render(); return; }
   st.phase = (await checkIsAdmin()) ? 'ready' : 'denied';
   const v = (location.hash || '').slice(1);
-  if (['lote', 'importar', 'relatos', 'rascunhos', 'questoes', 'provas', 'admins'].includes(v)) st.view = v;
+  if (['acessos', 'lote', 'importar', 'relatos', 'rascunhos', 'questoes', 'provas', 'admins'].includes(v)) st.view = v;
   render();
   if (st.phase === 'ready') adminOpenReportsCount().then((n) => { st.openReports = n; render(); });
 }
@@ -75,7 +77,7 @@ async function boot() {
 function render() {
   if (st.phase === 'loading') { root.innerHTML = '<div class="adm-center"><p class="muted">Carregando…</p></div>'; return; }
   if (st.phase === 'login' || st.phase === 'denied') { root.innerHTML = viewLogin(); return; }
-  const nav = [['lote', 'folder', 'Importar pasta'], ['importar', 'upload', 'Importar uma prova'], ['relatos', 'flag', 'Relatos'], ['rascunhos', 'drafts', 'Rascunhos'], ['questoes', 'list', 'Questões publicadas'], ['provas', 'book', 'Provas'], ['admins', 'users', 'Administradores']];
+  const nav = [['lote', 'folder', 'Importar pasta'], ['importar', 'upload', 'Importar uma prova'], ['relatos', 'flag', 'Relatos'], ['rascunhos', 'drafts', 'Rascunhos'], ['questoes', 'list', 'Questões publicadas'], ['provas', 'book', 'Provas'], ['acessos', 'key', 'Acessos e assinantes'], ['admins', 'users', 'Administradores']];
   const m = st.user.user_metadata || {};
   root.innerHTML = `<aside class="adm-side">
       <div class="adm-brand">${LOGO}<span><strong>Sinapse</strong><small>Painel</small></span></div>
@@ -86,7 +88,7 @@ function render() {
         <button class="btn ghost" data-act="logout">${icon('out', 18)} Sair</button>
       </div>
     </aside>
-    <main class="adm-main">${({ relatos: viewReports, lote: viewLote, importar: viewImport, rascunhos: viewDrafts, questoes: viewQuestions, provas: viewProvas, admins: viewAdmins })[st.view]()}</main>`;
+    <main class="adm-main">${({ acessos: viewAcessos, relatos: viewReports, lote: viewLote, importar: viewImport, rascunhos: viewDrafts, questoes: viewQuestions, provas: viewProvas, admins: viewAdmins })[st.view]()}</main>`;
 }
 
 function viewLogin() {
@@ -349,6 +351,39 @@ function viewAdmins() {
     </form>`;
 }
 
+// ----- acessos e assinantes -----
+const PLAN_LABEL = { pro: 'Pro', residencia: 'Residência', gratis: 'Grátis' };
+
+function viewAcessos() {
+  const h = head('Acessos e assinantes', 'Libere o app sem pagar para quem você quiser (cortesia, monitores, parceiros) e veja quem está pagando.');
+  const form = `<form class="panel stack-sm" id="grant" novalidate>
+    <h2>Liberar acesso sem pagar</h2>
+    <p class="muted small">A pessoa precisa ter entrado no app pelo menos uma vez com a conta Google desse e-mail.</p>
+    <div class="adm-grid-3 grant">
+      <label class="field">E-mail<input type="email" id="g-email" placeholder="email@gmail.com" autocomplete="off"></label>
+      <label class="field">Plano<select id="g-plan"><option value="residencia">Residência (tudo)</option><option value="pro">Pro</option></select></label>
+      <label class="field">Por quanto tempo<select id="g-time" data-gtime="1"><option value="sem">Sem prazo</option><option value="1">1 mês</option><option value="3">3 meses</option><option value="6">6 meses</option><option value="12">12 meses</option><option value="data">Até uma data…</option></select></label>
+    </div>
+    <div class="adm-grid-2"><label class="field" id="g-date-wrap" hidden>Até o dia<input type="date" id="g-date"></label><label class="field">Observação (opcional)<input type="text" id="g-note" placeholder="Ex.: cortesia, monitora, parceria"></label></div>
+    <div class="row adm-actions"><button class="btn primary" type="submit">${icon('key', 18)} Liberar acesso</button></div>
+  </form>`;
+  if (!st.subs) { load('subs', adminSubscribers); return `${h}${form}<p class="muted">Carregando…</p>`; }
+  const now = Date.now();
+  const rows = st.subs.map((u) => {
+    const exp = u.valid_until ? new Date(u.valid_until) : null;
+    const vencido = exp && exp.getTime() < now;
+    return `<tr><td><strong>${esc(u.name || u.email)}</strong><br><span class="muted small">${esc(u.email)}</span></td>
+      <td>${PLAN_LABEL[u.plan] || u.plan}</td>
+      <td><span class="tag ${u.source === 'pagamento' ? 'good' : 'violet'}">${u.source === 'pagamento' ? 'Pagante' : 'Liberado'}</span></td>
+      <td>${exp ? `<span class="${vencido ? 'bad-ink' : ''}">${vencido ? 'Venceu em ' : ''}${exp.toLocaleDateString('pt-BR')}</span>` : 'Sem prazo'}</td>
+      <td class="muted small">${esc(u.note || '')}</td>
+      <td>${u.source === 'pagamento' ? '' : `<button class="link-btn bad-ink" data-act="revoke" data-v="${u.user_id}">${st.confirm === u.user_id ? 'Clique de novo' : 'Revogar'}</button>`}</td></tr>`;
+  }).join('');
+  return `${h}${form}<section class="panel stack-sm"><h2>Quem tem plano</h2>
+    ${st.subs.length ? `<table class="adm-table"><thead><tr><th>Pessoa</th><th>Plano</th><th>Origem</th><th>Válido até</th><th>Observação</th><th></th></tr></thead><tbody>${rows}</tbody></table>` : '<p class="muted">Ninguém com plano ainda.</p>'}
+  </section>`;
+}
+
 // ----- relatos de erro -----
 const REASON_LABEL = { gabarito: 'Gabarito errado', enunciado: 'Enunciado/alternativas', comentario: 'Comentário', imagem: 'Imagem', outro: 'Outro' };
 
@@ -517,6 +552,13 @@ async function loteRun() {
 
 // ---------- eventos ----------
 const actions = {
+  revoke: async (uid) => {
+    if (st.confirm !== uid) { st.confirm = uid; render(); return; }
+    st.confirm = null;
+    try { await adminRevoke(uid); toast('Acesso revogado. A pessoa volta ao Grátis.'); } catch (e) { toast(e.message); return; }
+    st.subs = null;
+    render();
+  },
   'rep-tab': (v) => { st.reportsTab = v; st.reports = null; st.repEdit = null; st.q.edit = null; render(); },
   'rep-edit': (id) => {
     const r = st.reports.find((x) => x.id === id);
@@ -541,7 +583,7 @@ const actions = {
     try { await signInWithGoogle(APP_URL); } catch (e) { toast(e.message); }
   },
   logout: async () => { await signOutCloud().catch(() => {}); st.user = null; st.phase = 'login'; render(); },
-  view: (v) => { st.view = v; st.confirm = null; if (v === 'relatos') { st.reports = null; st.repEdit = null; } history.replaceState(null, '', `#${v}`); if (v === 'rascunhos') st.drafts = null; if (v === 'provas') st.provas = null; if (v === 'admins') st.admins = null; render(); window.scrollTo(0, 0); },
+  view: (v) => { st.view = v; st.confirm = null; if (v === 'acessos') st.subs = null; if (v === 'relatos') { st.reports = null; st.repEdit = null; } history.replaceState(null, '', `#${v}`); if (v === 'rascunhos') st.drafts = null; if (v === 'provas') st.provas = null; if (v === 'admins') st.admins = null; render(); window.scrollTo(0, 0); },
   'imp-read': async () => {
     const s = st.imp;
     if (!s.banca.trim() || !s.prova.trim() || !/^\d{4}$/.test(String(s.ano))) { toast('Preencha banca, nome da prova e ano.'); return; }
@@ -644,6 +686,7 @@ root.addEventListener('input', (e) => {
 root.addEventListener('change', (e) => {
   const t = e.target;
   if (t.dataset.imp === 'definitivo') st.imp.definitivo = t.checked;
+  if (t.dataset.gtime) { const w = document.getElementById('g-date-wrap'); if (w) w.hidden = t.value !== 'data'; }
   if (t.dataset.loteDir) loteOrganize([...(t.files || [])]);
   if (t.dataset.file) setFile(t.dataset.file, t.files && t.files[0]);
   if (t.dataset.img) setImage(t.dataset.img, t.files && t.files[0]);
@@ -658,6 +701,29 @@ root.addEventListener('change', (e) => {
 });
 
 root.addEventListener('submit', async (e) => {
+  if (e.target.id === 'grant') {
+    e.preventDefault();
+    const email = document.getElementById('g-email').value.trim();
+    const plan = document.getElementById('g-plan').value;
+    const time = document.getElementById('g-time').value;
+    const note = document.getElementById('g-note').value.trim();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { toast('Digite um e-mail válido.'); return; }
+    let until = null;
+    if (time === 'data') {
+      const d = document.getElementById('g-date').value;
+      if (!d) { toast('Escolha a data.'); return; }
+      until = new Date(`${d}T23:59:59-03:00`).toISOString();
+    } else if (time !== 'sem') {
+      const d = new Date();
+      d.setMonth(d.getMonth() + Number(time));
+      until = d.toISOString();
+    }
+    try { await adminGrant(email, plan, until, note); } catch (err) { toast(err.message); return; }
+    toast(`Acesso ${PLAN_LABEL[plan]} liberado para ${email}.`);
+    st.subs = null;
+    render();
+    return;
+  }
   if (e.target.id !== 'add-admin') return;
   e.preventDefault();
   const email = document.getElementById('new-admin').value.trim();
