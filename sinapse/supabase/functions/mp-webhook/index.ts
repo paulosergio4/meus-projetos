@@ -42,6 +42,7 @@ Deno.serve(async (req) => {
   const token = Deno.env.get('MP_ACCESS_TOKEN');
   if (!token) return new Response('sem token', { status: 503 });
   const resp = await fetch(`https://api.mercadopago.com/v1/payments/${encodeURIComponent(dataId)}`, { headers: { Authorization: `Bearer ${token}` } });
+  if (resp.status === 404) { console.warn('pagamento não encontrado', dataId); return ok('pagamento não encontrado'); }
   if (!resp.ok) { console.error('mp', resp.status); return new Response('erro ao consultar', { status: 502 }); }
   const pay = await resp.json();
   if (pay.status !== 'approved' || pay.currency_id !== 'BRL') return ok(`status ${pay.status}`);
