@@ -111,7 +111,7 @@ export async function callGerarCards(body) {
 export async function fetchSubscription(userId) {
   const c = await loadCloud();
   if (!c) return undefined;
-  const { data, error } = await c.from('subscriptions').select('plan, valid_until').eq('user_id', userId).maybeSingle();
+  const { data, error } = await c.from('subscriptions').select('plan, valid_until, auto_renew, next_charge').eq('user_id', userId).maybeSingle();
   if (error) return undefined;
   return data || null;
 }
@@ -309,4 +309,28 @@ export async function adminRevoke(userId) {
   const c = await loadCloud();
   const { error } = await c.rpc('admin_revoke', { p_user: userId });
   if (error) throw new Error(error.message);
+}
+
+// Assinatura com renovação automática no cartão (Mercado Pago). email = e-mail da conta do Mercado Pago.
+export async function startCardSubscription(plan, period, email) {
+  const c = await loadCloud();
+  if (!c) throw new Error('Sem conexão com o servidor.');
+  const { data, error } = await c.functions.invoke('pagamento', { body: { action: 'assinar', plan, period, email } });
+  if (error) {
+    let info = {};
+    try { info = await error.context.json(); } catch (e) { /* sem corpo */ }
+    throw new Error(info.message || 'Não foi possível abrir a assinatura.');
+  }
+  return data.url;
+}
+
+export async function cancelRenewal() {
+  const c = await loadCloud();
+  if (!c) throw new Error('Sem conexão com o servidor.');
+  const { error } = await c.functions.invoke('pagamento', { body: { action: 'cancelar' } });
+  if (error) {
+    let info = {};
+    try { info = await error.context.json(); } catch (e) { /* sem corpo */ }
+    throw new Error(info.message || 'Não foi possível cancelar agora.');
+  }
 }

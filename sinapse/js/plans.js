@@ -43,7 +43,7 @@ export function effectivePlan(sub, createdAt) {
   if (!COBRANCA_ATIVA) return { id: 'residencia', trial: false, testing: true };
   const now = Date.now();
   if (sub && sub.plan && sub.plan !== 'gratis' && (!sub.valid_until || new Date(sub.valid_until).getTime() > now)) {
-    return { id: sub.plan, trial: false, validUntil: sub.valid_until || null };
+    return { id: sub.plan, trial: false, validUntil: sub.valid_until || null, autoRenew: !!sub.auto_renew, nextCharge: sub.next_charge || null };
   }
   const created = createdAt ? new Date(createdAt).getTime() : 0;
   const trialEnd = created + TRIAL_DAYS * 86400000;

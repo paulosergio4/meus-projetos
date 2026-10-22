@@ -10,7 +10,7 @@ import { daysBetween } from './plan.js';
 import { GOOGLE_CLIENT_ID, EXIGIR_LOGIN } from './config.js';
 import { startSynapseFx } from './fx.js';
 import { biometricAvailable, biometricEnabled, enableBiometric, disableBiometric, unlockWithBiometric } from './biometric.js';
-import { startCheckout, sendReport, callGerarCards, callImportarProva, fetchPublishedQuestions, checkIsAdmin, adminQuestions, adminProvas, adminUpdateQuestion, adminDeleteQuestion, uploadQuestionImage, fetchSubscription, cloudEnabled, loadCloud, signInWithGoogle, currentCloudUser, userFromSession, signOutCloud, pullProgress, pushProgress, deleteCloudProgress, isOAuthReturn } from './cloud.js';
+import { startCardSubscription, cancelRenewal, startCheckout, sendReport, callGerarCards, callImportarProva, fetchPublishedQuestions, checkIsAdmin, adminQuestions, adminProvas, adminUpdateQuestion, adminDeleteQuestion, uploadQuestionImage, fetchSubscription, cloudEnabled, loadCloud, signInWithGoogle, currentCloudUser, userFromSession, signOutCloud, pullProgress, pushProgress, deleteCloudProgress, isOAuthReturn } from './cloud.js';
 
 function homeView() {
   if (!store.data.user) return 'login';
@@ -65,7 +65,7 @@ function animateCard(cls, ms, then) {
   setTimeout(() => { ui.animating = false; then(); }, ms);
 }
 
-const APP_VERSION = '0.15.1';
+const APP_VERSION = '0.16.0';
 const root = document.getElementById('app');
 
 // ---------- utilitários ----------
@@ -637,6 +637,22 @@ function reportContextForCard(card) {
   return { questionId: null, ref: `card:${card.id}`, refText: text, label: `Card · ${card.sub || ''}` };
 }
 
+function cardSheet() {
+  const c = ui.cardSub;
+  const pl = planById(c.plan);
+  return `<div class="sheet-backdrop" role="dialog" aria-modal="true" aria-labelledby="cs-title">
+    <form class="sheet stack" id="card-form" novalidate>
+      <h2 id="cs-title" class="center-text">Assinar ${esc(pl.name)} com cartão</h2>
+      <p class="muted small center-text">${fmtPrice(c.period === 'anual' ? pl.yearly : pl.monthly)} ${c.period === 'anual' ? 'por ano' : 'por mês'}, cobrado automaticamente no cartão até você cancelar.</p>
+      <label class="field" for="cs-email">E-mail da sua conta do Mercado Pago
+        <input id="cs-email" type="email" autocomplete="email" value="${esc(c.email)}">
+        <small class="muted">O Mercado Pago pede para entrar com a conta desse e-mail para cadastrar o cartão. Se não tiver conta, dá para criar na hora.</small>
+      </label>
+      <div class="grid-2"><button type="button" class="btn ghost" data-act="card-close">Cancelar</button><button type="submit" class="btn primary" ${c.sending ? 'disabled' : ''}>${c.sending ? 'Abrindo…' : 'Continuar'}</button></div>
+    </form>
+  </div>`;
+}
+
 function paywallSheet() {
   const f = FEATURE_INFO[ui.paywall] || FEATURE_INFO.ia;
   return `<div class="sheet-backdrop" role="dialog" aria-modal="true" aria-labelledby="pw-title">
@@ -656,12 +672,15 @@ function planPanel() {
   let line;
   if (cur.testing) line = 'Fase de testes: todos os recursos estão liberados de graça.';
   else if (cur.trial) line = `Teste grátis do Residência até ${new Date(cur.trialEnd).toLocaleDateString('pt-BR')}.`;
-  else if (cur.validUntil) line = `Renova em ${new Date(cur.validUntil).toLocaleDateString('pt-BR')}.`;
+  else if (cur.autoRenew) line = `Renovação automática no cartão ativa${cur.nextCharge ? ` · próxima cobrança em ${new Date(cur.nextCharge).toLocaleDateString('pt-BR')}` : ''}.`;
+  else if (cur.validUntil) line = `Válido até ${new Date(cur.validUntil).toLocaleDateString('pt-BR')}. Para continuar depois disso, renove em Planos.`;
   else line = cur.id === 'gratis' ? 'Revisão, decks prontos e um pouco de tudo, com limites.' : 'Assinatura ativa.';
   return `<section class="panel stack-sm">
     <div class="row"><h2>Seu plano</h2><span class="tag ${cur.testing ? 'good' : 'violet'}">${cur.testing ? 'Tudo liberado' : esc(p.name)}</span></div>
     <p class="muted small">${line}</p>
     <button class="btn ghost" data-act="go" data-v="planos">Ver planos</button>
+    ${cur.autoRenew ? `<button class="link-btn small bad-ink" data-act="cancel-renew">${ui.confirmCancelRenew ? 'Toque de novo para cancelar a renovação' : 'Cancelar renovação automática'}</button>
+      <p class="muted small">Se cancelar, o plano continua até ${cur.validUntil ? new Date(cur.validUntil).toLocaleDateString('pt-BR') : 'o fim do período pago'} e não é cobrado de novo.</p>` : ''}
   </section>`;
 }
 
@@ -687,7 +706,10 @@ function viewPlanos() {
         <ul class="plan-feats">${pl.features.map((f) => `<li>${icon('check', 16)} ${esc(f)}</li>`).join('')}</ul>
         ${pl.id === 'gratis' ? (mine ? '<span class="muted small center-text">Seu plano atual</span>' : '')
           : mine ? '<span class="btn ghost" aria-disabled="true">Seu plano atual</span>'
-          : `<button class="btn ${pl.highlight ? 'primary' : 'ghost'}" data-act="subscribe" data-v="${pl.id}" ${on ? '' : 'disabled'}>${on ? `Assinar ${pl.name}` : 'Disponível em breve'}</button>`}
+          : !on ? '<button class="btn ghost" disabled>Disponível em breve</button>'
+          : `<button class="btn ${pl.highlight ? 'primary' : 'ghost'}" data-act="subscribe-card" data-v="${pl.id}">${icon('check', 18)} Assinar com cartão · renova sozinho</button>
+             <button class="btn ghost" data-act="subscribe" data-v="${pl.id}">Pagar com Pix ou boleto · sem renovar</button>
+             <p class="muted small center-text">No cartão, a cobrança se repete ${yearly ? 'a cada ano' : 'todo mês'} até você cancelar em Ajustes.</p>`}
       </article>`;
     }).join('')}
     <p class="muted small center-text">A revisão do que você já estudou nunca é bloqueada, em nenhum plano.</p>
@@ -1810,7 +1832,7 @@ function render() {
   const showNav = !FULLSCREEN.includes(ui.view) || (ui.view === 'quiz' && ui.quiz && ui.quiz.finished);
   const showBar = ui.view !== 'login' && ui.view !== 'lock';
   const offer = ui.bioOffer && store.data.user && !['login', 'lock'].includes(ui.view);
-  root.innerHTML = (showBar ? appbar() : '') + views[ui.view]() + (showNav ? nav() : '') + (offer ? bioOfferSheet() : '') + (ui.paywall ? paywallSheet() : '') + (ui.report ? reportSheet() : '');
+  root.innerHTML = (showBar ? appbar() : '') + views[ui.view]() + (showNav ? nav() : '') + (offer ? bioOfferSheet() : '') + (ui.paywall ? paywallSheet() : '') + (ui.report ? reportSheet() : '') + (ui.cardSub ? cardSheet() : '');
   document.body.classList.toggle('has-bar', showBar);
   document.body.classList.toggle('has-nav', showNav);
   document.body.classList.toggle('on-login', ui.view === 'login');
@@ -2170,6 +2192,18 @@ const actions = {
   'paywall-plans': () => { ui.paywall = null; go('planos'); },
   'paywall-close': () => { ui.paywall = null; render(); },
   'plan-period': (v) => { ui.planYearly = v === 'a'; render(); },
+  'subscribe-card': (plan) => {
+    ui.cardSub = { plan, period: ui.planYearly ? 'anual' : 'mensal', email: (store.data.user && store.data.user.email) || '', sending: false };
+    render();
+  },
+  'card-close': () => { ui.cardSub = null; render(); },
+  'cancel-renew': async () => {
+    if (!ui.confirmCancelRenew) { ui.confirmCancelRenew = true; render(); return; }
+    ui.confirmCancelRenew = false;
+    try { await cancelRenewal(); toast('Renovação cancelada. Seu plano continua até o fim do período pago.'); } catch (e) { toast(e.message); }
+    await refreshPlan();
+    render();
+  },
   subscribe: async (plan) => {
     if (!cobrancaAtiva()) { toast('As assinaturas começam em breve. Por enquanto, tudo está liberado.'); return; }
     if (ui.checkingOut) return;
@@ -2376,6 +2410,23 @@ root.addEventListener('submit', async (e) => {
     toast(wasNew ? 'Tudo pronto. Bons estudos!' : 'Perfil salvo.');
     go(wasNew ? 'home' : 'settings');
   }
+  if (e.target.id === 'card-form') {
+    e.preventDefault();
+    const c = ui.cardSub;
+    if (!c || c.sending) return;
+    c.email = (document.getElementById('cs-email') || {}).value.trim();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(c.email)) { toast('Digite um e-mail válido.'); return; }
+    c.sending = true;
+    render();
+    try {
+      location.href = await startCardSubscription(c.plan, c.period, c.email);
+    } catch (err) {
+      c.sending = false;
+      render();
+      toast(err.message);
+    }
+    return;
+  }
   if (e.target.id === 'report-form') {
     e.preventDefault();
     const r = ui.report;
@@ -2455,7 +2506,8 @@ bootCloud();
 
 // Volta do Mercado Pago: confere o plano algumas vezes (a confirmação chega em segundos).
 (function paymentReturn() {
-  const st = new URLSearchParams(location.search).get('pagamento');
+  const qs = new URLSearchParams(location.search);
+  const st = qs.get('pagamento') || (qs.get('assinatura') ? 'aprovado' : null);
   if (!st) return;
   history.replaceState(null, '', location.pathname);
   if (st === 'falhou') { setTimeout(() => toast('O pagamento não foi concluído. Você pode tentar de novo em Ajustes → Planos.'), 2600); return; }

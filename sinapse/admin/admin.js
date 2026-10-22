@@ -374,7 +374,7 @@ function viewAcessos() {
     const vencido = exp && exp.getTime() < now;
     return `<tr><td><strong>${esc(u.name || u.email)}</strong><br><span class="muted small">${esc(u.email)}</span></td>
       <td>${PLAN_LABEL[u.plan] || u.plan}</td>
-      <td><span class="tag ${u.source === 'pagamento' ? 'good' : 'violet'}">${u.source === 'pagamento' ? 'Pagante' : 'Liberado'}</span></td>
+      <td><span class="tag ${u.source === 'pagamento' ? 'good' : 'violet'}">${u.source === 'pagamento' ? 'Pagante' : 'Liberado'}</span>${u.auto_renew ? ' <span class="tag amber">Renova no cartão</span>' : ''}</td>
       <td>${exp ? `<span class="${vencido ? 'bad-ink' : ''}">${vencido ? 'Venceu em ' : ''}${exp.toLocaleDateString('pt-BR')}</span>` : 'Sem prazo'}</td>
       <td class="muted small">${esc(u.note || '')}</td>
       <td>${u.source === 'pagamento' ? '' : `<button class="link-btn bad-ink" data-act="revoke" data-v="${u.user_id}">${st.confirm === u.user_id ? 'Clique de novo' : 'Revogar'}</button>`}</td></tr>`;
