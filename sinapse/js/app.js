@@ -32,6 +32,7 @@ const ui = {
   onbProva: null,
   createType: 'cloze',
   qArea: 'all',       // filtro do treino de questões
+  qSub: 'all',        // subtema do treino
   qCount: 10,
   simSize: 10,
   quiz: null,         // treino, simulado ou caderno de erros em andamento
@@ -65,7 +66,7 @@ function animateCard(cls, ms, then) {
   setTimeout(() => { ui.animating = false; then(); }, ms);
 }
 
-const APP_VERSION = '0.17.0';
+const APP_VERSION = '0.17.1';
 const root = document.getElementById('app');
 
 // ---------- utilitários ----------
@@ -1188,7 +1189,12 @@ function viewQuestions() {
   const qGoal = store.data.settings.questionsPerDay;
   const errors = store.openErrors().length;
   const casesDone = Object.keys(store.data.cases).length;
-  const pool = ui.qArea === 'all' ? QUESTIONS.length : QUESTIONS.filter((q) => q.area === ui.qArea).length;
+  const pool = treinoPool().length;
+  const subCounts = {};
+  if (ui.qArea !== 'all') for (const q of QUESTIONS) if (q.area === ui.qArea && q.sub) subCounts[q.sub] = (subCounts[q.sub] || 0) + 1;
+  const subItems = Object.entries(subCounts).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'pt'));
+  const areaItems = AREAS.filter((a) => QUESTIONS.some((q) => q.area === a.id))
+    .map((a) => [a.id, `${a.short} <span class="muted">${QUESTIONS.filter((q) => q.area === a.id).length}</span>`]);
   return `<div class="screen stack">
     <header class="stack-xs"><h1>Questões</h1><p class="muted">Questões autorais no estilo das provas de residência, com comentário em cada alternativa certa.</p></header>
 
@@ -1201,7 +1207,9 @@ function viewQuestions() {
     <section class="panel stack-sm" aria-label="Treino">
       <div class="row gap-md"><span class="badge violet">${icon('target')}</span><div class="stack-xs grow"><h2>Treino</h2><p class="muted small">Correção e comentário logo após cada questão.</p></div></div>
       <p class="small strong">Área</p>
-      ${chipGroup('q-area', ui.qArea, [['all', 'Todas']].concat(AREAS.filter((a) => QUESTIONS.some((q) => q.area === a.id)).map((a) => [a.id, a.short])))}
+      ${chipGroup('q-area', ui.qArea, [['all', `Todas <span class="muted">${QUESTIONS.length}</span>`]].concat(areaItems))}
+      ${subItems.length > 1 ? `<p class="small strong">Tema</p>
+      ${chipGroup('q-sub', ui.qSub, [['all', 'Todos']].concat(subItems.map(([s, n]) => [esc(s), `${esc(s)} <span class="muted">${n}</span>`])))}` : ''}
       <p class="small strong">Quantidade</p>
       ${chipGroup('q-count', ui.qCount, [[5, '5'], [10, '10'], [20, '20']])}
       <button class="btn primary big" data-act="start-treino">Começar treino · ${plural(Math.min(ui.qCount, pool), 'questão', 'questões')}</button>
@@ -1216,6 +1224,10 @@ function viewQuestions() {
     ${modeRow('go', 'book', 'Caderno de erros', errors ? `${plural(errors, 'questão', 'questões')} para refazer` : 'Questões que você errar aparecem aqui', errors, 'bad', false, 'errors')}
     ${modeRow('go', 'steth', 'Casos clínicos', `${CASES.length} casos em etapas, decidindo a conduta`, casesDone ? `${casesDone}/${CASES.length}` : null, 'good', false, 'cases')}
   </div>`;
+}
+
+function treinoPool() {
+  return QUESTIONS.filter((q) => (ui.qArea === 'all' || q.area === ui.qArea) && (ui.qSub === 'all' || q.sub === ui.qSub));
 }
 
 function pickQuestions(ids, n) {
@@ -2045,12 +2057,13 @@ const actions = {
   cell: (v) => { ui.selectedCell = v; render(); },
 
   // questões
-  'q-area': (v) => { ui.qArea = v; render(); },
+  'q-area': (v) => { ui.qArea = v; ui.qSub = 'all'; render(); },
+  'q-sub': (v) => { ui.qSub = v; render(); },
   'q-count': (v) => { ui.qCount = Number(v); render(); },
   'sim-size': (v) => { ui.simSize = Number(v); render(); },
   'start-treino': () => {
-    const ids = QUESTIONS.filter((q) => ui.qArea === 'all' || q.area === ui.qArea).map((q) => q.id);
-    const title = ui.qArea === 'all' ? 'Treino' : `Treino · ${areaById(ui.qArea).short}`;
+    const ids = treinoPool().map((q) => q.id);
+    const title = ui.qArea === 'all' ? 'Treino' : `Treino · ${ui.qSub !== 'all' ? ui.qSub : areaById(ui.qArea).short}`;
     startQuiz('treino', pickQuestions(ids, ui.qCount), title);
   },
   'start-treino-area': (v) => startQuiz('treino', pickQuestions(QUESTIONS.filter((q) => q.area === v).map((q) => q.id), 10), `Treino · ${areaById(v).short}`),
