@@ -3,7 +3,7 @@
 import {
   loadCloud, signInWithGoogle, signOutCloud, currentSessionUser, checkIsAdmin,
   callImportarProva, adminQuestions, adminProvas, adminUpdateQuestion, adminDeleteQuestion,
-  uploadQuestionImage, adminList, adminAdd, adminRemove, adminSearchQuestions,
+  uploadQuestionImage, adminList, adminAdd, adminRemove, adminSearchQuestions, callOrganizarPasta,
 } from '../js/cloud.js';
 import { extractPdfText, shrinkImage, fileToB64 } from '../js/tools.js';
 import { AREAS } from '../js/data.js';
@@ -26,6 +26,7 @@ const ICONS = {
   image: '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/>',
   check: '<path d="M5 12.5l4.5 4.5L19 7"/>',
   trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
+  folder: '<path d="M3 6a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
   phone: '<rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M11 18.5h2"/>',
 };
 const icon = (n, s = 20) => `<svg aria-hidden="true" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[n] || ''}</svg>`;
@@ -44,7 +45,7 @@ function toast(msg) {
 const st = {
   phase: 'loading', // loading | login | denied | ready
   user: null,
-  view: 'importar',
+  view: 'lote',
   imp: { step: 'form', banca: '', prova: '', ano: String(new Date().getFullYear() - 1), tipo: '', provaFile: null, gabFile: null, definitivo: false, gab: null, progress: null, summary: null },
   drafts: null,
   provas: null,
@@ -52,6 +53,7 @@ const st = {
   admins: null,
   confirm: null,
   pasteTarget: null,
+  lote: { step: 'pick', files: null, fila: null, ignorados: [], jaImportadas: new Set(), running: false, stop: false, log: [], startedAt: 0, totals: { provas: 0, publicadas: 0, rascunhos: 0 } },
 };
 
 // ---------- início ----------
@@ -62,7 +64,7 @@ async function boot() {
   if (!st.user) { st.phase = 'login'; render(); return; }
   st.phase = (await checkIsAdmin()) ? 'ready' : 'denied';
   const v = (location.hash || '').slice(1);
-  if (['importar', 'rascunhos', 'questoes', 'provas', 'admins'].includes(v)) st.view = v;
+  if (['lote', 'importar', 'rascunhos', 'questoes', 'provas', 'admins'].includes(v)) st.view = v;
   render();
 }
 
@@ -70,7 +72,7 @@ async function boot() {
 function render() {
   if (st.phase === 'loading') { root.innerHTML = '<div class="adm-center"><p class="muted">Carregando…</p></div>'; return; }
   if (st.phase === 'login' || st.phase === 'denied') { root.innerHTML = viewLogin(); return; }
-  const nav = [['importar', 'upload', 'Importar prova'], ['rascunhos', 'drafts', 'Rascunhos'], ['questoes', 'list', 'Questões publicadas'], ['provas', 'book', 'Provas'], ['admins', 'users', 'Administradores']];
+  const nav = [['lote', 'folder', 'Importar pasta'], ['importar', 'upload', 'Importar uma prova'], ['rascunhos', 'drafts', 'Rascunhos'], ['questoes', 'list', 'Questões publicadas'], ['provas', 'book', 'Provas'], ['admins', 'users', 'Administradores']];
   const m = st.user.user_metadata || {};
   root.innerHTML = `<aside class="adm-side">
       <div class="adm-brand">${LOGO}<span><strong>Sinapse</strong><small>Painel</small></span></div>
@@ -81,7 +83,7 @@ function render() {
         <button class="btn ghost" data-act="logout">${icon('out', 18)} Sair</button>
       </div>
     </aside>
-    <main class="adm-main">${({ importar: viewImport, rascunhos: viewDrafts, questoes: viewQuestions, provas: viewProvas, admins: viewAdmins })[st.view]()}</main>`;
+    <main class="adm-main">${({ lote: viewLote, importar: viewImport, rascunhos: viewDrafts, questoes: viewQuestions, provas: viewProvas, admins: viewAdmins })[st.view]()}</main>`;
 }
 
 function viewLogin() {
@@ -344,8 +346,151 @@ function viewAdmins() {
     </form>`;
 }
 
+// ----- importar pasta inteira -----
+const LOTE_KEY = 'sinapse:lote';
+const loteSaved = () => { try { return JSON.parse(localStorage.getItem(LOTE_KEY) || '{}'); } catch (e) { return {}; } };
+const loteSave = (map) => { try { localStorage.setItem(LOTE_KEY, JSON.stringify(map)); } catch (e) { /* sem armazenamento */ } };
+const fmtMin = (ms) => { const m = Math.round(ms / 60000); return m < 1 ? 'menos de 1 min' : m < 60 ? `${m} min` : `${Math.floor(m / 60)} h ${m % 60} min`; };
+
+function viewLote() {
+  const L = st.lote;
+  const h = head('Importar pasta inteira', 'Escolha a pasta das provas baixada do Drive. A IA junta cada prova ao seu gabarito oficial, importa tudo sozinha e deixa em rascunho as questões que precisam de imagem.');
+  if (L.step === 'pick') {
+    return `${h}<label class="adm-drop big-drop" for="lote-dir">
+        <span class="adm-drop-empty">${icon('folder', 36)}<strong>Escolher a pasta</strong><span>No Drive: botão direito na pasta → Fazer download. Descompacte e escolha a pasta aqui.</span></span>
+        <input id="lote-dir" type="file" webkitdirectory directory multiple class="visually-hidden" data-lote-dir="1">
+      </label>
+      <div class="panel note"><strong>Regras automáticas:</strong> só provas objetivas; a resposta vem do gabarito oficial (arquivo separado ou no fim do PDF); prova sem gabarito ou com gabarito preliminar fica de fora; anuladas não entram; prova já importada é pulada.</div>`;
+  }
+  if (L.step === 'organizing') return `${h}<section class="panel stack-sm adm-progress"><h2>Organizando ${L.files.size} PDFs…</h2><span class="bar"><span class="fill violet indeterminate"></span></span><p class="muted small">A IA está lendo os nomes dos arquivos e juntando prova com gabarito.</p></section>`;
+  const fila = L.fila || [];
+  const saved = loteSaved();
+  const done = fila.filter((j) => j.status === 'ok').length;
+  const pend = fila.filter((j) => !['ok', 'pulada', 'erro'].includes(j.status)).length;
+  const elapsed = L.startedAt ? Date.now() - L.startedAt : 0;
+  const processed = fila.filter((j) => ['ok', 'pulada', 'erro'].includes(j.status) && j.ranNow).length;
+  const eta = L.running && processed ? (elapsed / processed) * pend : 0;
+  const statusTag = (j) => ({ fila: '<span class="tag">Na fila</span>', lendo: '<span class="tag violet">Lendo…</span>', gabarito: '<span class="tag violet">Lendo gabarito…</span>', importando: `<span class="tag violet">Importando ${j.done || 0}/${j.total || '?'}</span>`, ok: `<span class="tag good">${j.pub} publicadas${j.ras ? ` · ${j.ras} rascunho` : ''}</span>`, pulada: `<span class="tag amber">${esc(j.motivo)}</span>`, erro: `<span class="tag bad">${esc(j.motivo)}</span>` })[j.status] || '';
+  return `${h}<section class="panel stack-sm">
+      <div class="row wrap gap-sm"><h2 class="grow">${fila.length} provas objetivas encontradas</h2>
+        ${L.running ? `<span class="muted small">${fmtMin(elapsed)} rodando${eta ? ` · faltam ~${fmtMin(eta)}` : ''}</span><button class="btn ghost" data-act="lote-stop" ${L.stop ? 'disabled' : ''}>${L.stop ? 'Parando…' : 'Pausar'}</button>`
+          : pend ? `<button class="btn primary" data-act="lote-run">${icon('upload', 18)} Importar ${pend} ${pend === 1 ? 'prova' : 'provas'}</button>` : '<span class="tag good">Concluído</span>'}
+        ${L.running ? '' : '<button class="btn ghost" data-act="lote-reset">Escolher outra pasta</button>'}</div>
+      <p class="muted small">${done} importadas · ${L.totals.publicadas} questões publicadas · ${L.totals.rascunhos} em rascunho${Object.keys(saved).length ? ' · o progresso fica salvo neste computador' : ''}</p>
+      <div class="adm-list">${fila.map((j) => `<div class="adm-row static"><span class="stack-xs grow"><strong>${esc(j.prova)}</strong><span class="muted small">${esc(j.arquivo_prova)}${j.arquivo_gabarito ? ` + ${esc(j.arquivo_gabarito.split('/').pop())}` : ' · gabarito: procurar no próprio PDF'}${j.tipo ? ` · ${esc(j.tipo)}` : ''}</span></span>${statusTag(j)}</div>`).join('')}</div>
+    </section>
+    ${L.ignorados.length ? `<details class="panel"><summary><strong>${L.ignorados.length} ${L.ignorados.length === 1 ? 'arquivo ignorado' : 'arquivos ignorados'}</strong> <span class="muted small">(discursivas, habilidades clínicas, versões repetidas…)</span></summary><ul class="adm-ign">${L.ignorados.map((i) => `<li><span>${esc(i.arquivo)}</span><span class="muted small">${esc(i.motivo)}</span></li>`).join('')}</ul></details>` : ''}`;
+}
+
+async function loteOrganize(fileList) {
+  const L = st.lote;
+  const files = new Map();
+  for (const f of fileList) if (/\.pdf$/i.test(f.name)) files.set(f.webkitRelativePath || f.name, f);
+  if (!files.size) { toast('Nenhum PDF nessa pasta.'); return; }
+  L.files = files;
+  L.step = 'organizing';
+  render();
+  try {
+    const [org, provas] = await Promise.all([callOrganizarPasta([...files.keys()]), adminProvas().catch(() => [])]);
+    const ja = new Set(provas.filter((p) => p.publicada + p.rascunho > 0).map((p) => `${p.prova}|${p.ano}`));
+    const saved = loteSaved();
+    L.fila = org.provas.map((p) => {
+      const key = p.arquivo_prova;
+      const prev = saved[key];
+      if (prev && prev.status === 'ok') return { ...p, ...prev };
+      if (ja.has(`${p.prova}|${p.ano}`)) return { ...p, status: 'pulada', motivo: 'Já importada' };
+      return { ...p, status: 'fila' };
+    });
+    L.ignorados = org.ignorados || [];
+    L.totals = { provas: 0, publicadas: L.fila.reduce((a, j) => a + (j.pub || 0), 0), rascunhos: L.fila.reduce((a, j) => a + (j.ras || 0), 0) };
+    L.step = 'list';
+  } catch (e) {
+    L.step = 'pick';
+    toast(e.message);
+  }
+  render();
+}
+
+function pagesOf(text) {
+  return text.split(/\[página \d+\]\n?/).filter((x) => x.trim());
+}
+
+async function loteJob(j) {
+  const L = st.lote;
+  const file = L.files.get(j.arquivo_prova);
+  j.ranNow = true;
+  j.status = 'lendo'; render();
+  let text;
+  try { ({ text } = await extractPdfText(await file.arrayBuffer())); } catch (e) { j.status = 'erro'; j.motivo = 'Não abriu o PDF'; return; }
+  if (text.replace(/\[página \d+\]/g, '').trim().length < 800) { j.status = 'erro'; j.motivo = 'PDF escaneado (sem texto)'; return; }
+
+  // Gabarito oficial: arquivo separado ou as últimas páginas do próprio PDF (só se falarem em gabarito).
+  j.status = 'gabarito'; render();
+  let gab;
+  try {
+    if (j.arquivo_gabarito) {
+      const gf = L.files.get(j.arquivo_gabarito);
+      if (gf.size > MAX_PDF) { j.status = 'erro'; j.motivo = 'Gabarito com mais de 10 MB'; return; }
+      gab = await callImportarProva({ action: 'gabarito', pdf: await fileToB64(gf), tipo: j.tipo || '' });
+    } else {
+      const tail = pagesOf(text).slice(-8).join('\n');
+      if (!/gabarito/i.test(tail)) { j.status = 'pulada'; j.motivo = 'Sem gabarito oficial'; return; }
+      gab = await callImportarProva({ action: 'gabarito', text: tail, tipo: j.tipo || '' });
+    }
+  } catch (e) { j.status = 'erro'; j.motivo = e.message.slice(0, 60); return; }
+  const nums = [...new Set([...Object.keys(gab.respostas).map(Number), ...gab.anuladas])].sort((a, b) => a - b);
+  if (nums.length < 5) { j.status = 'pulada'; j.motivo = 'Sem gabarito oficial'; return; }
+  if (/prelimin/i.test(gab.observacao || '') && !/definitiv/i.test(gab.observacao || '')) { j.status = 'pulada'; j.motivo = 'Gabarito preliminar'; return; }
+
+  // Questões em lotes de 10, três ao mesmo tempo.
+  j.status = 'importando'; j.total = nums.length; j.done = 0; j.pub = 0; j.ras = 0; render();
+  const chunks = [];
+  for (let i = 0; i < nums.length; i += 10) chunks.push(nums.slice(i, i + 10));
+  let falhas = 0;
+  const worker = async () => {
+    while (chunks.length && !L.stop) {
+      const c = chunks.shift();
+      const body = { action: 'questoes', banca: j.banca, prova: j.prova, ano: j.ano, de: c[0], ate: c[c.length - 1], texto: text, respostas: gab.respostas, anuladas: gab.anuladas };
+      let r = null;
+      for (let t = 0; t < 2 && !r; t += 1) { try { r = await callImportarProva(body); } catch (e) { if (t === 1) falhas += 1; } }
+      if (r) { j.pub += r.publicadas; j.ras += r.rascunhos.length; L.totals.publicadas += r.publicadas; L.totals.rascunhos += r.rascunhos.length; }
+      j.done += c.length;
+      render();
+    }
+  };
+  await Promise.all([worker(), worker(), worker()]);
+  if (L.stop && chunks.length) { j.status = 'fila'; return; }
+  j.status = falhas && !j.pub ? 'erro' : 'ok';
+  if (j.status === 'erro') j.motivo = 'Falhou na importação';
+  else if (falhas) j.motivo = `${falhas} lote(s) falharam`;
+}
+
+async function loteRun() {
+  const L = st.lote;
+  L.running = true; L.stop = false; L.startedAt = Date.now();
+  render();
+  for (const j of L.fila) {
+    if (L.stop) break;
+    if (j.status !== 'fila') continue;
+    await loteJob(j);
+    if (['ok', 'pulada', 'erro'].includes(j.status)) {
+      const saved = loteSaved();
+      saved[j.arquivo_prova] = { status: j.status, pub: j.pub || 0, ras: j.ras || 0, motivo: j.motivo || '' };
+      loteSave(saved);
+    }
+    render();
+  }
+  L.running = false; L.stop = false;
+  st.drafts = null; st.provas = null;
+  render();
+  toast(L.fila.some((j) => j.status === 'fila') ? 'Importação pausada.' : 'Importação concluída.');
+}
+
 // ---------- eventos ----------
 const actions = {
+  'lote-run': () => { if (!st.lote.running) loteRun(); },
+  'lote-stop': () => { st.lote.stop = true; render(); },
+  'lote-reset': () => { Object.assign(st.lote, { step: 'pick', files: null, fila: null, ignorados: [] }); render(); },
   login: async () => {
     try { localStorage.setItem('sinapse:goAdmin', String(Date.now())); } catch (e) { /* segue */ }
     try { await signInWithGoogle(APP_URL); } catch (e) { toast(e.message); }
@@ -451,6 +596,7 @@ root.addEventListener('input', (e) => {
 root.addEventListener('change', (e) => {
   const t = e.target;
   if (t.dataset.imp === 'definitivo') st.imp.definitivo = t.checked;
+  if (t.dataset.loteDir) loteOrganize([...(t.files || [])]);
   if (t.dataset.file) setFile(t.dataset.file, t.files && t.files[0]);
   if (t.dataset.img) setImage(t.dataset.img, t.files && t.files[0]);
   if (t.dataset.qf && t.dataset.qf !== 'text') { st.q[t.dataset.qf] = t.value; st.q.page = 0; st.q.open = null; st.q.rows = null; render(); }
@@ -499,6 +645,8 @@ document.addEventListener('paste', (e) => {
   e.preventDefault();
   setImage(st.pasteTarget, item.getAsFile());
 });
+
+window.addEventListener('beforeunload', (e) => { if (st.lote.running || st.imp.step === 'importing') { e.preventDefault(); e.returnValue = ''; } });
 
 render();
 boot();

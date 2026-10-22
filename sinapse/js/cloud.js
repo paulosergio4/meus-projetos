@@ -236,3 +236,15 @@ export async function currentSessionUser() {
   const { data } = await c.auth.getSession();
   return data.session ? data.session.user : null;
 }
+
+export async function callOrganizarPasta(arquivos) {
+  const c = await loadCloud();
+  if (!c) throw new Error('Sem conexão com o servidor.');
+  const { data, error } = await c.functions.invoke('organizar-pasta', { body: { arquivos } });
+  if (error) {
+    let info = {};
+    try { info = await error.context.json(); } catch (e) { /* sem corpo */ }
+    throw new Error(info.message || 'Não foi possível organizar a pasta.');
+  }
+  return data;
+}
