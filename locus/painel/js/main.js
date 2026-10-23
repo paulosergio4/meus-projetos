@@ -638,8 +638,7 @@
   render(exemplo());
   function escuroAgora() {
     const t = document.documentElement.dataset.tema;
-    if (t) return t === "escuro";
-    return !(window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches);
+    return t === "escuro"; // abre sempre no claro
   }
   function corBarra() {
     const m = document.querySelector('meta[name="theme-color"]');

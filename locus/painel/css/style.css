@@ -22,41 +22,43 @@
   --topbg: rgba(12, 15, 9, 0.85);
   --dropbg: rgba(28, 34, 22, 0.6);
   --onaccent: #141810;
+  --accentfill: #b9c38e;
   --accenthover: #cad3a3;
   --glow1: rgba(185, 195, 142, 0.1);
   --glow2: rgba(212, 137, 90, 0.1);
   --shadow: none;
   color-scheme: dark;
 }
-@media (prefers-color-scheme: light) {
-  :root:not([data-tema="escuro"]) {
-    --bg: #f3eee3;
-    --bg2: #eae3d4;
-    --panel: #fffdf8;
-    --panel2: #efe9dc;
-    --line: #ddd3bc;
-    --line2: #e6decb;
-    --txt: #1f2416;
-    --muted: #5e6450;
-    --dim: #868a76;
-    --sage: #6f7d45;
-    --olive: #8c9866;
-    --moss: #b9c38e;
-    --copper: #b86a3c;
-    --gold: #ad8424;
-    --sand: #c9b48a;
-    --good: #3f6e22;
-    --bad: #b03a2e;
-    --topbg: rgba(246, 242, 233, 0.88);
-    --dropbg: rgba(255, 253, 248, 0.7);
-    --onaccent: #fffdf8;
-    --accenthover: #56623a;
-    --glow1: rgba(86, 98, 58, 0.1);
-    --glow2: rgba(184, 106, 60, 0.08);
-    --shadow: 0 14px 30px -24px rgba(46, 54, 32, 0.45);
-    color-scheme: light;
-  }
+
+:root:not([data-tema="escuro"]) {
+  --bg: #f3eee3;
+  --bg2: #eae3d4;
+  --panel: #fffdf8;
+  --panel2: #efe9dc;
+  --line: #ddd3bc;
+  --line2: #e6decb;
+  --txt: #1f2416;
+  --muted: #5e6450;
+  --dim: #868a76;
+  --sage: #6f7d45;
+  --olive: #8c9866;
+  --moss: #b9c38e;
+  --copper: #b86a3c;
+  --gold: #ad8424;
+  --sand: #c9b48a;
+  --good: #3f6e22;
+  --bad: #b03a2e;
+  --topbg: rgba(246, 242, 233, 0.88);
+  --dropbg: rgba(255, 253, 248, 0.7);
+  --onaccent: #2e3620;
+  --accentfill: #b9c38e;
+  --accenthover: #a9b47c;
+  --glow1: rgba(86, 98, 58, 0.1);
+  --glow2: rgba(184, 106, 60, 0.08);
+  --shadow: 0 14px 30px -24px rgba(46, 54, 32, 0.45);
+  color-scheme: light;
 }
+
 :root[data-tema="claro"] {
   --bg: #f3eee3;
   --bg2: #eae3d4;
@@ -77,8 +79,9 @@
   --bad: #b03a2e;
   --topbg: rgba(246, 242, 233, 0.88);
   --dropbg: rgba(255, 253, 248, 0.7);
-  --onaccent: #fffdf8;
-  --accenthover: #56623a;
+  --onaccent: #2e3620;
+  --accentfill: #b9c38e;
+  --accenthover: #a9b47c;
   --glow1: rgba(86, 98, 58, 0.1);
   --glow2: rgba(184, 106, 60, 0.08);
   --shadow: 0 14px 30px -24px rgba(46, 54, 32, 0.45);
@@ -176,9 +179,9 @@ body {
   border-color: var(--sage);
 }
 .btn.primary {
-  background: var(--sage);
+  background: var(--accentfill);
   color: var(--onaccent);
-  border-color: var(--sage);
+  border-color: var(--accentfill);
 }
 .btn.primary:hover {
   background: var(--accenthover);
@@ -200,13 +203,12 @@ body {
 :root[data-tema="claro"] .tema-lua {
   display: none;
 }
-@media (prefers-color-scheme: light) {
-  :root:not([data-tema="escuro"]) .tema-sol {
-    display: block;
-  }
-  :root:not([data-tema="escuro"]) .tema-lua {
-    display: none;
-  }
+
+:root:not([data-tema="escuro"]) .tema-sol {
+  display: block;
+}
+:root:not([data-tema="escuro"]) .tema-lua {
+  display: none;
 }
 
 /* cabeçalho do relatório */

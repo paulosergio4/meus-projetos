@@ -29,7 +29,7 @@
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
+  :root[data-theme="auto"] {
     --bg: #14180f;
     --card: #1c2216;
     --soft: #232a1b;
@@ -158,8 +158,8 @@ button {
   color: var(--muted);
 }
 .switch button[aria-pressed="true"] {
-  background: var(--deep);
-  color: var(--cream);
+  background: var(--sage);
+  color: var(--deep);
 }
 .ctl {
   display: flex;
@@ -650,8 +650,8 @@ p.s {
   width: 100%;
   padding: 15px;
   border-radius: 16px;
-  background: var(--deep);
-  color: var(--cream);
+  background: var(--sage);
+  color: var(--deep);
   font-weight: 700;
   font-size: 14.5px;
 }
@@ -681,9 +681,9 @@ p.s {
   background: var(--card);
 }
 .seg button[aria-pressed="true"] {
-  background: var(--olive);
-  border-color: var(--olive);
-  color: #fff;
+  background: var(--sage);
+  border-color: var(--sage);
+  color: var(--deep);
 }
 .drop {
   border: 1.5px dashed var(--line);
@@ -1316,10 +1316,10 @@ p.s {
   display: none;
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .tbtn .sol {
+  :root[data-theme="auto"] .tbtn .sol {
     display: block;
   }
-  :root:not([data-theme="light"]) .tbtn .lua {
+  :root[data-theme="auto"] .tbtn .lua {
     display: none;
   }
 }

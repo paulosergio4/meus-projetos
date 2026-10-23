@@ -134,7 +134,7 @@
   }
   function temaAtual() {
     try {
-      return localStorage.getItem("locus-app-tema") || "auto";
+      return localStorage.getItem("locus-app-tema") || "light";
     } catch (_) {
       return "auto";
     }
@@ -609,14 +609,13 @@
   $("m-replay").onclick = $("replay").onclick;
   function escuroAgora() {
     const r = document.documentElement;
-    return r.dataset.theme
-      ? r.dataset.theme === "dark"
-      : !!(window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches);
+    if (r.dataset.theme === "auto")
+      return !!(window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches);
+    return r.dataset.theme === "dark"; // sem escolha, abre no claro
   }
   function aplicarTema(k) {
     const r = document.documentElement;
-    if (k === "auto") delete r.dataset.theme;
-    else r.dataset.theme = k;
+    r.dataset.theme = k;
     try {
       localStorage.setItem("locus-app-tema", k);
     } catch (_) {}

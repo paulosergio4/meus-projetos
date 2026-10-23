@@ -204,8 +204,7 @@ document.getElementById("form-contato").addEventListener("submit", function (e) 
   } catch (e) {}
   function escuro() {
     var t = root.getAttribute("data-theme");
-    if (t) return t === "dark";
-    return !!(window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches);
+    return t === "dark"; // abre sempre no claro, a não ser que a pessoa escolha o escuro
   }
   function barra() {
     var m = document.querySelector('meta[name="theme-color"]');
