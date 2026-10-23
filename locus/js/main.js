@@ -243,7 +243,7 @@ document.getElementById("form-contato").addEventListener("submit", function (e) 
     return document.getElementById(id);
   }
   function calc() {
-    var LIM_MEI = TETO[$("s-ano").value] || 81000,
+    var LIM_MEI = TETO[2027], // regras do ano de lançamento
       LIM_NANO = LIM_MEI / 2,
       milMei = (LIM_MEI / 1000).toLocaleString("pt-BR") + " mil",
       milNano = (LIM_NANO / 1000).toLocaleString("pt-BR") + " mil";
