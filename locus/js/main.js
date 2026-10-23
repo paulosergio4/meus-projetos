@@ -261,11 +261,32 @@ document.getElementById("form-contato").addEventListener("submit", function (e) 
     $("d-nano").textContent = podeNano
       ? (inss
           ? "Sem IBS e CBS. INSS pago à parte, " + brl(INSS_NANO) + " por mês (plano de 11%)."
-          : "Sem IBS, sem CBS e sem CNPJ. Também fica sem INSS.") +
-        (ativ === "app" ? " Para app, conta só 25% do que você recebe." : "")
+          : "Sem IBS, sem CBS e sem CNPJ. Também fica sem INSS.") + ""
       : ativ === "app"
         ? "25% do que você recebe passa de R$ 40,5 mil."
         : "Passa de R$ 40,5 mil por ano.";
+
+    // aplicativos: para o nano, conta só 25% do que a pessoa recebe das plataformas
+    var apps = $("apps");
+    apps.hidden = ativ !== "app";
+    $("s-fat-l").textContent =
+      ativ === "app" ? "Quanto você recebe dos apps por ano" : "Quanto você fatura por ano";
+    if (ativ === "app") {
+      apps.innerHTML =
+        '<span class="apps-h">Uber, 99, iFood e outros apps</span>' +
+        "<div><span>Você recebe dos apps</span><b>" +
+        brl(fat) +
+        "</b></div>" +
+        "<div><span>Conta para o nano (25%)</span><b>" +
+        brl(baseNano) +
+        "</b></div>" +
+        "<div><span>Limite do nano</span><b>" +
+        brl(LIM_NANO) +
+        "</b></div>" +
+        '<div class="apps-t"><span>Recebimento máximo para ser nano</span><b>' +
+        brl(LIM_NANO * 4) +
+        "</b></div>";
+    }
 
     var v,
       melhor = null;

@@ -417,7 +417,10 @@
           <div class="sec-head">
             <div>
               <span class="eyebrow">Tecnologia · em construção</span>
-              <h2>Você cuida da empresa. <br/> A papelada chega sozinha.</h2>
+              <h2>
+                Você cuida da empresa. <br />
+                A papelada chega sozinha.
+              </h2>
             </div>
             <p class="lede">
               O que estamos construindo no portal para você não precisar lembrar de nada nem mandar nada.
@@ -595,11 +598,8 @@
           <div class="sim">
             <form id="sim-form" novalidate>
               <label class="full"
-                >Quanto você fatura por ano<input
-                  id="s-fat"
-                  inputmode="numeric"
-                  data-moeda
-                  value="R$ 36.000,00"
+                ><span id="s-fat-l">Quanto você fatura por ano</span
+                ><input id="s-fat" inputmode="numeric" data-moeda value="R$ 36.000,00"
               /></label>
               <label
                 >O que você faz
@@ -607,7 +607,7 @@
                   <option value="servico">Presto serviço</option>
                   <option value="comercio">Vendo produtos</option>
                   <option value="ambos">Vendo e presto serviço</option>
-                  <option value="app">Motorista ou entregador de aplicativo</option>
+                  <option value="app">Uber, 99, iFood e outros apps</option>
                 </select></label
               >
               <label
@@ -624,6 +624,7 @@
               </div>
               <div class="opc" id="o-nano">
                 <span class="opc-h">Nanoempreendedor</span><b id="r-nano">—</b><small id="d-nano"></small>
+                <div class="apps" id="apps" hidden></div>
               </div>
               <p class="veredito" id="veredito"></p>
             </div>
