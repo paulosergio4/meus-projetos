@@ -228,8 +228,7 @@ document.getElementById("form-contato").addEventListener("submit", function (e) 
   var form = document.getElementById("sim-form");
   if (!form) return;
   var SM = 1621,
-    LIM_MEI = 81000,
-    LIM_NANO = LIM_MEI / 2,
+    TETO = { 2026: 81000, 2027: 110000, 2028: 140000 }, // Lei Complementar 238/2026
     INSS_MEI = SM * 0.05,
     INSS_NANO = SM * 0.11,
     EXTRA = { servico: 5, comercio: 1, ambos: 6, app: 5 };
@@ -244,6 +243,10 @@ document.getElementById("form-contato").addEventListener("submit", function (e) 
     return document.getElementById(id);
   }
   function calc() {
+    var LIM_MEI = TETO[$("s-ano").value] || 81000,
+      LIM_NANO = LIM_MEI / 2,
+      milMei = (LIM_MEI / 1000).toLocaleString("pt-BR") + " mil",
+      milNano = (LIM_NANO / 1000).toLocaleString("pt-BR") + " mil";
     var fat = num($("s-fat").value),
       ativ = $("s-ativ").value,
       inss = $("s-inss").value === "sim";
@@ -256,15 +259,15 @@ document.getElementById("form-contato").addEventListener("submit", function (e) 
     $("r-mei").textContent = podeMei ? brl(custoMei) + " /ano" : "Não se enquadra";
     $("d-mei").textContent = podeMei
       ? "DAS de " + brl(INSS_MEI + EXTRA[ativ]) + " por mês, com INSS, CNPJ e nota fiscal."
-      : "Passa do limite de R$ 81 mil por ano.";
+      : "Passa do teto de R$ " + milMei + " por ano.";
     $("r-nano").textContent = podeNano ? brl(custoNano) + " /ano" : "Não se enquadra";
     $("d-nano").textContent = podeNano
       ? (inss
           ? "Sem IBS e CBS. INSS pago à parte, " + brl(INSS_NANO) + " por mês (plano de 11%)."
           : "Sem IBS, sem CBS e sem CNPJ. Também fica sem INSS.") + ""
       : ativ === "app"
-        ? "25% do que você recebe passa de R$ 40,5 mil."
-        : "Passa de R$ 40,5 mil por ano.";
+        ? "25% do que você recebe passa de R$ " + milNano + "."
+        : "Passa de R$ " + milNano + " por ano.";
 
     // aplicativos: para o nano, conta só 25% do que a pessoa recebe das plataformas
     var apps = $("apps");
