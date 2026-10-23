@@ -2,6 +2,7 @@
 import { AREAS, PROVAS, FASES, ECG_REGIONS } from './data.js';
 import { extractPdfText, shrinkImage } from './tools.js';
 import { PLANS, FEATURE_INFO, cobrancaAtiva, effectivePlan, limitsFor, planById, fmtPrice, TRIAL_DAYS } from './plans.js';
+import { gradeAnswer, hasWritten } from './grade.js';
 import { QUESTIONS, CASES, setBankQuestions, usingDemoQuestions } from './questions.js';
 import { store } from './store.js';
 import { scheduleAll, formatInterval, DAY_MS } from './fsrs.js';
@@ -70,7 +71,7 @@ function animateCard(cls, ms, then) {
   setTimeout(() => { ui.animating = false; then(); }, ms);
 }
 
-const APP_VERSION = '0.22.0';
+const APP_VERSION = '0.23.0';
 const root = document.getElementById('app');
 
 // ---------- utilitários ----------
@@ -134,6 +135,7 @@ const icons = {
   quiz: '<rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h5"/>',
   clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
   book: '<path d="M4 4h6a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H4z"/><path d="M20 4h-6a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h7z"/>',
+  pen: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>',
   steth: '<path d="M6 3v6a5 5 0 0 0 10 0V3"/><path d="M11 14v2a5 5 0 0 0 10 0v-3"/><circle cx="21" cy="11" r="2"/>',
   repeat: '<path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/>',
   layers: '<path d="M12 3 2 8l10 5 10-5z"/><path d="M2 16l10 5 10-5"/><path d="M2 12l10 5 10-5"/>',
@@ -1589,6 +1591,7 @@ function viewCases() {
         ${c.source ? `<p class="muted small">Baseado em ${esc(c.source)}</p>` : ''}
         <div class="row"><span class="small ${best ? 'good-ink strong' : 'muted'}">${best ? `Melhor resultado: ${best.best}/${best.total}` : 'Ainda não resolvido'}</span>
         <button class="btn primary" data-act="start-case" data-v="${c.id}">${best ? 'Refazer' : 'Começar'}</button></div>
+        ${c.stages.some(hasWritten) ? `<p class="muted small">${icon('pen', 14)} Você escreve a resposta e o app corrige pelas palavras-chave. <button class="link-btn small" data-act="start-case" data-v="${c.id}|alt">Prefiro alternativas</button></p>` : ''}
       </article>`;
     }).join('')}
     ${list.length > limit ? `<button class="btn ghost" data-act="case-more">Mostrar mais (${list.length - limit})</button>` : ''}
@@ -1611,7 +1614,7 @@ function viewCase() {
   const st = c.stages[r.stage];
   const timeline = c.stages.slice(0, r.stage).map((s, i) => `<li class="done">
       ${s.info ? `<p class="small">${esc(s.info)}</p>` : ''}
-      <p class="small"><span class="${r.hits[i] ? 'good-ink' : 'bad-ink'} strong">${r.hits[i] ? 'Acertou' : 'Errou'}:</span> ${esc(s.options[s.answer])}</p>
+      <p class="small"><span class="${r.hits[i] ? 'good-ink' : 'bad-ink'} strong">${r.hits[i] ? 'Acertou' : 'Errou'}:</span> ${esc(r.written && hasWritten(s) && s.model ? s.model : s.options[s.answer])}</p>
     </li>`).join('');
   const ok = r.pick === st.answer;
   return `<div class="screen stack quiz">
@@ -1626,12 +1629,39 @@ function viewCase() {
     ${st.info ? `<section class="panel new-info"><p class="label">Nova informação</p><p>${esc(st.info)}</p></section>` : ''}
     ${st.image ? `<img class="q-img" src="${esc(st.image)}" alt="Imagem do caso" loading="lazy">` : ''}
     <p class="stem">${esc(st.question)}</p>
-    ${optionList(st, r.pick, r.confirmed, 'case-pick', r.orders[r.stage])}
+    ${r.written && hasWritten(st) ? caseWrittenBody(c, st, r) : `${optionList(st, r.pick, r.confirmed, 'case-pick', r.orders[r.stage])}
     ${r.confirmed
       ? `<div class="panel stack-sm feedback ${ok ? 'good' : 'bad'}"><p class="verdict ${ok ? 'good' : 'bad'}">${icon(ok ? 'check' : 'x', 18)} ${ok ? 'Boa decisão' : `Melhor conduta: ${letterOf(r.orders[r.stage], st.answer)}`}</p><p>${esc(st.explanation)}</p></div>
          <button class="btn primary big" data-act="case-next">${r.stage < c.stages.length - 1 ? 'Continuar o caso' : 'Ver resultado'}</button>`
-      : `<button class="btn primary big" data-act="case-confirm" ${r.pick == null ? 'disabled' : ''}>Confirmar conduta</button>`}
+      : `<button class="btn primary big" data-act="case-confirm" ${r.pick == null ? 'disabled' : ''}>Confirmar conduta</button>`}`}
   </div>`;
+}
+
+// Etapa respondida por escrito: o app confere as palavras-chave da resposta esperada.
+function caseWrittenBody(c, st, r) {
+  const next = `<button class="btn primary big" data-act="case-next">${r.stage < c.stages.length - 1 ? 'Continuar o caso' : 'Ver resultado'}</button>`;
+  if (!r.confirmed) {
+    return `<label class="stack-xs"><span class="visually-hidden">Sua resposta</span>
+        <textarea data-case-text rows="4" placeholder="Escreva sua resposta, como numa prova discursiva">${esc(r.text)}</textarea></label>
+      <button class="btn primary big" data-act="case-check">Corrigir</button>`;
+  }
+  const g = r.grade;
+  const ok = r.hits[r.hits.length - 1];
+  const chips = st.keywords.map((grp, i) => {
+    const words = Array.isArray(grp) ? grp : [grp];
+    return `<span class="kw ${g.found[i] ? 'on' : 'off'}">${icon(g.found[i] ? 'check' : 'x', 14)} ${esc(words[0])}</span>`;
+  }).join('');
+  return `<section class="panel stack-xs"><p class="label">Sua resposta</p><p>${esc(r.text)}</p></section>
+    <div class="panel stack-sm feedback ${ok ? 'good' : 'bad'}">
+      <p class="verdict ${ok ? 'good' : 'bad'}">${icon(ok ? 'check' : 'x', 18)} ${ok ? 'Certo' : 'Errado'}${r.override ? ' (corrigido por você)' : ''}</p>
+      <p class="small muted">Palavras-chave: ${g.hits} de ${g.total} encontradas (precisava de ${g.need}).</p>
+      ${g.wrong && g.wrong.length ? `<p class="small bad-ink">Sua resposta tem um erro: “${esc(g.wrong[0])}”.</p>` : ''}
+      <div class="kw-list">${chips}</div>
+      <p><strong>Resposta esperada:</strong> ${esc(st.model || st.options[st.answer])}</p>
+      ${st.explanation ? `<p>${esc(st.explanation)}</p>` : ''}
+      <button class="link-btn small" data-act="case-override">${ok ? 'Na verdade errei' : 'Minha resposta estava certa'}</button>
+    </div>
+    ${next}`;
 }
 
 // ---------- cronograma ----------
@@ -2281,9 +2311,32 @@ const actions = {
   'case-area': (v) => { ui.caseArea = v; ui.caseLimit = 20; render(); },
   'case-more': () => { ui.caseLimit = (ui.caseLimit || 20) + 20; render(); },
   'start-case': (v) => {
-    const c = CASES.find((x) => x.id === v);
-    ui.caseRun = { id: v, stage: 0, pick: null, confirmed: false, score: 0, hits: [], done: false, orders: c.stages.map(optionOrder) };
+    const [id, modo] = String(v).split('|');
+    const c = CASES.find((x) => x.id === id);
+    ui.caseRun = { id, stage: 0, pick: null, confirmed: false, score: 0, hits: [], done: false, orders: c.stages.map(optionOrder), written: modo !== 'alt', text: '', grade: null };
     go('case');
+  },
+  'case-check': () => {
+    const r = ui.caseRun;
+    const c = CASES.find((x) => x.id === r.id);
+    const st = c.stages[r.stage];
+    const el = document.querySelector('[data-case-text]');
+    if (el) r.text = el.value;
+    if (r.text.trim().length < 2) { toast('Escreva sua resposta antes de corrigir.'); return; }
+    r.grade = gradeAnswer(r.text, st.keywords, st.min, st.avoid);
+    r.confirmed = true;
+    r.hits.push(r.grade.ok);
+    if (r.grade.ok) r.score += 1;
+    render();
+  },
+  'case-override': () => {
+    const r = ui.caseRun;
+    if (!r.grade) return;
+    const i = r.hits.length - 1;
+    r.hits[i] = !r.hits[i];
+    r.score += r.hits[i] ? 1 : -1;
+    r.override = !r.override;
+    render();
   },
   'case-pick': (v) => { if (!ui.caseRun.confirmed) { ui.caseRun.pick = Number(v); render(); } },
   'case-confirm': () => {
@@ -2303,6 +2356,9 @@ const actions = {
       r.stage += 1;
       r.pick = null;
       r.confirmed = false;
+      r.text = '';
+      r.grade = null;
+      r.override = false;
     } else {
       r.done = true;
       store.saveCase(r.id, r.score, c.stages.length);
@@ -2482,6 +2538,7 @@ root.addEventListener('click', (e) => {
 });
 
 root.addEventListener('input', (e) => {
+  if (e.target.matches('[data-case-text]')) { if (ui.caseRun) ui.caseRun.text = e.target.value; return; }
   const admField = e.target.closest('[data-adm]');
   if (admField && admField.type !== 'checkbox') { admState()[admField.dataset.adm] = admField.value; return; }
   if (e.target.matches('[data-ia-text]')) {

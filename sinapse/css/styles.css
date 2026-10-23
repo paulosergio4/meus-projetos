@@ -812,3 +812,10 @@ body.splashing .login *, body.splashing .lock * { animation-play-state: paused !
 .chip.wide { width: 100%; text-align: left; border-radius: 14px; padding: 10px 14px; }
 .report-link { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; color: var(--muted); margin-top: 2px; }
 .sheet .field { text-align: left; }
+
+/* casos em modo discursivo */
+.kw-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.kw { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 999px; font-size: 13px; border: 1px solid var(--line); }
+.kw.on { background: var(--good-soft); border-color: var(--good); color: var(--good-ink); }
+.kw.off { background: var(--bad-soft); border-color: var(--bad); color: var(--bad-ink); }
+.kw .muted { color: inherit; opacity: .7; }

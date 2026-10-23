@@ -283,8 +283,10 @@ Para cada questão, extraia o FATO MÉDICO de maior rendimento que ela cobra e e
           alternativas: { type: 'array', items: { type: 'string' }, description: 'Exatamente 5 alternativas plausíveis, sem letras.' },
           certa: { type: 'integer', description: 'Índice (0 a 4) da alternativa certa.' },
           explicacao: { type: 'string', description: 'Por que a certa é a melhor e por que as principais erradas não são. 1 a 3 frases.' },
+          resposta: { type: 'string', description: 'Resposta modelo curta, como numa prova discursiva (ex.: "Crise tireotóxica.").' },
+          palavras_chave: { type: 'array', items: { type: 'array', items: { type: 'string' } }, description: '1 a 4 grupos de termos que uma resposta escrita certa precisa conter. Cada grupo é uma lista de sinônimos aceitos (ex.: [["propiltiouracil","PTU","metimazol"],["propranolol","betabloqueador"]]). Termos curtos e específicos, sem palavras genéricas que também apareçam nas alternativas erradas.' },
         },
-        required: ['info', 'pergunta', 'alternativas', 'certa', 'explicacao'],
+        required: ['info', 'pergunta', 'alternativas', 'certa', 'explicacao', 'resposta', 'palavras_chave'],
       };
       const tool = {
         name: 'entregar_casos',
@@ -321,6 +323,10 @@ Regras:
           options: (Array.isArray(e.alternativas) ? e.alternativas : []).map((o: any) => String(o).trim().slice(0, 300)).filter(Boolean).slice(0, 5),
           answer: Number(e.certa),
           explanation: String(e.explicacao || '').trim().slice(0, 900),
+          model: String(e.resposta || '').trim().slice(0, 400),
+          keywords: (Array.isArray(e.palavras_chave) ? e.palavras_chave : []).slice(0, 5)
+            .map((g: any) => (Array.isArray(g) ? g : [g]).map((x: any) => String(x).trim().slice(0, 60)).filter(Boolean).slice(0, 8))
+            .filter((g: string[]) => g.length),
         })).filter((e: any) => e.question && e.options.length >= 4 && Number.isInteger(e.answer) && e.answer >= 0 && e.answer < e.options.length);
         const title = String(c.titulo || '').trim().slice(0, 120), intro = String(c.introducao || '').trim().slice(0, 1500);
         if (stages.length < 2 || !title || !intro) continue;

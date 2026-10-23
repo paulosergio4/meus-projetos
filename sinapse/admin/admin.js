@@ -288,6 +288,7 @@ function caseCard(k) {
       <p><strong>${esc(s.question)}</strong></p>
       <ol class="adm-opts">${(s.options || []).map((o, j) => `<li class="${j === s.answer ? 'right' : ''}">${LETTERS[j]}) ${esc(o)}${j === s.answer ? ' ✓' : ''}</li>`).join('')}</ol>
       ${s.explanation ? `<p class="muted small">${esc(s.explanation)}</p>` : ''}
+      ${s.keywords && s.keywords.length ? `<p class="small"><strong>Resposta escrita:</strong> ${esc(s.model || '')}<br><span class="muted">Palavras-chave: ${s.keywords.map((g) => esc([].concat(g).join(' / '))).join(' · ')}${s.min ? ` (mínimo ${s.min})` : ''}</span></p>` : ''}
     </div>`).join('');
   const btns = k.status === 'rascunho'
     ? `<button class="btn ghost bad-ink" data-act="cs-set" data-v="${k.id}|rejeitado">Rejeitar</button><button class="btn good-solid" data-act="cs-set" data-v="${k.id}|publicado">${icon('check', 18)} Publicar</button>`
