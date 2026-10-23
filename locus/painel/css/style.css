@@ -827,7 +827,7 @@ footer .wrap {
   content: "";
   position: absolute;
   left: 50%;
-  top: -0.18em;
+  top: 0.02em;
   width: 0.2em;
   height: 0.2em;
   border-radius: 50%;
