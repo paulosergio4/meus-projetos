@@ -180,7 +180,7 @@
   <div class="sec">Enviados recentemente</div>
   <div class="stack">${D.docs.map((d) => `<div class="item"><span class="ic">${ic("file")}</span><span class="tx"><b>${d.n}</b><span>${d.d}</span></span>${d.st === "new" ? '<span class="pill p-new">Em análise</span>' : '<span class="pill p-ok">Recebido</span>'}</div>`).join("")}</div>`,
     painel: () => `<h2 class="t">Painel</h2><p class="s">Setembro de 2026 · atualizado pela Lócus em 08/10</p>
-  <div class="sem-card"><span class="sem-dot ok"></span><div><b>Verde</b><span><b>O que fazer:</b> a margem subiu 0,4 ponto. Mantenha os preços dos três produtos mais vendidos.</span></div></div>
+  <div class="sem-card"><span class="sem-dot ok"></span><div><b>Saúde da empresa: verde</b><span><b>O que fazer:</b> a margem subiu 0,4 ponto. Mantenha os preços dos três produtos mais vendidos.</span></div></div>
   <div class="grid2"><div class="kpi"><small>Faturamento</small><b>R$ 66,1 mil</b><em class="up">▲ 1,4%</em></div><div class="kpi"><small>Despesas</small><b>R$ 60,2 mil</b><em class="down">▲ 1,0%</em></div><div class="kpi"><small>Resultado</small><b>R$ 5,9 mil</b><em class="up">▲ 5,9%</em></div><div class="kpi"><small>Margem</small><b>8,6%</b><em class="down">abaixo de 10%</em></div></div>
   <div class="sec">Faturamento · 6 meses</div>
   <div class="card">${(() => {
