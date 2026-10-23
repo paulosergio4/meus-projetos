@@ -282,7 +282,7 @@
   <section class="box"><div class="box-b"><form class="form" id="pub-form" novalidate>
     <div class="campo"><label for="p-cli">Cliente</label><select id="p-cli">${CLIENTES.map((c) => `<option>${c.n}</option>`).join("")}</select></div>
     <div class="campo"><label for="p-tipo">O que é</label><select id="p-tipo"><option>Guia DAS</option><option>Guia FGTS</option><option>Holerites</option><option>Painel do mês</option><option>Balancete</option></select></div>
-    <div class="campo"><label for="p-val">Valor</label><input id="p-val" inputmode="decimal" placeholder="Ex.: R$ 4.050,12" /></div>
+    <div class="campo"><label for="p-val">Valor</label><input id="p-val" inputmode="numeric" data-moeda placeholder="R$ 0,00" /></div>
     <div class="campo"><label for="p-venc">Vencimento</label><input id="p-venc" type="date" /></div>
     <div class="campo full"><label>Arquivo</label><button type="button" class="drop" data-act="anexar">Arraste o PDF aqui ou importe do Domínio</button></div>
     <div class="campo full"><label for="p-msg">Mensagem</label><textarea id="p-msg" rows="3" placeholder="Ex.: DAS de outubro. Pague até o dia 20 para evitar multa."></textarea></div>
@@ -360,5 +360,27 @@
       selCli = i;
       ir("clientes");
     } else if (q) toast("Nenhum cliente encontrado com esse nome ou CNPJ.");
+  });
+})();
+
+/* ===== campos de dinheiro: formata como R$ 0,00 enquanto digita ===== */
+(function () {
+  function fmt(v) {
+    var d = String(v)
+      .replace(/\D/g, "")
+      .replace(/^0+(?=\d)/, "");
+    var n = parseInt(d || "0", 10) / 100;
+    return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  }
+  document.addEventListener("input", function (e) {
+    var el = e.target;
+    if (!el.matches || !el.matches("[data-moeda]")) return;
+    el.value = fmt(el.value);
+    try {
+      el.setSelectionRange(el.value.length, el.value.length);
+    } catch (_) {}
+  });
+  document.querySelectorAll("[data-moeda]").forEach(function (el) {
+    if (el.value) el.value = fmt(el.value);
   });
 })();

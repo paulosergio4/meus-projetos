@@ -1576,3 +1576,7 @@ img {
 .foot-equipe:hover {
   color: #f3eee2;
 }
+#sim-form label {
+  grid-template-rows: 1fr auto;
+  align-items: end;
+}

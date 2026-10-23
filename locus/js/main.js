@@ -237,7 +237,8 @@ document.getElementById("form-contato").addEventListener("submit", function (e) 
     return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
   };
   function num(v) {
-    return parseFloat(String(v).replace(/\./g, "").replace(",", ".")) || 0;
+    // o campo está em R$ 0,00: os dígitos são os centavos
+    return parseInt(String(v).replace(/\D/g, "") || "0", 10) / 100;
   }
   function $(id) {
     return document.getElementById(id);
@@ -302,4 +303,26 @@ document.getElementById("form-contato").addEventListener("submit", function (e) 
     e.preventDefault();
   });
   calc();
+})();
+
+/* ===== campos de dinheiro: formata como R$ 0,00 enquanto digita ===== */
+(function () {
+  function fmt(v) {
+    var d = String(v)
+      .replace(/\D/g, "")
+      .replace(/^0+(?=\d)/, "");
+    var n = parseInt(d || "0", 10) / 100;
+    return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  }
+  document.addEventListener("input", function (e) {
+    var el = e.target;
+    if (!el.matches || !el.matches("[data-moeda]")) return;
+    el.value = fmt(el.value);
+    try {
+      el.setSelectionRange(el.value.length, el.value.length);
+    } catch (_) {}
+  });
+  document.querySelectorAll("[data-moeda]").forEach(function (el) {
+    if (el.value) el.value = fmt(el.value);
+  });
 })();

@@ -465,7 +465,7 @@
   <div style="height:14px"></div><button type="button" class="btn" data-act="pacote">${ic("loan")}Gerar pacote em PDF</button>`,
     preco:
       () => `${voltar()}<h2 class="t">Preço de venda</h2><p class="s">Quanto cobrar para pagar o imposto e ainda lucrar.</p>
-  <div class="grid2"><div class="field"><label for="pv-custo">Custo do produto (R$)</label><input id="pv-custo" inputmode="decimal" value="40,00"></div><div class="field"><label for="pv-lucro">Lucro desejado (%)</label><input id="pv-lucro" inputmode="decimal" value="20"></div></div>
+  <div class="grid2"><div class="field"><label for="pv-custo">Custo do produto</label><input id="pv-custo" inputmode="numeric" data-moeda value="R$ 40,00"></div><div class="field"><label for="pv-lucro">Lucro desejado (%)</label><input id="pv-lucro" inputmode="decimal" value="20"></div></div>
   <div class="field"><label for="pv-imp">Imposto sobre a venda (%)</label><input id="pv-imp" inputmode="decimal" value="6,1"></div>
   <div class="prev"><div><small>Venda por</small><b id="pv-res">R$ 54,13</b><span id="pv-det">R$ 3,30 de imposto e R$ 10,83 de lucro</span></div></div>
   <p class="s" style="margin-top:10px">Conta simples: preço = custo ÷ (1 − lucro − imposto). Outras despesas fixas não entram aqui.</p>`,
@@ -488,7 +488,7 @@
   ${previa("A emissão oficial entra quando o Lócus Nota estiver pronto.")}
   <div class="field"><label for="n-cli">Cliente</label><input id="n-cli" value="Maria Souza"></div>
   <div class="field"><label for="n-serv">Serviço</label><input id="n-serv" value="Entrega de mercadorias"></div>
-  <div class="field"><label for="n-val">Valor</label><input id="n-val" inputmode="decimal" value="R$ 120,00"></div>
+  <div class="field"><label for="n-val">Valor</label><input id="n-val" inputmode="numeric" data-moeda value="R$ 120,00"></div>
   <div class="card stack" style="gap:8px;margin-bottom:14px;font-size:13px"><div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">IBS e CBS</span><b>preenchidos pelo app</b></div><div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Envio</span><b>PDF no WhatsApp do cliente</b></div></div>
   <button type="button" class="btn" data-act="emitir">${ic("nota")}Emitir nota</button>`,
 
@@ -681,7 +681,7 @@
       return `<div class="field">${lbl}<select id="${id}"${req}>${OPC[ph].map((o) => `<option>${o}</option>`).join("")}</select></div>`;
     if (tipo === "area")
       return `<div class="field">${lbl}<textarea id="${id}" rows="3" placeholder="${ph}"${req}></textarea></div>`;
-    return `<div class="field">${lbl}<input id="${id}" type="${tipo}" placeholder="${ph}"${modo ? ` inputmode="${modo}"` : ""}${req}></div>`;
+    return `<div class="field">${lbl}<input id="${id}" type="${tipo}" placeholder="${ph}"${modo === "decimal" ? ` inputmode="numeric" data-moeda` : modo ? ` inputmode="${modo}"` : ""}${req}></div>`;
   }
   document.addEventListener("submit", (e) => {
     if (e.target.id !== "pd-form") return;
@@ -785,7 +785,10 @@
 
   document.addEventListener("input", (e) => {
     if (!e.target.id || !e.target.id.startsWith("pv-")) return;
-    const n = (id) => parseFloat(($(id).value || "0").replace(/\./g, "").replace(",", ".")) || 0;
+    const n = (id) =>
+      $(id).hasAttribute("data-moeda")
+        ? parseInt(($(id).value || "").replace(/\D/g, "") || "0", 10) / 100
+        : parseFloat(($(id).value || "0").replace(/\./g, "").replace(",", ".")) || 0;
     const custo = n("pv-custo"),
       l = n("pv-lucro") / 100,
       i = n("pv-imp") / 100;
@@ -919,4 +922,26 @@
   renderLegend();
   render(false);
   abrir();
+})();
+
+/* ===== campos de dinheiro: formata como R$ 0,00 enquanto digita ===== */
+(function () {
+  function fmt(v) {
+    var d = String(v)
+      .replace(/\D/g, "")
+      .replace(/^0+(?=\d)/, "");
+    var n = parseInt(d || "0", 10) / 100;
+    return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  }
+  document.addEventListener("input", function (e) {
+    var el = e.target;
+    if (!el.matches || !el.matches("[data-moeda]")) return;
+    el.value = fmt(el.value);
+    try {
+      el.setSelectionRange(el.value.length, el.value.length);
+    } catch (_) {}
+  });
+  document.querySelectorAll("[data-moeda]").forEach(function (el) {
+    if (el.value) el.value = fmt(el.value);
+  });
 })();
