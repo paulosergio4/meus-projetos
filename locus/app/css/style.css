@@ -1565,3 +1565,47 @@ body {
   background: var(--copper);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--copper) 25%, transparent);
 }
+
+/* ---------- formulários de pedido ---------- */
+.sheet {
+  max-height: 88%;
+  overflow-y: auto;
+}
+.pd {
+  display: grid;
+}
+.pd .field input::placeholder,
+.pd .field textarea::placeholder {
+  color: var(--dim);
+}
+.pd .opc {
+  font-weight: 500;
+  color: var(--dim);
+}
+.pd .erro {
+  border-color: var(--bad) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--bad) 18%, transparent);
+}
+.pd .btn {
+  margin-top: 4px;
+}
+
+.sh-x {
+  position: absolute;
+  right: 16px;
+  top: 14px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--soft);
+  color: var(--ink);
+  display: grid;
+  place-items: center;
+}
+.sh-x svg {
+  width: 20px;
+  height: 20px;
+}
+.sheet .t {
+  padding-right: 44px;
+}

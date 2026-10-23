@@ -434,7 +434,9 @@
     tt = setTimeout(() => $("toast").classList.remove("on"), 2200);
   }
   function sheet(h) {
-    $("sheetBody").innerHTML = h;
+    $("sheetBody").innerHTML =
+      `<button type="button" class="sh-x" data-act="fechar" aria-label="Fechar">${ic("plus", 'style="transform:rotate(45deg)"')}</button>` +
+      h;
     $("sheet").classList.add("on");
     $("sheetBg").classList.add("on");
   }
@@ -443,6 +445,91 @@
     $("sheetBg").classList.remove("on");
   }
   $("sheetBg").onclick = closeSheet;
+
+  /* ---------- formulários de pedido ---------- */
+  const OPC = {
+    dias: ["30 dias", "20 dias", "15 dias", "10 dias"],
+    simnao: ["Não", "Sim"],
+    tipoResc: [
+      "Pedido de demissão",
+      "Dispensa sem justa causa",
+      "Dispensa com justa causa",
+      "Acordo entre as partes",
+      "Fim do contrato de experiência",
+    ],
+    aviso: ["Trabalhado", "Indenizado", "Dispensado"],
+  };
+  const PEDIDOS = {
+    Admissão: {
+      dica: "Envie até o dia anterior ao primeiro dia de trabalho. A equipe responde em até 1 dia útil.",
+      campos: [
+        ["Nome completo", "text", "Ex.: Ana Paula Souza", 1],
+        ["CPF", "text", "000.000.000-00", 1, "numeric"],
+        ["Primeiro dia de trabalho", "date", "", 1],
+        ["Função", "text", "Ex.: Operadora de caixa", 1],
+        ["Salário", "text", "Ex.: R$ 1.850,00", 1, "decimal"],
+        ["Horário de trabalho", "text", "Ex.: segunda a sábado, das 8h às 17h", 1],
+        ["Observações", "area", "Ex.: vale-transporte, experiência de 45 dias, dependentes"],
+      ],
+    },
+    Rescisão: {
+      dica: "Avise no dia em que o funcionário sair. A equipe responde em até 1 dia útil.",
+      campos: [
+        ["Nome do funcionário", "text", "Ex.: Marcos Oliveira", 1],
+        ["Último dia de trabalho", "date", "", 1],
+        ["Tipo de saída", "select", "tipoResc", 1],
+        ["Aviso prévio", "select", "aviso", 1],
+        ["Observações", "area", "Ex.: férias vencidas, faltas no mês, devolução de uniforme"],
+      ],
+    },
+    Férias: {
+      dica: "Peça com pelo menos 30 dias de antecedência. A equipe responde em até 1 dia útil.",
+      campos: [
+        ["Nome do funcionário", "text", "Ex.: João Pereira", 1],
+        ["Primeiro dia de férias", "date", "", 1],
+        ["Quantos dias", "select", "dias", 1],
+        ["Vender 10 dias (abono)?", "select", "simnao", 1],
+        ["Adiantar parte do 13º?", "select", "simnao", 1],
+        ["Observações", "area", "Ex.: quem vai cobrir o caixa nesse período"],
+      ],
+    },
+    Dúvida: {
+      dica: "Escreva com as suas palavras. A equipe responde em até 1 dia útil.",
+      campos: [
+        ["Assunto", "text", "Ex.: pró-labore, imposto, nota fiscal", 1],
+        ["Sua dúvida", "area", "Conte o que aconteceu. Se puder, diga valores e datas.", 1],
+      ],
+    },
+  };
+  let nCampo = 0;
+  function campo([rot, tipo, ph, obr, modo]) {
+    const id = "pd-" + nCampo++;
+    const req = obr ? ' required aria-required="true"' : "";
+    const lbl = `<label for="${id}">${rot}${obr ? "" : ' <span class="opc">opcional</span>'}</label>`;
+    if (tipo === "select")
+      return `<div class="field">${lbl}<select id="${id}"${req}>${OPC[ph].map((o) => `<option>${o}</option>`).join("")}</select></div>`;
+    if (tipo === "area")
+      return `<div class="field">${lbl}<textarea id="${id}" rows="3" placeholder="${ph}"${req}></textarea></div>`;
+    return `<div class="field">${lbl}<input id="${id}" type="${tipo}" placeholder="${ph}"${modo ? ` inputmode="${modo}"` : ""}${req}></div>`;
+  }
+  document.addEventListener("submit", (e) => {
+    if (e.target.id !== "pd-form") return;
+    e.preventDefault();
+    const falta = [...e.target.querySelectorAll("[required]")].filter((el) => !el.value.trim());
+    e.target.querySelectorAll(".erro").forEach((el) => el.classList.remove("erro"));
+    if (falta.length) {
+      falta.forEach((el) => el.classList.add("erro"));
+      falta[0].focus();
+      const nome = e.target.querySelector(`label[for="${falta[0].id}"]`).textContent.trim();
+      return toast(
+        falta.length === 1
+          ? `Falta preencher: ${nome}`
+          : `Faltam ${falta.length} campos. Comece por: ${nome}`,
+      );
+    }
+    closeSheet();
+    toast("Pedido enviado. Você recebe a resposta aqui.");
+  });
 
   document.addEventListener("click", (e) => {
     const t = e.target.closest(
@@ -476,6 +563,7 @@
     <button type="button" class="btn" data-act="copiar">${ic("copy")}Copiar código</button><div style="height:8px"></div><button type="button" class="btn ghost" data-act="pix">Pagar com PIX</button>`);
     }
     const a = t.dataset.act;
+    if (a === "fechar") return closeSheet();
     if (a === "tema") {
       aplicarTema(escuroAgora() ? "light" : "dark");
       return;
@@ -495,13 +583,10 @@
       return toast("No app de verdade, abre a câmera ou os arquivos.");
     }
     if (a === "pedido") {
+      const f = PEDIDOS[t.dataset.t];
       return sheet(
-        `<h2 class="t">Novo pedido · ${t.dataset.t}</h2><p class="s">A equipe responde em até 1 dia útil.</p><div class="field"><label for="pd-tx">Detalhes</label><textarea id="pd-tx" rows="4">Nome, data de início, salário e função.</textarea></div><button type="button" class="btn" data-act="enviarPedido">Enviar pedido</button>`,
+        `<h2 class="t">Novo pedido · ${t.dataset.t}</h2><p class="s">${f.dica}</p><form id="pd-form" class="pd" novalidate>${f.campos.map(campo).join("")}<button type="submit" class="btn">Enviar pedido</button></form>`,
       );
-    }
-    if (a === "enviarPedido") {
-      closeSheet();
-      return toast("Pedido enviado. Você recebe a resposta aqui.");
     }
     if (a === "cobrar") return toast("Mensagem enviada para o WhatsApp do cliente.");
     if (a === "ok") {
