@@ -70,7 +70,7 @@ function animateCard(cls, ms, then) {
   setTimeout(() => { ui.animating = false; then(); }, ms);
 }
 
-const APP_VERSION = '0.21.1';
+const APP_VERSION = '0.22.0';
 const root = document.getElementById('app');
 
 // ---------- utilitários ----------
@@ -1290,7 +1290,7 @@ function treinoPool() {
   return QUESTIONS.filter((q) => (ui.qArea === 'all' || q.area === ui.qArea) && (ui.qSub === 'all' || q.sub === ui.qSub));
 }
 
-const BANCA_NOMES = { INEP: 'Revalida (INEP)' };
+const BANCA_NOMES = { INEP: 'Revalida (INEP)', TEEM: 'TEEM (simulado)' };
 function bancaLabel(b) { return BANCA_NOMES[b] || b; }
 function simBancas() {
   const n = {};
@@ -1624,6 +1624,7 @@ function viewCase() {
     <section class="panel case-intro"><p>${esc(c.intro)}</p></section>
     ${timeline ? `<ol class="timeline">${timeline}</ol>` : ''}
     ${st.info ? `<section class="panel new-info"><p class="label">Nova informação</p><p>${esc(st.info)}</p></section>` : ''}
+    ${st.image ? `<img class="q-img" src="${esc(st.image)}" alt="Imagem do caso" loading="lazy">` : ''}
     <p class="stem">${esc(st.question)}</p>
     ${optionList(st, r.pick, r.confirmed, 'case-pick', r.orders[r.stage])}
     ${r.confirmed

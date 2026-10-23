@@ -284,6 +284,7 @@ function caseCard(k) {
   const stages = (k.stages || []).map((s, i) => `<div class="stack-xs adm-case-stage">
       <strong class="small">Etapa ${i + 1}</strong>
       ${s.info ? `<p class="small">${esc(s.info)}</p>` : ''}
+      ${s.image ? `<img class="q-img" src="${esc(s.image)}" alt="" style="max-width:360px">` : ''}
       <p><strong>${esc(s.question)}</strong></p>
       <ol class="adm-opts">${(s.options || []).map((o, j) => `<li class="${j === s.answer ? 'right' : ''}">${LETTERS[j]}) ${esc(o)}${j === s.answer ? ' ✓' : ''}</li>`).join('')}</ol>
       ${s.explanation ? `<p class="muted small">${esc(s.explanation)}</p>` : ''}
