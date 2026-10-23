@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Equipe Lócus</title>
+    <meta
+      name="description"
+      content="Protótipo da área da equipe Lócus no computador: clientes, chamados, documentos e prazos."
+    />
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#F6F2E9" />
+    <link rel="icon" href="../marca/locus-icone-app.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+    <script src="js/main.js" defer></script>
+  </head>
+  <body>
+    <svg width="0" height="0" class="sprite" aria-hidden="true">
+      <symbol id="logo" viewBox="0 0 100 100">
+        <rect x="16" y="10" width="19" height="80" rx="5" fill="currentColor" />
+        <rect x="16" y="71" width="74" height="19" rx="5" fill="currentColor" />
+        <path
+          d="M65 53 V66 M40 41 H53"
+          stroke="#B9C38E"
+          stroke-width="3.4"
+          stroke-linecap="round"
+          stroke-dasharray="0.1 6.2"
+          fill="none"
+        />
+        <circle cx="65" cy="41" r="11.5" fill="#C0743F" />
+      </symbol>
+    </svg>
+
+    <!-- entrada -->
+    <div class="login" id="login">
+      <form class="login-card" id="login-form" novalidate>
+        <div class="brand">
+          <svg width="44" height="44"><use href="#logo" /></svg>
+          <span><b>LÓCUS</b><small>Área da equipe</small></span>
+        </div>
+        <h1>Entrar na área da equipe</h1>
+        <p class="muted">Clientes, chamados, documentos e prazos do escritório.</p>
+        <label for="l-email">E-mail da Lócus</label>
+        <input
+          id="l-email"
+          type="email"
+          placeholder="voce@locus.com.br"
+          value="paulo@locus.com.br"
+          autocomplete="off"
+        />
+        <label for="l-senha">Senha</label>
+        <input id="l-senha" type="password" value="exemplo123" autocomplete="off" />
+        <label for="l-cod">Código de confirmação</label>
+        <input id="l-cod" inputmode="numeric" placeholder="6 dígitos do app autenticador" value="482 913" />
+        <button class="btn" type="submit">Entrar</button>
+        <p class="tiny">Protótipo com dados de exemplo. A equipe entra com confirmação em duas etapas.</p>
+      </form>
+    </div>
+
+    <div class="shell" id="shell" hidden>
+      <aside class="side">
+        <div class="brand">
+          <svg width="36" height="36"><use href="#logo" /></svg>
+          <span><b>LÓCUS</b><small>Equipe</small></span>
+        </div>
+        <nav class="menu" id="menu" aria-label="Seções"></nav>
+        <div class="side-foot">
+          <a class="side-link" href="../app/" target="_blank" rel="noopener">Ver o app do cliente</a>
+          <button type="button" class="side-link" id="sair">Sair</button>
+        </div>
+      </aside>
+
+      <div class="main">
+        <header class="top">
+          <label class="busca" for="busca">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" />
+              <path d="M20 20l-4-4" />
+            </svg>
+            <input id="busca" type="search" placeholder="Buscar cliente, CNPJ ou funcionário" />
+          </label>
+          <div class="top-dir">
+            <span class="previa-tag">Protótipo · dados de exemplo</span>
+            <div class="eu">
+              <span class="av">PS</span
+              ><span><b>Paulo Sérgio</b><small>Contabilidade e tecnologia</small></span>
+            </div>
+          </div>
+        </header>
+        <main class="conteudo" id="view" tabindex="-1"></main>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>

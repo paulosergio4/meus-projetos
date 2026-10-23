@@ -1569,3 +1569,10 @@ img {
 .foot-claim b {
   color: #f3eee2;
 }
+.foot-equipe {
+  color: #a6aa92;
+  text-decoration: none;
+}
+.foot-equipe:hover {
+  color: #f3eee2;
+}

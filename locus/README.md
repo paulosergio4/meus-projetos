@@ -18,6 +18,10 @@ locus/
 │   ├── index.html      Protótipo do app (clientes e equipe)
 │   ├── css/style.css
 │   └── js/main.js      Abertura animada, login, telas e troca de tema
+├── equipe/
+│   ├── index.html      Área da equipe no computador (protótipo)
+│   ├── css/style.css
+│   └── js/main.js      Clientes, chamados, entrada, prazos e publicar
 └── marca/              Logo e ícones em PNG
 ```
 
@@ -39,3 +43,4 @@ npx prettier --write "**/*.{html,css,js}"
 - Site: https://paulosergio4.github.io/meus-projetos/locus/
 - Painel: https://paulosergio4.github.io/meus-projetos/locus/painel/
 - App: https://paulosergio4.github.io/meus-projetos/locus/app/
+- Equipe: https://paulosergio4.github.io/meus-projetos/locus/equipe/

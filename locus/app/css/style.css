@@ -1666,3 +1666,12 @@ body {
   color: var(--dim);
   margin-left: 6px;
 }
+
+.pc-link {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--olive);
+  text-decoration: none;
+  border-bottom: 1px solid currentColor;
+  justify-self: start;
+}
