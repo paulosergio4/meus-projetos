@@ -59,8 +59,51 @@
       { n: "Atestado · João.jpg", d: "14/10", st: "ok" },
     ],
     chamados: [
-      { n: "Admissão · Ana Paula", d: "aberto ontem", st: "due" },
-      { n: "Dúvida sobre pró-labore", d: "respondido", st: "ok" },
+      {
+        id: "ferias-joao",
+        n: "Férias · João Pereira",
+        d: "pronto hoje",
+        st: "pronto",
+        etapas: [
+          ["Pedido aberto", "10/10", 1],
+          ["Em análise pela Lócus", "11/10", 1],
+          ["Pronto para assinar", "hoje", 2],
+        ],
+        quem: "Paulo",
+        msg: "As férias do João começam em 01/12, por 30 dias. O pagamento de R$ 2.466,67 precisa cair na conta dele até 28/11.",
+        docs: [
+          { id: "aviso", n: "Aviso de férias", ass: true },
+          { id: "recibo", n: "Recibo de férias", ass: true },
+          { id: "holerite", n: "Holerite de férias", ass: false },
+        ],
+      },
+      {
+        id: "adm-ana",
+        n: "Admissão · Ana Paula",
+        d: "aberto ontem",
+        st: "due",
+        etapas: [
+          ["Pedido aberto", "ontem", 1],
+          ["Em análise pela Lócus", "agora", 2],
+          ["Pronto para assinar", "", 0],
+        ],
+        quem: "Bruno",
+        msg: "Recebemos os dados da Ana Paula. Falta a foto da carteira de trabalho digital, pode mandar pela aba Enviar?",
+        docs: [],
+      },
+      {
+        id: "duvida-pl",
+        n: "Dúvida sobre pró-labore",
+        d: "respondido",
+        st: "ok",
+        etapas: [
+          ["Pergunta enviada", "05/10", 1],
+          ["Respondida", "06/10", 1],
+        ],
+        quem: "Paulo",
+        msg: "Carla, com o fator R do seu Simples, vale manter o pró-labore em R$ 3.000. Abaixo disso o imposto do mês sobe. Qualquer coisa me chama.",
+        docs: [],
+      },
     ],
     clientes: [
       { n: "Mercado Bom Preço", r: "Simples · Anexo I", pend: 1, st: "due", cor: "#C0743F" },
@@ -70,6 +113,66 @@
       { n: "Loja Estilo", r: "MEI → ME", pend: 2, st: "due", cor: "#C0743F" },
     ],
   };
+  const assinados = new Set();
+  const EQ = [
+    [
+      "Admissão · Ana Paula",
+      "Mercado Bom Preço",
+      "prazo hoje",
+      "p-bad",
+      [
+        ["Nome", "Ana Paula Souza"],
+        ["Início", "27/10/2026"],
+        ["Função", "Repositora"],
+        ["Salário", "R$ 1.850,00"],
+        ["Horário", "seg a sáb, 8h às 17h"],
+      ],
+      [
+        ["Contrato de trabalho", 1],
+        ["Ficha de registro", 0],
+      ],
+    ],
+    [
+      "Rescisão · Marcos",
+      "Padaria Silva",
+      "prazo 23/10",
+      "p-due",
+      [
+        ["Nome", "Marcos Oliveira"],
+        ["Último dia", "22/10/2026"],
+        ["Tipo", "Pedido de demissão"],
+        ["Aviso prévio", "Trabalhado"],
+      ],
+      [
+        ["Termo de rescisão", 1],
+        ["Guia do FGTS", 0],
+      ],
+    ],
+    [
+      "Férias · João Pereira",
+      "Mercado Bom Preço",
+      "pronto",
+      "p-ok",
+      [
+        ["Nome", "João Pereira"],
+        ["Início", "01/12/2026"],
+        ["Dias", "30"],
+        ["Abono", "Não"],
+        ["Adiantar 13º", "Não"],
+      ],
+      [
+        ["Aviso de férias", 1],
+        ["Recibo de férias", 1],
+        ["Holerite de férias", 0],
+      ],
+    ],
+  ];
+  const stPedido = (st) =>
+    st === "pronto"
+      ? '<span class="pill p-new">Pronto</span>'
+      : st === "ok"
+        ? '<span class="pill p-ok">Respondido</span>'
+        : '<span class="pill p-due">Em andamento</span>';
   let role = "cli",
     tab = "inicio",
     stack = [],
@@ -166,6 +269,7 @@
   <button type="button" class="item" data-guia="das"><span class="ic">${ic("guia")}</span><span class="tx"><b>DAS · Simples Nacional</b><span>vence 20/11 · faltam 30 dias</span></span><span class="vl">${brl(4050.12)}</span></button>
   <div class="sec">Avisos da Lócus</div>
   <div class="stack">
+   <button type="button" class="item" data-pedido="ferias-joao"><span class="ic" style="color:var(--copper)">${ic("check")}</span><span class="tx"><b>Férias do João prontas</b><span>2 documentos esperando a sua assinatura</span></span><span class="pill p-new">Assinar</span></button>
    <div class="item"><span class="ic" style="color:var(--copper)">${ic("bell")}</span><span class="tx"><b>Painel de setembro pronto</b><span>Sua margem subiu 0,4 ponto</span></span>${pill("new")}</div>
    <button type="button" class="item" data-go="auto"><span class="ic">${ic("auto")}</span><span class="tx"><b>Chegou sozinho hoje</b><span>3 notas de compra e o extrato do Itaú</span></span>${pill("new")}</button>
   </div>`,
@@ -202,14 +306,15 @@
     .join("")}</div>`,
     falar: () => `<h2 class="t">Falar com a Lócus</h2><p class="s">Abra um pedido ou mande uma mensagem.</p>
   <div class="grid2" style="margin-bottom:6px">${["Admissão", "Rescisão", "Férias", "Dúvida"].map((t) => `<button type="button" class="item" style="justify-content:center;font-weight:600" data-act="pedido" data-t="${t}">${t}</button>`).join("")}</div>
-  <div class="sec">Seus pedidos</div><div class="stack">${D.chamados.map((c) => `<div class="item"><span class="ic">${ic("chat")}</span><span class="tx"><b>${c.n}</b><span>${c.d}</span></span>${c.st === "ok" ? '<span class="pill p-ok">Respondido</span>' : '<span class="pill p-due">Em andamento</span>'}</div>`).join("")}</div>
+  <div class="sec">Seus pedidos</div><div class="stack">${D.chamados.map((c) => `<button type="button" class="item" data-pedido="${c.id}"><span class="ic">${ic("chat")}</span><span class="tx"><b>${c.n}</b><span>${c.d}</span></span>${stPedido(c.st)}</button>`).join("")}</div>
+  <button type="button" class="item" data-go="arquivo" style="margin-top:10px"><span class="ic">${ic("file")}</span><span class="tx"><b>Arquivo da empresa</b><span>Tudo que já foi entregue, por funcionário e por ano</span></span></button>
   <div class="sec">Conversa</div>
   <div class="chat"><div class="msg them">Oi, Carla! Seu painel de setembro já está no app. A margem melhorou 👍<small>Bruno · 08/10</small></div><div class="msg me">Que ótimo! E o extrato do Sicoob, mando por aqui?<small>você · 08/10</small></div><div class="msg them">Isso, pela aba Enviar. Até dia 05.<small>Bruno · 08/10</small></div></div>`,
     perfil:
       () => `<button type="button" class="back" data-back>${ic("back")}Voltar</button><h2 class="t">Minha empresa</h2><p class="s">CNPJ 12.345.678/0001-90</p>
   <div class="card stack" style="gap:12px">${[
     ["Regime", "Simples Nacional · Anexo I"],
-    ["Responsável na Lócus", "Bruno"],
+    ["Responsáveis na Lócus", "Paulo e Bruno"],
     ["Funcionários", "8"],
     ["Plano", "Gestão"],
     ["Abertura da filial", "em andamento"],
@@ -237,8 +342,80 @@
   </div>
   <div class="sec">Preferências</div>
   <div class="stack"><div class="item"><span class="ic">${ic("bell")}</span><span class="tx"><b>Avisos no WhatsApp</b><span>Guia nova e vencimento em 3 dias</span></span><span class="pill p-ok">Ligado</span></div></div>
-  <div style="height:12px"></div><button type="button" class="item" data-go="abertura"><span class="ic">${ic("track")}</span><span class="tx"><b>Abertura da filial</b><span>Acompanhe cada etapa</span></span><span class="pill p-due">Na Junta</span></button>
+  <div style="height:12px"></div><button type="button" class="item" data-go="arquivo"><span class="ic">${ic("file")}</span><span class="tx"><b>Arquivo da empresa</b><span>Documentos entregues pela Lócus</span></span></button>
+  <div style="height:8px"></div><button type="button" class="item" data-go="abertura"><span class="ic">${ic("track")}</span><span class="tx"><b>Abertura da filial</b><span>Acompanhe cada etapa</span></span><span class="pill p-due">Na Junta</span></button>
   <div style="height:16px"></div><button type="button" class="btn ghost" data-act="sair">${ic("out")}Sair</button>`,
+
+    /* ----- pedido do cliente ----- */
+    pedido: (id) => {
+      const c = D.chamados.find((x) => x.id === id);
+      const pend = c.docs.filter((d) => d.ass && !assinados.has(d.id)).length;
+      return `${voltar("Falar")}<h2 class="t">${c.n}</h2><p class="s">${stPedido(c.st)}</p>
+  <ol class="trilha" style="margin-top:6px">${c.etapas.map(([t, d, st]) => `<li class="${st === 1 ? "ok" : st === 2 ? "now" : ""}"><b>${t}</b>${d ? `<span>${d}</span>` : ""}</li>`).join("")}</ol>
+  <div class="msg-l"><span class="av sm">${c.quem === "Paulo" ? "PS" : "B"}</span><div><b>${c.quem} · Lócus</b><p>${c.msg}</p></div></div>
+  ${
+    c.docs.length
+      ? `<div class="sec">Documentos</div>
+  <div class="stack">${c.docs
+    .map((d) => {
+      const ok = assinados.has(d.id);
+      return `<div class="item doc-i"><span class="ic">${ic("file")}</span><span class="tx"><b>${d.n}</b><span>${d.ass ? (ok ? "assinado por você hoje" : "precisa da sua assinatura") : "só para guardar"}</span></span><span class="doc-acts"><button type="button" class="mini-b" data-act="baixar" data-n="${d.n}">Baixar</button>${d.ass ? (ok ? '<span class="pill p-ok">Assinado</span>' : `<button type="button" class="mini-b pri" data-act="assinar" data-d="${d.id}" data-p="${c.id}">Assinar</button>`) : ""}</span></div>`;
+    })
+    .join("")}</div>
+  <p class="s" style="margin-top:10px">${pend ? `Falta${pend > 1 ? "m" : ""} ${pend} assinatura${pend > 1 ? "s" : ""} sua${pend > 1 ? "s" : ""}. Depois o João assina pelo link que chega no WhatsApp dele.` : "Tudo assinado por você. O João recebe o link para assinar no WhatsApp."}</p>`
+      : ""
+  }
+  <div style="height:12px"></div><button type="button" class="btn ghost" data-go="arquivo">${ic("file")}Ver no arquivo da empresa</button>`;
+    },
+    arquivo:
+      () => `${voltar()}<h2 class="t">Arquivo da empresa</h2><p class="s">Tudo que a Lócus já entregou, guardado por funcionário e por ano.</p>
+  <div class="seg" role="group" aria-label="Ano"><button type="button" aria-pressed="true">2026</button><button type="button" aria-pressed="false">2025</button><button type="button" aria-pressed="false">2024</button></div>
+  ${[
+    [
+      "João Pereira",
+      "Operador de caixa",
+      [
+        ["Férias 2026", "aviso, recibo e holerite", "new"],
+        ["Admissão", "contrato e ficha de registro", "ok"],
+      ],
+    ],
+    ["Ana Paula Souza", "Repositora", [["Admissão", "em andamento", "due"]]],
+    [
+      "Lucas Fernandes",
+      "desligado em 03/2026",
+      [["Rescisão", "termo, guia do FGTS e seguro-desemprego", "ok"]],
+    ],
+    [
+      "Empresa",
+      "Mercado Bom Preço",
+      [
+        ["Contrato social e alterações", "3 arquivos", "ok"],
+        ["Alvará e certidões", "atualizados em 10/2026", "ok"],
+      ],
+    ],
+  ]
+    .map(
+      ([n, sub, itens]) =>
+        `<div class="sec">${n} <span class="sub-sec">${sub}</span></div><div class="stack">${itens
+          .map(
+            ([t, d, st]) =>
+              `<button type="button" class="item" data-act="baixar" data-n="${t}"><span class="ic">${ic("file")}</span><span class="tx"><b>${t}</b><span>${d}</span></span>${st === "new" ? '<span class="pill p-new">Novo</span>' : st === "due" ? '<span class="pill p-due">Em andamento</span>' : ""}</button>`,
+          )
+          .join("")}</div>`,
+    )
+    .join("")}`,
+    eqpedido: (i) => {
+      const c = EQ[i];
+      return `${voltar("Chamados")}<h2 class="t">${c[0]}</h2><p class="s">${c[1]} · ${c[2]}</p>
+  <div class="sec">O que o cliente enviou</div>
+  <div class="card stack" style="gap:10px">${c[4].map(([a, b]) => `<div style="display:flex;justify-content:space-between;gap:12px"><span style="color:var(--muted)">${a}</span><b style="text-align:right">${b}</b></div>`).join("")}</div>
+  <div class="field" style="margin-top:14px"><label for="eq-resp">Responsável</label><select id="eq-resp"><option>Paulo</option><option>Bruno</option></select></div>
+  <div class="sec">Arquivos para o cliente</div>
+  <button type="button" class="drop" style="width:100%;margin-bottom:10px" data-act="arquivo">${ic("up")}<b>Anexar PDF</b><span style="font-size:12px">ou importar do Domínio</span></button>
+  <div class="stack">${c[5].map(([n, a]) => `<div class="item"><span class="ic">${ic("file")}</span><span class="tx"><b>${n}</b><span>${a ? "cliente e funcionário assinam" : "só para guardar"}</span></span></div>`).join("")}</div>
+  <div class="field" style="margin-top:12px"><label for="eq-msg">Mensagem para o cliente</label><textarea id="eq-msg" rows="3" placeholder="Ex.: o pagamento precisa cair na conta até 28/11"></textarea></div>
+  <button type="button" class="btn" data-act="concluir">${ic("check")}Concluir e avisar cliente</button>`;
+    },
 
     /* ----- telas de prévia (ainda sem integração) ----- */
     auto: () => `${voltar()}<h2 class="t">Chegou sozinho</h2><p class="s">Documentos que entraram sem você mandar.</p>
@@ -391,17 +568,11 @@
   <div class="grid2"><div class="field"><label for="p-val">Valor</label><input id="p-val" value="R$ 4.050,12"></div><div class="field"><label for="p-venc">Vencimento</label><input id="p-venc" value="20/11/2026"></div></div>
   <button type="button" class="drop" style="width:100%;margin-bottom:14px" data-act="arquivo">${ic("up")}<b>Anexar PDF</b><span style="font-size:12px">ou importar do Domínio</span></button>
   <button type="button" class="btn" data-act="publicar">Publicar e avisar cliente</button>`,
-    eqchat: () => `<h2 class="t">Chamados</h2><p class="s">Pedidos com prazo de resposta.</p>
-  <div class="stack">${[
-    ["Admissão · Ana Paula", "Mercado Bom Preço", "prazo hoje", "p-bad"],
-    ["Rescisão · Marcos", "Padaria Silva", "prazo 23/10", "p-due"],
-    ["Dúvida sobre pró-labore", "Clínica Vida", "respondido", "p-ok"],
-  ]
-    .map(
-      ([n, c, d, p]) =>
-        `<div class="item"><span class="ic">${ic("chat")}</span><span class="tx"><b>${n}</b><span>${c}</span></span><span class="pill ${p}">${d}</span></div>`,
-    )
-    .join("")}</div>`,
+    eqchat: () => `<h2 class="t">Chamados</h2><p class="s">Pedidos dos clientes. Toque para responder.</p>
+  <div class="stack">${EQ.map(
+    ([n, c, d, p], i) =>
+      `<button type="button" class="item" data-eqp="${i}"><span class="ic">${ic("chat")}</span><span class="tx"><b>${n}</b><span>${c}</span></span><span class="pill ${p}">${d}</span></button>`,
+  ).join("")}</div>`,
   };
 
   function render(anim = true) {
@@ -533,7 +704,7 @@
 
   document.addEventListener("click", (e) => {
     const t = e.target.closest(
-      "[data-tema],[data-tab],[data-go],[data-back],[data-guia],[data-cli],[data-act],.seg button",
+      "[data-tema],[data-tab],[data-go],[data-back],[data-guia],[data-cli],[data-act],[data-pedido],[data-eqp],.seg button",
     );
     if (!t) return;
     if (t.dataset.tema) {
@@ -552,6 +723,8 @@
       return render();
     }
     if (t.dataset.cli) return push("cliente", +t.dataset.cli);
+    if (t.dataset.act === undefined && t.dataset.pedido) return push("pedido", t.dataset.pedido);
+    if (t.dataset.eqp) return push("eqpedido", +t.dataset.eqp);
     if (t.matches(".seg button")) {
       t.parentNode.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", b === t));
       return;
@@ -564,6 +737,13 @@
     }
     const a = t.dataset.act;
     if (a === "fechar") return closeSheet();
+    if (a === "baixar") return toast(`Prévia: aqui abriria o PDF "${t.dataset.n}".`);
+    if (a === "assinar") {
+      assinados.add(t.dataset.d);
+      render(false);
+      return toast("Assinado. Fica registrado com data, hora e o seu login.");
+    }
+    if (a === "concluir") return toast("Pedido concluído. O cliente recebeu o aviso no app e no WhatsApp.");
     if (a === "tema") {
       aplicarTema(escuroAgora() ? "light" : "dark");
       return;

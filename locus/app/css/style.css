@@ -1609,3 +1609,60 @@ body {
 .sheet .t {
   padding-right: 44px;
 }
+
+/* ---------- pedido pronto e arquivo ---------- */
+.msg-l {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 14px;
+  margin-top: 6px;
+}
+.msg-l b {
+  font-size: 13px;
+}
+.msg-l p {
+  margin: 4px 0 0;
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+.av.sm {
+  width: 36px;
+  height: 36px;
+  font-size: 13px;
+}
+.doc-i {
+  grid-template-columns: auto 1fr;
+  flex-wrap: wrap;
+}
+.doc-acts {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-left: auto;
+}
+.mini-b {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--ink);
+}
+.mini-b.pri {
+  background: var(--sage);
+  border-color: var(--sage);
+  color: var(--deep);
+}
+.sub-sec {
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 500;
+  color: var(--dim);
+  margin-left: 6px;
+}
