@@ -482,16 +482,6 @@ p.s {
   position: relative;
   overflow: hidden;
 }
-.hero::after {
-  content: "";
-  position: absolute;
-  right: -30px;
-  bottom: -40px;
-  width: 150px;
-  height: 150px;
-  border-radius: 50%;
-  background: radial-gradient(circle, var(--hero-glow), transparent 70%);
-}
 .hero .spark polyline {
   stroke: var(--hero-line);
 }
