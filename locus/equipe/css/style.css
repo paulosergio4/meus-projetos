@@ -7,7 +7,8 @@
   --ink: #1f2416;
   --muted: #5e6450;
   --dim: #8a8e7a;
-  --deep: #2e3620;
+  --deep: #56623a; /* teste: oliva no lugar do oliva escuro */
+  --on-sage: #1f2416;
   --olive: #56623a;
   --sage: #b9c38e;
   --sage-h: #a9b47c;
@@ -97,7 +98,7 @@ button {
   padding: 12px 20px;
   border-radius: 999px;
   background: var(--sage);
-  color: var(--deep);
+  color: var(--on-sage);
   font-weight: 700;
   border: 1px solid var(--sage);
   transition: background 0.2s;
@@ -218,7 +219,7 @@ textarea:focus {
   width: 100%;
   padding: 11px 12px;
   border-radius: 12px;
-  color: #c9ccb6;
+  color: #e6e8d8;
   font-weight: 600;
   text-align: left;
 }
@@ -228,7 +229,7 @@ textarea:focus {
 }
 .menu button[aria-current="page"] {
   background: var(--sage);
-  color: var(--deep);
+  color: var(--on-sage);
 }
 .menu .cnt {
   margin-left: auto;
@@ -252,7 +253,7 @@ textarea:focus {
   display: block;
   padding: 9px 12px;
   border-radius: 10px;
-  color: #c9ccb6;
+  color: #e6e8d8;
   font-size: 13px;
   text-decoration: none;
   text-align: left;

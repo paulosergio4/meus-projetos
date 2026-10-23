@@ -1,7 +1,7 @@
 /* Layout: faixas horizontais alternando bege e verde-oliva, conteúdo em grade de 12 colunas, hero com painel de dados ao lado */
 :root {
   --olive: #56623a; /* verde-oliva botânico */
-  --olive-deep: #2e3620;
+  --olive-deep: #56623a; /* teste: oliva no lugar do oliva escuro */
   --olive-soft: #8c9866;
   --beige: #eae2d0; /* bege natural */
   --paper: #f6f2e9;
@@ -16,7 +16,7 @@
   --wrap: 1160px;
   --accent: #b9c38e; /* verde-sálvia, cor principal */
   --accent-h: #a9b47c;
-  --on-accent: #2e3620;
+  --on-accent: #1f2416;
 }
 
 :root[data-theme="dark"] {
@@ -440,7 +440,7 @@ section {
   color: #b9c38e;
 }
 .band-olive .lede {
-  color: #c7c9b5;
+  color: #e3e5d2;
 }
 
 /* Serviços */
@@ -527,7 +527,7 @@ section {
 }
 .step p {
   margin-top: 10px;
-  color: #c7c9b5;
+  color: #e3e5d2;
   font-size: 0.94rem;
 }
 @media (max-width: 800px) {
@@ -885,7 +885,7 @@ textarea {
 
 footer {
   background: var(--olive-deep);
-  color: #c7c9b5;
+  color: #e3e5d2;
   font-size: 0.85rem;
 }
 .foot {
@@ -1356,7 +1356,7 @@ img {
 }
 .tcard p {
   margin: 6px 0 0;
-  color: #c7c9b5;
+  color: #e3e5d2;
   font-size: 0.9rem;
   line-height: 1.5;
 }
@@ -1381,7 +1381,7 @@ img {
 }
 .cadeado p {
   margin: 0;
-  color: #c7c9b5;
+  color: #e3e5d2;
 }
 .cadeado b {
   color: #f3eee2;
@@ -1427,7 +1427,7 @@ img {
 }
 .limite small {
   font-size: 0.72rem;
-  color: #c7c9b5;
+  color: #e3e5d2;
 }
 .portal-link {
   display: inline-flex;
@@ -1475,7 +1475,7 @@ img {
 }
 .plan.destaque .price small,
 .plan.destaque ul {
-  color: #c7c9b5;
+  color: #e3e5d2;
 }
 .nota-obs,
 .sim-obs {
@@ -1563,7 +1563,7 @@ img {
 .foot-claim {
   margin: 0;
   align-self: center;
-  color: #c7c9b5;
+  color: #e3e5d2;
   font-size: 0.95rem;
 }
 .foot-claim b {

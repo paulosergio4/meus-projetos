@@ -1,6 +1,7 @@
 /* Layout: no computador, um celular no centro com notas laterais; no celular, o app ocupa a tela inteira. Telas trocadas por estado; barra inferior de abas */
 :root {
-  --deep: #2e3620;
+  --deep: #56623a; /* teste: oliva no lugar do oliva escuro */
+  --on-sage: #1f2416;
   --olive: #56623a;
   --sage: #b9c38e;
   --copper: #c0743f;
@@ -159,7 +160,7 @@ button {
 }
 .switch button[aria-pressed="true"] {
   background: var(--sage);
-  color: var(--deep);
+  color: var(--on-sage);
 }
 .ctl {
   display: flex;
@@ -641,7 +642,7 @@ p.s {
   padding: 15px;
   border-radius: 16px;
   background: var(--sage);
-  color: var(--deep);
+  color: var(--on-sage);
   font-weight: 700;
   font-size: 14.5px;
 }
@@ -673,7 +674,7 @@ p.s {
 .seg button[aria-pressed="true"] {
   background: var(--sage);
   border-color: var(--sage);
-  color: var(--deep);
+  color: var(--on-sage);
 }
 .drop {
   border: 1.5px dashed var(--line);
@@ -1037,7 +1038,7 @@ p.s {
   position: absolute;
   inset: 0;
   z-index: 80;
-  background: #2e3620;
+  background: #56623a;
   display: grid;
   place-items: center;
   overflow: hidden;
@@ -1657,7 +1658,7 @@ body {
 .mini-b.pri {
   background: var(--sage);
   border-color: var(--sage);
-  color: var(--deep);
+  color: var(--on-sage);
 }
 .sub-sec {
   text-transform: none;
