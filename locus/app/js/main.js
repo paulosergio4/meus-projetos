@@ -21,6 +21,15 @@
     plus: '<path d="M12 5v14M5 12h14"/>',
     check: '<path d="M5 12l5 5 9-10"/>',
     out: '<path d="M14 4h5v16h-5M10 16l4-4-4-4M14 12H4"/>',
+    nota: '<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/>',
+    shield: '<path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>',
+    bank: '<path d="M3 10l9-6 9 6M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20h18"/>',
+    loan: '<path d="M4 7h16v12H4z"/><path d="M8 7V5h8v2M12 11v4M10 13h4"/>',
+    tag: '<path d="M3 12V4h8l10 10-8 8z"/><path d="M7.5 8.5h.01"/>',
+    track:
+      '<circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/><path d="M7 12h3M14 12h3"/>',
+    lock: '<path d="M7 11V8a5 5 0 0 1 10 0v3M5 11h14v10H5z"/><path d="M12 15v2"/>',
+    auto: '<path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3"/><path d="M18 3v4h-4M6 21v-4h4"/>',
   };
   const ic = (n, s = "") =>
     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" ${s}>${I[n]}</svg>`;
@@ -93,11 +102,12 @@
   }
   const LEG = {
     cli: [
-      ["1", "Início", "Resumo do mês, próximo vencimento e avisos."],
+      ["1", "Início", "Saúde da empresa, imposto previsto, atalhos e o que chegou sozinho."],
       ["2", "Guias", "Todas as guias com código de barras e PIX para copiar."],
       ["3", "Enviar", "Foto do celular ou arquivo: notas, extratos, atestados."],
       ["4", "Painel", "Faturamento, margem e impostos todo mês."],
       ["5", "Falar", "Chamados e conversa com a Lócus, com histórico."],
+      ["+", "Prévias", "Lócus Nota, certidões, pacote para o banco, preço de venda e abertura com rastreio."],
     ],
     eq: [
       ["1", "Clientes", "Carteira com pendências de cada empresa."],
@@ -129,6 +139,8 @@
       return "auto";
     }
   }
+  const previa = (t) => `<div class="previa">${ic("auto")}<span><b>Tela de prévia.</b> ${t}</span></div>`;
+  const voltar = (t = "Início") => `<button type="button" class="back" data-back>${ic("back")}${t}</button>`;
   const pill = (st) =>
     ({
       ok: '<span class="pill p-ok">Pago</span>',
@@ -141,12 +153,21 @@
       () => `<div class="hdr"><div class="who"><small>Bom dia, ${D.resp}</small><b>${D.empresa}</b></div><span class="acts"><button type="button" class="tbtn" data-act="tema" aria-label="Mudar entre fundo claro e escuro"><svg class="lua" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/></svg><svg class="sol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button><button type="button" class="av" data-go="perfil" aria-label="Perfil">MB</button></span></div>
   <div class="hero"><small>Faturamento de setembro</small><div class="big">R$ 66,1 mil</div>${spark()}
    <div class="row"><div>Margem<b>8,6%</b></div><div>Impostos<b>6,1%</b></div><div>vs agosto<b style="color:var(--hero-line)">+1,4%</b></div></div></div>
+  <div class="sem-card"><span class="sem-dot ok"></span><div><b>Saúde da empresa: verde</b><span>Margem e caixa no ponto. Impostos dentro do previsto.</span></div></div>
+  <div class="prev"><div><small>Imposto previsto · novembro</small><b>${brl(4128.4)}</b><span>com as 214 notas emitidas até hoje</span></div><span class="pill p-new">ao vivo</span></div>
+  <div class="sec">Atalhos</div>
+  <div class="atalhos">
+   <button type="button" data-go="nota">${ic("nota")}<span>Emitir nota</span></button>
+   <button type="button" data-go="certidoes">${ic("shield")}<span>Certidões</span></button>
+   <button type="button" data-go="emprestimo">${ic("loan")}<span>Pacote banco</span></button>
+   <button type="button" data-go="preco">${ic("tag")}<span>Preço de venda</span></button>
+  </div>
   <div class="sec">Próximo vencimento</div>
   <button type="button" class="item" data-guia="das"><span class="ic">${ic("guia")}</span><span class="tx"><b>DAS · Simples Nacional</b><span>vence 20/11 · faltam 30 dias</span></span><span class="vl">${brl(4050.12)}</span></button>
   <div class="sec">Avisos da Lócus</div>
   <div class="stack">
    <div class="item"><span class="ic" style="color:var(--copper)">${ic("bell")}</span><span class="tx"><b>Painel de setembro pronto</b><span>Sua margem subiu 0,4 ponto</span></span>${pill("new")}</div>
-   <div class="item"><span class="ic">${ic("file")}</span><span class="tx"><b>Falta o extrato do Sicoob</b><span>Envie até 05/11 para fechar o mês</span></span></div>
+   <button type="button" class="item" data-go="auto"><span class="ic">${ic("auto")}</span><span class="tx"><b>Chegou sozinho hoje</b><span>3 notas de compra e o extrato do Itaú</span></span>${pill("new")}</button>
   </div>`,
     guias: () => `<h2 class="t">Guias</h2><p class="s">Toque para ver o código de barras ou o PIX.</p>
   <div class="seg" role="group"><button type="button" aria-pressed="true">Todas</button><button type="button" aria-pressed="false">A pagar</button><button type="button" aria-pressed="false">Pagas</button></div>
@@ -155,9 +176,11 @@
       () => `<h2 class="t">Enviar documento</h2><p class="s">Notas, extratos, atestados ou qualquer papel da empresa.</p>
   <div class="grid2" style="margin-bottom:12px"><button type="button" class="drop" data-act="foto">${ic("cam")}<b>Tirar foto</b><span style="font-size:12px">Nota ou recibo</span></button><button type="button" class="drop" data-act="arquivo">${ic("file")}<b>Arquivo</b><span style="font-size:12px">PDF, XML ou planilha</span></button></div>
   <div class="field"><label for="e-tipo">Tipo de documento</label><select id="e-tipo"><option>Extrato bancário</option><option>Nota de compra</option><option>Atestado / férias</option><option>Contrato</option><option>Outro</option></select></div>
+  <button type="button" class="item" data-go="auto" style="margin-bottom:4px"><span class="ic">${ic("auto")}</span><span class="tx"><b>Você não precisa mandar notas de compra</b><span>Elas chegam sozinhas da Receita. Ver o que chegou</span></span></button>
   <div class="sec">Enviados recentemente</div>
   <div class="stack">${D.docs.map((d) => `<div class="item"><span class="ic">${ic("file")}</span><span class="tx"><b>${d.n}</b><span>${d.d}</span></span>${d.st === "new" ? '<span class="pill p-new">Em análise</span>' : '<span class="pill p-ok">Recebido</span>'}</div>`).join("")}</div>`,
     painel: () => `<h2 class="t">Painel</h2><p class="s">Setembro de 2026 · atualizado pela Lócus em 08/10</p>
+  <div class="sem-card"><span class="sem-dot ok"></span><div><b>Verde</b><span><b>O que fazer:</b> a margem subiu 0,4 ponto. Mantenha os preços dos três produtos mais vendidos.</span></div></div>
   <div class="grid2"><div class="kpi"><small>Faturamento</small><b>R$ 66,1 mil</b><em class="up">▲ 1,4%</em></div><div class="kpi"><small>Despesas</small><b>R$ 60,2 mil</b><em class="down">▲ 1,0%</em></div><div class="kpi"><small>Resultado</small><b>R$ 5,9 mil</b><em class="up">▲ 5,9%</em></div><div class="kpi"><small>Margem</small><b>8,6%</b><em class="down">abaixo de 10%</em></div></div>
   <div class="sec">Faturamento · 6 meses</div>
   <div class="card">${(() => {
@@ -189,6 +212,7 @@
     ["Responsável na Lócus", "Bruno"],
     ["Funcionários", "8"],
     ["Plano", "Gestão"],
+    ["Abertura da filial", "em andamento"],
   ]
     .map(
       ([a, b]) =>
@@ -205,9 +229,91 @@
       ([k, l]) => `<button type="button" data-tema="${k}" aria-pressed="${temaAtual() === k}">${l}</button>`,
     )
     .join("")}</div>
+  <div class="sec">Segurança</div>
+  <div class="card stack" style="gap:12px">
+   <div class="seg-row">${ic("lock")}<span><b>Dados criptografados</b><small>no celular, no caminho e no servidor</small></span></div>
+   <div class="seg-row">${ic("shield")}<span><b>Só a sua empresa vê os seus dados</b><small>e a equipe Lócus responsável por ela</small></span></div>
+   <div class="seg-row">${ic("users")}<span><b>Quem tem acesso</b><small>Carla (dona) · Ana (funcionária, só envia documentos)</small></span></div>
+  </div>
   <div class="sec">Preferências</div>
   <div class="stack"><div class="item"><span class="ic">${ic("bell")}</span><span class="tx"><b>Avisos no WhatsApp</b><span>Guia nova e vencimento em 3 dias</span></span><span class="pill p-ok">Ligado</span></div></div>
+  <div style="height:12px"></div><button type="button" class="item" data-go="abertura"><span class="ic">${ic("track")}</span><span class="tx"><b>Abertura da filial</b><span>Acompanhe cada etapa</span></span><span class="pill p-due">Na Junta</span></button>
   <div style="height:16px"></div><button type="button" class="btn ghost" data-act="sair">${ic("out")}Sair</button>`,
+
+    /* ----- telas de prévia (ainda sem integração) ----- */
+    auto: () => `${voltar()}<h2 class="t">Chegou sozinho</h2><p class="s">Documentos que entraram sem você mandar.</p>
+  ${previa("No sistema real, as notas vêm da Receita e o extrato pelo Open Finance.")}
+  <div class="sec">Notas de compra · hoje</div>
+  <div class="stack">${[
+    ["Atacadão Minas", "NF-e 48.211 · R$ 12.480,00"],
+    ["Cemig", "Conta de energia · R$ 1.932,17"],
+    ["Vivo Empresas", "Internet e telefone · R$ 289,90"],
+  ]
+    .map(
+      ([n, d]) =>
+        `<div class="item"><span class="ic">${ic("nota")}</span><span class="tx"><b>${n}</b><span>${d}</span></span><span class="pill p-ok">Lançada</span></div>`,
+    )
+    .join("")}</div>
+  <div class="sec">Extrato</div>
+  <div class="item"><span class="ic">${ic("bank")}</span><span class="tx"><b>Itaú · conta empresa</b><span>42 lançamentos conferidos com as notas</span></span><span class="pill p-ok">Em dia</span></div>`,
+    certidoes: () => `${voltar()}<h2 class="t">Certidões</h2><p class="s">Conferidas pela Lócus todo mês.</p>
+  ${previa("A consulta automática aos órgãos entra numa próxima fase.")}
+  <div class="stack">${[
+    ["Federal (Receita e PGFN)", "válida até 14/03/2027", "p-ok", "Negativa"],
+    ["Estadual (SEF-MG)", "pendência de 2023 em análise", "p-due", "Verificando"],
+    ["Municipal (Pompéu)", "válida até 02/01/2027", "p-ok", "Negativa"],
+    ["FGTS (CRF)", "válida até 18/11/2026", "p-ok", "Regular"],
+  ]
+    .map(
+      ([n, d, c, t]) =>
+        `<div class="item"><span class="ic">${ic("shield")}</span><span class="tx"><b>${n}</b><span>${d}</span></span><span class="pill ${c}">${t}</span></div>`,
+    )
+    .join("")}</div>
+  <p class="s" style="margin-top:12px">A Lócus já está cuidando da pendência estadual. Nada para você fazer.</p>`,
+    emprestimo:
+      () => `${voltar()}<h2 class="t">Pacote para o banco</h2><p class="s">Tudo que o gerente costuma pedir, num PDF.</p>
+  ${previa("O PDF ainda não é gerado nesta versão.")}
+  <div class="card stack" style="gap:12px">${[
+    "Faturamento dos últimos 12 meses",
+    "Demonstração de resultado (DRE)",
+    "Balancete do último mês",
+    "Certidões negativas",
+    "Cartão CNPJ e contrato social",
+  ]
+    .map(
+      (t) =>
+        `<div style="display:flex;gap:10px;align-items:center"><span class="chk">${ic("check", 'style="width:14px;height:14px"')}</span><span>${t}</span></div>`,
+    )
+    .join("")}</div>
+  <div style="height:14px"></div><button type="button" class="btn" data-act="pacote">${ic("loan")}Gerar pacote em PDF</button>`,
+    preco:
+      () => `${voltar()}<h2 class="t">Preço de venda</h2><p class="s">Quanto cobrar para pagar o imposto e ainda lucrar.</p>
+  <div class="grid2"><div class="field"><label for="pv-custo">Custo do produto (R$)</label><input id="pv-custo" inputmode="decimal" value="40,00"></div><div class="field"><label for="pv-lucro">Lucro desejado (%)</label><input id="pv-lucro" inputmode="decimal" value="20"></div></div>
+  <div class="field"><label for="pv-imp">Imposto sobre a venda (%)</label><input id="pv-imp" inputmode="decimal" value="6,1"></div>
+  <div class="prev"><div><small>Venda por</small><b id="pv-res">R$ 54,13</b><span id="pv-det">R$ 3,30 de imposto e R$ 10,83 de lucro</span></div></div>
+  <p class="s" style="margin-top:10px">Conta simples: preço = custo ÷ (1 − lucro − imposto). Outras despesas fixas não entram aqui.</p>`,
+    abertura:
+      () => `${voltar("Minha empresa")}<h2 class="t">Abertura da filial</h2><p class="s">Mercado Bom Preço · Pompéu, bairro Centro</p>
+  ${previa("As etapas são atualizadas pela equipe Lócus.")}
+  <ol class="trilha">${[
+    ["Documentos recebidos", "08/10", 1],
+    ["Viabilidade aprovada na prefeitura", "14/10", 1],
+    ["Registro na Junta Comercial", "em andamento · previsão 3 dias úteis", 2],
+    ["CNPJ da filial", "", 0],
+    ["Inscrição estadual e alvará", "", 0],
+  ]
+    .map(
+      ([t, d, st]) =>
+        `<li class="${st === 1 ? "ok" : st === 2 ? "now" : ""}"><b>${t}</b>${d ? `<span>${d}</span>` : ""}</li>`,
+    )
+    .join("")}</ol>`,
+    nota: () => `${voltar()}<div class="nota-top"><b>LÓCUS</b><span>Nota</span></div><h2 class="t">Nova nota de serviço</h2><p class="s">Para MEI e pequenas empresas, com IBS e CBS já preenchidos.</p>
+  ${previa("A emissão oficial entra quando o Lócus Nota estiver pronto.")}
+  <div class="field"><label for="n-cli">Cliente</label><input id="n-cli" value="Maria Souza"></div>
+  <div class="field"><label for="n-serv">Serviço</label><input id="n-serv" value="Entrega de mercadorias"></div>
+  <div class="field"><label for="n-val">Valor</label><input id="n-val" inputmode="decimal" value="R$ 120,00"></div>
+  <div class="card stack" style="gap:8px;margin-bottom:14px;font-size:13px"><div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">IBS e CBS</span><b>preenchidos pelo app</b></div><div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Envio</span><b>PDF no WhatsApp do cliente</b></div></div>
+  <button type="button" class="btn" data-act="emitir">${ic("nota")}Emitir nota</button>`,
 
     /* ----- equipe ----- */
     clientes:
@@ -403,11 +509,29 @@
       return toast("Documento conferido.");
     }
     if (a === "publicar") return toast("Guia publicada. O cliente recebeu um aviso.");
+    if (a === "pacote") return toast("Prévia: aqui o PDF seria gerado e enviado.");
+    if (a === "emitir") return toast("Prévia: nesta versão a nota ainda não é emitida.");
     if (a === "sair") {
       logged = false;
       $("login").hidden = false;
       return;
     }
+  });
+
+  document.addEventListener("input", (e) => {
+    if (!e.target.id || !e.target.id.startsWith("pv-")) return;
+    const n = (id) => parseFloat(($(id).value || "0").replace(/\./g, "").replace(",", ".")) || 0;
+    const custo = n("pv-custo"),
+      l = n("pv-lucro") / 100,
+      i = n("pv-imp") / 100;
+    if (l + i >= 1) {
+      $("pv-res").textContent = "—";
+      $("pv-det").textContent = "Lucro e imposto somados precisam ficar abaixo de 100%.";
+      return;
+    }
+    const p = custo / (1 - l - i);
+    $("pv-res").textContent = brl(p);
+    $("pv-det").textContent = `${brl(p * i)} de imposto e ${brl(p * l)} de lucro`;
   });
 
   /* ---------- login e papel ---------- */

@@ -138,6 +138,10 @@ document.getElementById("form-contato").addEventListener("submit", function (e) 
     [".contact > div", "from-left"],
     [".contact form", "from-right"],
     [".hero-meta > div", ""],
+    [".tcard", ""],
+    [".plan", ""],
+    [".opc", ""],
+    [".problema-in > *", "from-left"],
   ];
   var vh = window.innerHeight,
     els = [];
@@ -218,4 +222,85 @@ document.getElementById("form-contato").addEventListener("submit", function (e) 
       } catch (e) {}
       barra();
     });
+})();
+
+/* ===== Simulador MEI ou Nano (valores de 2026) ===== */
+(function () {
+  var form = document.getElementById("sim-form");
+  if (!form) return;
+  var SM = 1621,
+    LIM_MEI = 81000,
+    LIM_NANO = LIM_MEI / 2,
+    INSS_MEI = SM * 0.05,
+    INSS_NANO = SM * 0.11,
+    EXTRA = { servico: 5, comercio: 1, ambos: 6, app: 5 };
+  var brl = function (v) {
+    return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  };
+  function num(v) {
+    return parseFloat(String(v).replace(/\./g, "").replace(",", ".")) || 0;
+  }
+  function $(id) {
+    return document.getElementById(id);
+  }
+  function calc() {
+    var fat = num($("s-fat").value),
+      ativ = $("s-ativ").value,
+      inss = $("s-inss").value === "sim";
+    var baseNano = ativ === "app" ? fat * 0.25 : fat;
+    var podeMei = fat <= LIM_MEI,
+      podeNano = baseNano < LIM_NANO;
+    var custoMei = (INSS_MEI + EXTRA[ativ]) * 12,
+      custoNano = inss ? INSS_NANO * 12 : 0;
+
+    $("r-mei").textContent = podeMei ? brl(custoMei) + " /ano" : "Não se enquadra";
+    $("d-mei").textContent = podeMei
+      ? "DAS de " + brl(INSS_MEI + EXTRA[ativ]) + " por mês, com INSS, CNPJ e nota fiscal."
+      : "Passa do limite de R$ 81 mil por ano.";
+    $("r-nano").textContent = podeNano ? brl(custoNano) + " /ano" : "Não se enquadra";
+    $("d-nano").textContent = podeNano
+      ? (inss
+          ? "Sem IBS e CBS. INSS pago à parte, " + brl(INSS_NANO) + " por mês (plano de 11%)."
+          : "Sem IBS, sem CBS e sem CNPJ. Também fica sem INSS.") +
+        (ativ === "app" ? " Para app, conta só 25% do que você recebe." : "")
+      : ativ === "app"
+        ? "25% do que você recebe passa de R$ 40,5 mil."
+        : "Passa de R$ 40,5 mil por ano.";
+
+    var v,
+      melhor = null;
+    if (!podeMei && !podeNano) {
+      v = "Nem MEI nem nano: o caminho é abrir uma ME no Simples Nacional. A Lócus faz a conta com você.";
+    } else if (podeMei && !podeNano) {
+      melhor = "mei";
+      v = "O MEI é o seu caminho: " + brl(custoMei) + " por ano, já com INSS, CNPJ e nota fiscal.";
+    } else if (!podeMei && podeNano) {
+      melhor = "nano";
+      v = "Pelo faturamento total você não cabe no MEI, mas se enquadra como nanoempreendedor.";
+    } else if (inss) {
+      melhor = custoMei <= custoNano ? "mei" : "nano";
+      v =
+        melhor === "mei"
+          ? "Com INSS, o MEI sai mais barato: " +
+            brl(custoNano - custoMei) +
+            " a menos por ano, e ainda vem com CNPJ e nota fiscal."
+          : "Com INSS, o nano sai mais barato no seu caso.";
+    } else {
+      melhor = "nano";
+      v =
+        "Sem INSS, o nano não paga nada de IBS e CBS. Mas você fica sem aposentadoria e auxílio-doença. Se for vender para empresas, o MEI com nota ajuda.";
+    }
+    ["mei", "nano"].forEach(function (k) {
+      var el = $("o-" + k);
+      el.classList.toggle("melhor", melhor === k);
+      el.classList.toggle("fora", !(k === "mei" ? podeMei : podeNano));
+    });
+    $("veredito").textContent = v;
+  }
+  form.addEventListener("input", calc);
+  form.addEventListener("change", calc);
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+  });
+  calc();
 })();
