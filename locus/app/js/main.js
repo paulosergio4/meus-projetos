@@ -368,7 +368,7 @@
   <div style="height:12px"></div><button type="button" class="btn ghost" data-go="arquivo">${ic("file")}Ver no arquivo da empresa</button>`;
     },
     arquivo:
-      () => `${voltar()}<h2 class="t">Arquivo da empresa</h2><p class="s">Tudo que a Lócus já entregou, guardado por funcionário e por ano.</p>
+      () => `${voltar("Voltar")}<h2 class="t">Arquivo da empresa</h2><p class="s">Tudo que a Lócus já entregou, guardado por funcionário e por ano.</p>
   <div class="seg" role="group" aria-label="Ano"><button type="button" aria-pressed="true">2026</button><button type="button" aria-pressed="false">2025</button><button type="button" aria-pressed="false">2024</button></div>
   ${[
     [
