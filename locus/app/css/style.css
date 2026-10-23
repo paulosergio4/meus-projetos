@@ -1197,27 +1197,28 @@ p.s {
   border-radius: 50%;
   background: #c0743f;
   opacity: 0;
-  transform: rotate(0deg) translateY(-2.4em);
+  transform: rotate(0deg) translate(0, -2.4em);
   animation: acento 1.5s cubic-bezier(0.45, 0, 0.25, 1) 1.85s forwards;
 }
 @keyframes acento {
   0% {
     opacity: 0;
-    transform: rotate(0deg) translateY(-2.4em);
+    transform: rotate(0deg) translate(0, -2.4em);
   }
   18% {
     opacity: 1;
-    transform: rotate(0deg) translateY(-0.66em);
+    transform: rotate(0deg) translate(0, -0.66em);
   }
   78% {
-    transform: rotate(360deg) translateY(-0.66em);
+    transform: rotate(360deg) translate(0, -0.66em);
   }
   88% {
-    transform: rotate(360deg) translateY(-0.5em);
+    transform: rotate(360deg) translate(0.15em, -0.54em);
   }
   100% {
     opacity: 1;
-    transform: rotate(360deg) translateY(-0.56em);
+    /* para à direita, como um acento */
+    transform: rotate(360deg) translate(0.15em, -0.6em);
   }
 }
 .splash .sub {

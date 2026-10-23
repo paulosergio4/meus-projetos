@@ -827,12 +827,13 @@ footer .wrap {
   content: "";
   position: absolute;
   left: 50%;
-  top: -0.26em;
+  top: -0.18em;
   width: 0.2em;
   height: 0.2em;
   border-radius: 50%;
   background: #c0743f;
-  transform: translateX(-50%);
+  /* deslocado para a direita, como um acento */
+  transform: translateX(calc(-50% + 0.15em));
 }
 
 /* ---------- utilitários (antes eram estilos inline) ---------- */
