@@ -71,7 +71,7 @@ function animateCard(cls, ms, then) {
   setTimeout(() => { ui.animating = false; then(); }, ms);
 }
 
-const APP_VERSION = '0.23.0';
+const APP_VERSION = '0.24.0';
 const root = document.getElementById('app');
 
 // ---------- utilitários ----------
@@ -1860,16 +1860,53 @@ function bioOfferSheet() {
   </div>`;
 }
 
+// Minimizado por mais de 1 min conta como app fechado: ao voltar, recomeça da tela inicial
+// (ou da biometria, se estiver ligada), como se tivesse sido aberto de novo.
 let hiddenAt = 0;
-const RELOCK_MS = 5 * 60 * 1000; // volta a pedir a biometria depois de 5 min fora do app
+const IDLE_CLOSE_MS = 60 * 1000;
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') { hiddenAt = Date.now(); return; }
-  if (biometricEnabled() && store.data.user && ui.view !== 'lock' && ui.view !== 'login' && hiddenAt && Date.now() - hiddenAt > RELOCK_MS) {
-    ui.afterUnlock = ui.view;
-    ui.autoUnlockTried = false;
-    go('lock');
-  }
+  const idle = hiddenAt && Date.now() - hiddenAt > IDLE_CLOSE_MS;
+  hiddenAt = 0;
+  if (!idle || !store.data.user || ['lock', 'login', 'onboarding'].includes(ui.view)) return;
+  leaveActivity();
+  if (biometricEnabled()) { ui.afterUnlock = 'home'; ui.autoUnlockTried = false; go('lock'); }
+  else go('home');
 });
+
+// Encerra o que estiver aberto (revisão, questões, simulado, caso, janelas) antes de ir para o início.
+function leaveActivity() {
+  if (ui.quiz && ui.quiz.mode === 'simulado' && !ui.quiz.finished) toast('Simulado cancelado. Nada foi salvo.');
+  stopQuizTimer();
+  ui.quiz = null;
+  ui.session = null;
+  ui.caseRun = null;
+  ui.typed = null;
+  ui.revealed = false;
+  ui.report = null;
+  ui.paywall = null;
+  ui.cardSub = null;
+}
+
+// Botão voltar do celular: qualquer tela volta para o início; no início (ou no login),
+// é preciso tocar duas vezes para sair do app.
+const BACK_EXIT_MS = 2000;
+let backArmed = 0;
+function armBackGuard() {
+  if (!history.state || !history.state.sinapse) history.pushState({ sinapse: true }, '');
+}
+window.addEventListener('popstate', () => {
+  const root = !store.data.user || ['home', 'login', 'lock', 'onboarding'].includes(ui.view);
+  const sheetOpen = ui.report || ui.paywall || ui.cardSub;
+  if (sheetOpen) { ui.report = null; ui.paywall = null; ui.cardSub = null; render(); armBackGuard(); return; }
+  if (!root) { leaveActivity(); go('home'); armBackGuard(); return; }
+  if (Date.now() - backArmed < BACK_EXIT_MS) return; // segundo toque: deixa o Android fechar o app
+  backArmed = Date.now();
+  toast('Toque em voltar de novo para sair');
+  // Sem o segundo toque, a proteção volta a valer.
+  setTimeout(() => { if (Date.now() - backArmed >= BACK_EXIT_MS) armBackGuard(); }, BACK_EXIT_MS);
+});
+armBackGuard();
 
 function viewLock() {
   const u = store.data.user || {};
