@@ -1552,3 +1552,16 @@ body {
   padding: 3px 10px;
   border-radius: 999px;
 }
+
+.spark-w {
+  position: relative;
+}
+.spark-dot {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  border-radius: 50%;
+  background: var(--copper);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--copper) 25%, transparent);
+}

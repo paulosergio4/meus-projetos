@@ -128,9 +128,9 @@
     const v = D.meses.map((m) => m[1]),
       mn = Math.min(...v) - 3,
       mx = Math.max(...v) + 1;
-    const pts = v.map((x, i) => [(i / (v.length - 1)) * 300, 50 - ((x - mn) / (mx - mn)) * 44]);
+    const pts = v.map((x, i) => [(i / (v.length - 1)) * 290, 50 - ((x - mn) / (mx - mn)) * 42]);
     const p = pts.map((q) => q.join(",")).join(" ");
-    return `<svg class="spark" viewBox="0 0 300 54" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B9C38E" stop-opacity=".35"/><stop offset="1" stop-color="#B9C38E" stop-opacity="0"/></linearGradient></defs><polygon points="0,54 ${p} 300,54" fill="url(#sg)"/><polyline points="${p}" fill="none" stroke="#B9C38E" stroke-width="2.5" vector-effect="non-scaling-stroke"/><circle cx="${pts.at(-1)[0]}" cy="${pts.at(-1)[1]}" r="4" fill="#C0743F"/></svg>`;
+    return `<div class="spark-w"><svg class="spark" viewBox="0 0 300 54" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B9C38E" stop-opacity=".35"/><stop offset="1" stop-color="#B9C38E" stop-opacity="0"/></linearGradient></defs><polygon points="0,54 ${p} 290,54" fill="url(#sg)"/><polyline points="${p}" fill="none" stroke="#B9C38E" stroke-width="2.5" vector-effect="non-scaling-stroke"/></svg><i class="spark-dot" style="left:${((pts.at(-1)[0] / 300) * 100).toFixed(2)}%;top:${((pts.at(-1)[1] / 54) * 100).toFixed(2)}%"></i></div>`;
   }
   function temaAtual() {
     try {
