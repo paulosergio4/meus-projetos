@@ -615,7 +615,7 @@ em {
 
 .category:hover .category-stack,
 .category:focus-visible .category-stack,
-.category.is-playing .category-stack {
+.category.is-started .category-stack {
   transform: scale(1.06);
   filter: brightness(1);
 }
@@ -656,7 +656,7 @@ em {
 }
 
 .category:hover .category-name,
-.category.is-playing .category-name {
+.category.is-started .category-name {
   transform: translateX(10px);
 }
 
@@ -669,7 +669,7 @@ em {
 }
 
 .category:hover .category-actions,
-.category.is-playing .category-actions {
+.category.is-started .category-actions {
   transform: translateX(10px);
 }
 
@@ -684,22 +684,24 @@ em {
   color: var(--gold-light);
 }
 
-/* ícone de play/pausa desenhado em CSS */
+/* setinha para cima: indica que a foto sobe */
 .category-hint::before {
-  content: "";
-  width: 0;
-  height: 0;
-  border-style: solid;
-  border-width: 5px 0 5px 8px;
-  border-color: transparent transparent transparent currentColor;
+  content: "↑";
+  font-size: 0.95rem;
+  letter-spacing: 0;
+  transition: transform 0.4s var(--ease);
 }
 
-.category.is-playing .category-hint::before {
-  width: 8px;
-  height: 10px;
-  border: 0;
-  border-left: 3px solid currentColor;
-  border-right: 3px solid currentColor;
+.category:hover .category-hint::before {
+  transform: translateY(-3px);
+}
+
+.category.is-loading .category-hint::before {
+  animation: hint-pulse 0.8s ease-in-out infinite;
+}
+
+@keyframes hint-pulse {
+  50% { opacity: 0.3; }
 }
 
 .category-open {
@@ -724,31 +726,6 @@ em {
   background: var(--gold);
   border-color: var(--gold);
   color: #0b0b0b;
-}
-
-/* barrinha de tempo de cada foto */
-.category-progress {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  z-index: 2;
-  width: 100%;
-  height: 2px;
-  background: var(--gold);
-  transform: scaleX(0);
-  transform-origin: left;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.category-progress.is-running {
-  opacity: 1;
-  animation: band-progress linear forwards;
-}
-
-@keyframes band-progress {
-  from { transform: scaleX(0); }
-  to { transform: scaleX(1); }
 }
 
 /* entrada ao rolar: as faixas só aparecem, sem deslizar */

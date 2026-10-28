@@ -135,8 +135,7 @@ function buildBand(slug, nome, capa, total, posicao) {
     band.dataset.band = slug;
     band.tabIndex = 0;
     band.setAttribute('role', 'button');
-    band.setAttribute('aria-pressed', 'false');
-    band.setAttribute('aria-label', `Ver as fotos do ensaio ${nome}`);
+    band.setAttribute('aria-label', `Ensaio ${nome}: clique para ver a próxima foto`);
 
     const stack = document.createElement('div');
     stack.className = 'category-stack';
@@ -166,10 +165,7 @@ function buildBand(slug, nome, capa, total, posicao) {
     actions.append(hint, open);
     info.append(name, actions);
 
-    const bar = document.createElement('span');
-    bar.className = 'category-progress';
-
-    band.append(stack, info, bar);
+    band.append(stack, info);
     return band;
 }
 
@@ -190,9 +186,8 @@ function renderCategories(list) {
 }
 
 // =========================================================
-// FAIXAS DE ENSAIO: clicar faz as fotos subirem em loop
+// FAIXAS DE ENSAIO: cada clique faz a próxima foto subir (em loop)
 // =========================================================
-const BAND_TIME = 2800; // tempo de cada foto (ms)
 const bandState = new WeakMap();
 
 function bandImages(slug) {
@@ -209,17 +204,30 @@ function loadImage(src) {
     });
 }
 
-async function nextLayer(band) {
-    const st = bandState.get(band);
-    if (!st || !st.playing || st.busy) return;
+function updateCounter(band, st) {
+    band.querySelector('.category-hint').textContent =
+        `Próxima foto · ${st.index + 1} / ${st.images.length}`;
+}
+
+async function nextPhoto(band) {
+    let st = bandState.get(band);
+    if (!st) {
+        const images = bandImages(band.dataset.band);
+        if (images.length < 2) return;
+        st = { images, index: 0, z: 1, busy: false };
+        bandState.set(band, st);
+    }
+    if (st.busy) return; // espera a foto atual terminar de subir
     st.busy = true;
-    st.index = (st.index + 1) % st.images.length;
-    const src = st.images[st.index];
+    band.classList.add('is-loading');
+
+    const index = (st.index + 1) % st.images.length;
+    const src = st.images[index];
 
     // carrega antes de animar, para nunca subir uma foto em branco
     const loaded = await loadImage(src);
-    if (!st.playing) { st.busy = false; return; }
     if (loaded.decode) { try { await loaded.decode(); } catch { /* segue */ } }
+    band.classList.remove('is-loading');
 
     const stack = band.querySelector('.category-stack');
     const layer = document.createElement('img');
@@ -233,81 +241,45 @@ async function nextLayer(band) {
     layer.getBoundingClientRect();
     layer.classList.add('is-in');
 
+    st.index = index;
+    band.classList.add('is-started');
+    updateCounter(band, st);
+
     setTimeout(() => {
         // mantém só as duas últimas camadas na página
         const layers = stack.querySelectorAll('.layer:not(.is-cover)');
         for (let i = 0; i < layers.length - 2; i++) layers[i].remove();
         st.busy = false;
-    }, 1000);
-
-    restartBar(band);
+    }, 950);
 }
 
-function restartBar(band) {
-    const bar = band.querySelector('.category-progress');
-    bar.classList.remove('is-running');
-    bar.getBoundingClientRect();
-    bar.style.animationDuration = `${BAND_TIME}ms`;
-    bar.classList.add('is-running');
-}
-
-function playBand(band) {
-    let st = bandState.get(band);
-    if (!st) {
-        const images = bandImages(band.dataset.band);
-        if (images.length < 2) return;
-        st = { images, index: 0, z: 1, playing: false, timer: null, busy: false };
-        bandState.set(band, st);
-    }
-    if (st.playing) return;
-    st.playing = true;
-    band.classList.add('is-playing');
-    band.setAttribute('aria-pressed', 'true');
-    band.querySelector('.category-hint').textContent = 'Clique para pausar';
-    nextLayer(band);
-    st.timer = setInterval(() => nextLayer(band), BAND_TIME);
-}
-
-function pauseBand(band) {
+// pré-carrega a próxima foto quando a pessoa passa o mouse ou encosta o dedo
+function warmUp(band) {
     const st = bandState.get(band);
-    if (!st || !st.playing) return;
-    st.playing = false;
-    clearInterval(st.timer);
-    band.classList.remove('is-playing');
-    band.setAttribute('aria-pressed', 'false');
-    band.querySelector('.category-hint').textContent = 'Clique para continuar';
-    band.querySelector('.category-progress').classList.remove('is-running');
-}
-
-function toggleBand(band) {
-    const st = bandState.get(band);
-    if (st && st.playing) pauseBand(band);
-    else playBand(band);
+    const images = st ? st.images : bandImages(band.dataset.band);
+    const next = images[st ? (st.index + 1) % images.length : 1];
+    if (next) loadImage(next);
 }
 
 document.addEventListener('click', (e) => {
     if (e.target.closest('.category-open')) return; // esse botão abre a galeria
     const band = e.target.closest('.category[data-band]');
-    if (band) toggleBand(band);
+    if (band) nextPhoto(band);
 });
 
 document.addEventListener('keydown', (e) => {
     const band = e.target.closest && e.target.closest('.category[data-band]');
     if (band && e.target === band && (e.key === 'Enter' || e.key === ' ')) {
         e.preventDefault();
-        toggleBand(band);
+        nextPhoto(band);
     }
 });
 
-// pausa sozinha quando a faixa sai da tela (economiza bateria e memória)
-const bandObserver = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-        if (!entry.isIntersecting) pauseBand(entry.target);
-    });
-}, { threshold: 0.2 });
-
 function initBands() {
-    document.querySelectorAll('.category[data-band]').forEach((band) => bandObserver.observe(band));
+    document.querySelectorAll('.category[data-band]').forEach((band) => {
+        band.addEventListener('pointerenter', () => warmUp(band), { once: true });
+        band.addEventListener('touchstart', () => warmUp(band), { once: true, passive: true });
+    });
 }
 
 // =========================================================
