@@ -73,6 +73,26 @@ function useMini(img, path) {
 }
 window.useMini = useMini;
 
+// Capa das faixas de ensaio: o navegador escolhe a miniatura (900px) ou a
+// foto grande conforme a largura da tela. Se a miniatura faltar, usa só a grande.
+const ENQUADRAMENTO = { topo: 'center 0%', alto: 'center 30%', centro: 'center 50%', baixo: 'center 75%', 'bem-baixo': 'center 100%' };
+
+function setCover(img, path, posicao) {
+    const full = fixPath(path);
+    const mini = miniPath(full);
+    img.src = full;
+    if (mini !== full) {
+        img.srcset = `${mini} 900w, ${full} 2400w`;
+        img.sizes = '100vw';
+        img.onerror = () => {
+            img.onerror = null;
+            img.removeAttribute('srcset');
+            img.src = full;
+        };
+    }
+    if (ENQUADRAMENTO[posicao]) img.style.objectPosition = ENQUADRAMENTO[posicao];
+}
+
 async function loadSiteData() {
     try {
         // ?t= evita que o navegador mostre uma versão antiga depois de salvar no painel
@@ -109,6 +129,50 @@ function renderAbout(sobre) {
     if (sobre.foto_secundaria && second) second.src = fixPath(sobre.foto_secundaria);
 }
 
+function buildBand(slug, nome, capa, total, posicao) {
+    const band = document.createElement('div');
+    band.className = 'category reveal';
+    band.dataset.band = slug;
+    band.tabIndex = 0;
+    band.setAttribute('role', 'button');
+    band.setAttribute('aria-pressed', 'false');
+    band.setAttribute('aria-label', `Ver as fotos do ensaio ${nome}`);
+
+    const stack = document.createElement('div');
+    stack.className = 'category-stack';
+    const img = document.createElement('img');
+    img.className = 'layer is-cover';
+    setCover(img, capa, posicao);
+    img.alt = '';
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    stack.appendChild(img);
+
+    const info = document.createElement('span');
+    info.className = 'category-info';
+    const name = document.createElement('span');
+    name.className = 'category-name';
+    name.textContent = nome;
+    const actions = document.createElement('span');
+    actions.className = 'category-actions';
+    const hint = document.createElement('span');
+    hint.className = 'category-hint';
+    hint.textContent = 'Clique para ver as fotos';
+    const open = document.createElement('button');
+    open.className = 'category-open';
+    open.type = 'button';
+    open.dataset.category = slug;
+    open.textContent = `Galeria completa · ${total}`;
+    actions.append(hint, open);
+    info.append(name, actions);
+
+    const bar = document.createElement('span');
+    bar.className = 'category-progress';
+
+    band.append(stack, info, bar);
+    return band;
+}
+
 function renderCategories(list) {
     const cats = (list || []).filter((c) => c && c.nome && Array.isArray(c.fotos) && c.fotos.length);
     if (!cats.length) return;
@@ -118,34 +182,132 @@ function renderCategories(list) {
     box.replaceChildren(...cats.map((c) => {
         const slug = slugify(c.nome);
         galleries[slug] = { title: c.nome, images: c.fotos.filter(Boolean).map(fixPath) };
-
-        const btn = document.createElement('button');
-        btn.className = 'category reveal';
-        btn.type = 'button';
-        btn.dataset.category = slug;
-
-        const img = document.createElement('img');
-        useMini(img, c.capa || c.fotos[0]);
-        img.alt = '';
-        img.loading = 'lazy';
-        img.decoding = 'async';
-
-        const info = document.createElement('span');
-        info.className = 'category-info';
-        const name = document.createElement('span');
-        name.className = 'category-name';
-        name.textContent = c.nome;
-        const count = document.createElement('span');
-        count.className = 'category-count';
-        count.textContent = `${galleries[slug].images.length} fotos`;
-        info.append(name, count);
-
-        btn.append(img, info);
-        return btn;
+        return buildBand(slug, c.nome, c.capa || c.fotos[0], galleries[slug].images.length, c.enquadramento);
     }));
 
     // Usado pela galeria (modal.js)
     window.siteGalleries = galleries;
+}
+
+// =========================================================
+// FAIXAS DE ENSAIO: clicar faz as fotos subirem em loop
+// =========================================================
+const BAND_TIME = 2800; // tempo de cada foto (ms)
+const bandState = new WeakMap();
+
+function bandImages(slug) {
+    const source = window.siteGalleries || (typeof galleries !== 'undefined' ? galleries : {});
+    return source[slug] ? source[slug].images : [];
+}
+
+function loadImage(src) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.decoding = 'async';
+        img.onload = img.onerror = () => resolve(img);
+        img.src = src;
+    });
+}
+
+async function nextLayer(band) {
+    const st = bandState.get(band);
+    if (!st || !st.playing || st.busy) return;
+    st.busy = true;
+    st.index = (st.index + 1) % st.images.length;
+    const src = st.images[st.index];
+
+    // carrega antes de animar, para nunca subir uma foto em branco
+    const loaded = await loadImage(src);
+    if (!st.playing) { st.busy = false; return; }
+    if (loaded.decode) { try { await loaded.decode(); } catch { /* segue */ } }
+
+    const stack = band.querySelector('.category-stack');
+    const layer = document.createElement('img');
+    layer.className = 'layer';
+    layer.alt = '';
+    layer.src = src;
+    layer.style.zIndex = String(++st.z);
+    stack.appendChild(layer);
+
+    // começa embaixo e sobe
+    layer.getBoundingClientRect();
+    layer.classList.add('is-in');
+
+    setTimeout(() => {
+        // mantém só as duas últimas camadas na página
+        const layers = stack.querySelectorAll('.layer:not(.is-cover)');
+        for (let i = 0; i < layers.length - 2; i++) layers[i].remove();
+        st.busy = false;
+    }, 1000);
+
+    restartBar(band);
+}
+
+function restartBar(band) {
+    const bar = band.querySelector('.category-progress');
+    bar.classList.remove('is-running');
+    bar.getBoundingClientRect();
+    bar.style.animationDuration = `${BAND_TIME}ms`;
+    bar.classList.add('is-running');
+}
+
+function playBand(band) {
+    let st = bandState.get(band);
+    if (!st) {
+        const images = bandImages(band.dataset.band);
+        if (images.length < 2) return;
+        st = { images, index: 0, z: 1, playing: false, timer: null, busy: false };
+        bandState.set(band, st);
+    }
+    if (st.playing) return;
+    st.playing = true;
+    band.classList.add('is-playing');
+    band.setAttribute('aria-pressed', 'true');
+    band.querySelector('.category-hint').textContent = 'Clique para pausar';
+    nextLayer(band);
+    st.timer = setInterval(() => nextLayer(band), BAND_TIME);
+}
+
+function pauseBand(band) {
+    const st = bandState.get(band);
+    if (!st || !st.playing) return;
+    st.playing = false;
+    clearInterval(st.timer);
+    band.classList.remove('is-playing');
+    band.setAttribute('aria-pressed', 'false');
+    band.querySelector('.category-hint').textContent = 'Clique para continuar';
+    band.querySelector('.category-progress').classList.remove('is-running');
+}
+
+function toggleBand(band) {
+    const st = bandState.get(band);
+    if (st && st.playing) pauseBand(band);
+    else playBand(band);
+}
+
+document.addEventListener('click', (e) => {
+    if (e.target.closest('.category-open')) return; // esse botão abre a galeria
+    const band = e.target.closest('.category[data-band]');
+    if (band) toggleBand(band);
+});
+
+document.addEventListener('keydown', (e) => {
+    const band = e.target.closest && e.target.closest('.category[data-band]');
+    if (band && e.target === band && (e.key === 'Enter' || e.key === ' ')) {
+        e.preventDefault();
+        toggleBand(band);
+    }
+});
+
+// pausa sozinha quando a faixa sai da tela (economiza bateria e memória)
+const bandObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+        if (!entry.isIntersecting) pauseBand(entry.target);
+    });
+}, { threshold: 0.2 });
+
+function initBands() {
+    document.querySelectorAll('.category[data-band]').forEach((band) => bandObserver.observe(band));
 }
 
 // =========================================================
@@ -265,5 +427,6 @@ if (yearEl) yearEl.textContent = currentYear;
         renderCategories(data.categorias);
     }
     initSlideshow();
+    initBands();
     initReveal();
 })();

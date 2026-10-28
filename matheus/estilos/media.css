@@ -12,10 +12,6 @@
     gap: 56px;
   }
 
-  .categories {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
   .footer-grid {
     grid-template-columns: 1fr 1fr;
   }
@@ -159,23 +155,31 @@
     flex: 1 1 auto;
   }
 
-  .categories {
-    gap: 12px;
+  .category {
+    height: 56vh;
+    min-height: 300px;
+    max-height: 460px;
   }
 
   .category-info {
-    left: 14px;
-    right: 14px;
-    bottom: 14px;
+    top: auto;
+    bottom: 28px;
+    transform: none;
+    gap: 10px;
   }
 
-  .category-name {
-    font-size: 1.4rem;
+  .category::after {
+    background: linear-gradient(0deg, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0) 55%);
   }
 
-  .category-count {
+  .category-hint {
+    font-size: 0.66rem;
+    letter-spacing: 0.18em;
+  }
+
+  .category-open {
+    padding: 7px 13px;
     font-size: 0.62rem;
-    letter-spacing: 0.15em;
   }
 
   .badge {

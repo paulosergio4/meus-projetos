@@ -42,7 +42,8 @@
         "/meus-projetos/matheus/fotos/empresarial/empresarial1.webp",
         "/meus-projetos/matheus/fotos/empresarial/empresarial2.webp",
         "/meus-projetos/matheus/fotos/empresarial/empresarial3.webp"
-      ]
+      ],
+      "enquadramento": "topo"
     },
     {
       "nome": "Gestante",
@@ -53,7 +54,8 @@
         "/meus-projetos/matheus/fotos/gestante/ft12.webp",
         "/meus-projetos/matheus/fotos/gestante/ft16.jpg",
         "/meus-projetos/matheus/fotos/gestante/ft17.jpg"
-      ]
+      ],
+      "enquadramento": "centro"
     },
     {
       "nome": "Feminino",
@@ -65,7 +67,8 @@
         "/meus-projetos/matheus/fotos/feminino/fem4.webp",
         "/meus-projetos/matheus/fotos/feminino/fem5.webp",
         "/meus-projetos/matheus/fotos/feminino/fem6.webp"
-      ]
+      ],
+      "enquadramento": "alto"
     },
     {
       "nome": "Casal",
@@ -75,7 +78,8 @@
         "/meus-projetos/matheus/fotos/casal/ft5.webp",
         "/meus-projetos/matheus/fotos/casal/casal3.webp",
         "/meus-projetos/matheus/fotos/casal/casal4.webp"
-      ]
+      ],
+      "enquadramento": "centro"
     }
   ]
 }

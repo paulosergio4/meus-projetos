@@ -550,81 +550,224 @@ em {
 /* =========================================================
    ENSAIOS
    ========================================================= */
-.ensaios {
+.section.section.ensaios {
   background: var(--bg-soft);
+  /* as faixas vão de ponta a ponta; só o título tem margem */
+  padding-left: 0;
+  padding-right: 0;
+  padding-bottom: 0;
 }
 
+.ensaios .section-head {
+  padding: 0 24px;
+}
+
+/* Faixas de tela cheia, uma por categoria */
 .categories {
-  max-width: var(--container);
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--bg);
 }
 
 .category {
   position: relative;
-  aspect-ratio: 3 / 4;
+  display: block;
+  width: 100%;
+  height: clamp(340px, 62vh, 620px);
   overflow: hidden;
-  border-radius: var(--radius);
   text-align: left;
+  cursor: pointer;
+  isolation: isolate;
+  outline-offset: -4px;
 }
 
-.category img {
-  backface-visibility: hidden;
+/* camadas de foto: a capa fica embaixo e as próximas sobem por cima */
+.category-stack {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  transition: transform 1.4s var(--ease), filter 0.8s;
+  transform: scale(1.02);
+  filter: brightness(0.92);
+}
+
+.category .layer {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.9s var(--ease);
+  object-position: center 30%;
+  backface-visibility: hidden;
 }
 
+.category .layer:not(.is-cover) {
+  transform: translateY(100%);
+  transition: transform 0.95s cubic-bezier(0.77, 0, 0.18, 1);
+  will-change: transform;
+}
+
+.category .layer.is-in {
+  transform: translateY(0);
+}
+
+.category:hover .category-stack,
+.category:focus-visible .category-stack,
+.category.is-playing .category-stack {
+  transform: scale(1.06);
+  filter: brightness(1);
+}
+
+/* escurece o lado do título para o nome ficar legível em qualquer foto */
 .category::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0) 55%);
-}
-
-.category:hover img {
-  transform: scale(1.07);
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.18) 45%, rgba(0, 0, 0, 0) 70%),
+    linear-gradient(0deg, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0) 40%);
 }
 
 .category-info {
   position: absolute;
-  left: 24px;
+  z-index: 2;
+  top: 50%;
+  left: clamp(24px, 9vw, 140px);
   right: 24px;
-  bottom: 24px;
-  z-index: 1;
+  transform: translateY(-50%);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  align-items: flex-start;
+  gap: 16px;
 }
 
 .category-name {
   font-family: var(--font-display);
-  font-size: 2rem;
-  line-height: 1.1;
+  font-weight: 500;
+  font-size: clamp(3rem, 7vw, 6rem);
+  line-height: 1;
+  color: #fff;
+  text-shadow: 0 2px 30px rgba(0, 0, 0, 0.35);
+  transition: transform 0.6s var(--ease);
 }
 
-.category-count {
+.category:hover .category-name,
+.category.is-playing .category-name {
+  transform: translateX(10px);
+}
+
+.category-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 22px;
+  transition: transform 0.6s var(--ease);
+}
+
+.category:hover .category-actions,
+.category.is-playing .category-actions {
+  transform: translateX(10px);
+}
+
+.category-hint {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.72rem;
-  letter-spacing: 0.2em;
+  gap: 10px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.25em;
   text-transform: uppercase;
   color: var(--gold-light);
 }
 
-.category-count::after {
-  content: "→";
-  transition: transform 0.3s;
+/* ícone de play/pausa desenhado em CSS */
+.category-hint::before {
+  content: "";
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 5px 0 5px 8px;
+  border-color: transparent transparent transparent currentColor;
 }
 
-.category:hover .category-count::after {
-  transform: translateX(5px);
+.category.is-playing .category-hint::before {
+  width: 8px;
+  height: 10px;
+  border: 0;
+  border-left: 3px solid currentColor;
+  border-right: 3px solid currentColor;
+}
+
+.category-open {
+  padding: 8px 16px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 30px;
+  background: rgba(0, 0, 0, 0.2);
+  transition: background 0.3s, border-color 0.3s, color 0.3s;
+}
+
+.category-open::after {
+  content: " →";
+}
+
+.category-open:hover,
+.category-open:focus-visible {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #0b0b0b;
+}
+
+/* barrinha de tempo de cada foto */
+.category-progress {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  z-index: 2;
+  width: 100%;
+  height: 2px;
+  background: var(--gold);
+  transform: scaleX(0);
+  transform-origin: left;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.category-progress.is-running {
+  opacity: 1;
+  animation: band-progress linear forwards;
+}
+
+@keyframes band-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+/* entrada ao rolar: as faixas só aparecem, sem deslizar */
+.js .category.reveal {
+  transform: none;
+  transition: opacity 1.2s var(--ease);
+}
+
+/* quem prefere menos movimento: a foto troca com um esmaecer suave */
+@media (prefers-reduced-motion: reduce) {
+  .category .layer:not(.is-cover) {
+    transform: none;
+    opacity: 0;
+    transition: opacity 0.6s !important;
+  }
+
+  .category .layer.is-in {
+    opacity: 1;
+  }
 }
 
 /* =========================================================
@@ -896,9 +1039,6 @@ em {
   transform: none;
 }
 
-.categories .reveal:nth-child(2) { transition-delay: 0.1s; }
-.categories .reveal:nth-child(3) { transition-delay: 0.2s; }
-.categories .reveal:nth-child(4) { transition-delay: 0.3s; }
 .about-text.reveal { transition-delay: 0.15s; }
 
 @media (prefers-reduced-motion: reduce) {

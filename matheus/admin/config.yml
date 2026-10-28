@@ -56,6 +56,18 @@ collections:
             fields:
               - { label: Nome, name: nome, widget: string }
               - { label: Foto de capa, name: capa, widget: image }
+              - label: Enquadramento da capa
+                name: enquadramento
+                widget: select
+                required: false
+                default: alto
+                hint: Qual parte da foto aparece na faixa. Se a cabeça estiver cortada, escolha uma opção mais alta.
+                options:
+                  - { label: Topo da foto, value: topo }
+                  - { label: Alto, value: alto }
+                  - { label: Centro, value: centro }
+                  - { label: Baixo, value: baixo }
+                  - { label: Pé da foto, value: bem-baixo }
               - label: Fotos da galeria
                 name: fotos
                 widget: list
